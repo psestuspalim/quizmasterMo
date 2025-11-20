@@ -1,0 +1,219 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, XCircle, Lightbulb, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function QuestionView({ 
+  question, 
+  questionNumber, 
+  totalQuestions, 
+  onAnswer 
+}) {
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+
+  const handleSelectAnswer = (index) => {
+    if (showFeedback) return;
+    setSelectedAnswer(index);
+  };
+
+  const handleConfirm = () => {
+    if (selectedAnswer === null) return;
+    setShowFeedback(true);
+  };
+
+  const handleNext = () => {
+    const isCorrect = question.answerOptions[selectedAnswer].isCorrect;
+    onAnswer(isCorrect);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setShowHint(false);
+  };
+
+  const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-600">
+            Pregunta {questionNumber} de {totalQuestions}
+          </span>
+          <span className="text-sm text-gray-500">
+            {Math.round((questionNumber / totalQuestions) * 100)}%
+          </span>
+        </div>
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-indigo-600"
+            initial={{ width: 0 }}
+            animate={{ width: `${(questionNumber / totalQuestions) * 100}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+
+      {/* Question Card */}
+      <Card className="border-0 shadow-xl">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between mb-4">
+            <Badge variant="outline" className="text-indigo-600 border-indigo-200">
+              Pregunta {questionNumber}
+            </Badge>
+          </div>
+          <CardTitle className="text-xl font-semibold text-gray-900 leading-relaxed">
+            {question.question}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          {question.answerOptions.map((option, index) => {
+            const isSelected = selectedAnswer === index;
+            const isCorrect = option.isCorrect;
+            const showCorrect = showFeedback && isCorrect;
+            const showIncorrect = showFeedback && isSelected && !isCorrect;
+
+            return (
+              <motion.button
+                key={index}
+                whileHover={{ scale: showFeedback ? 1 : 1.01 }}
+                whileTap={{ scale: showFeedback ? 1 : 0.99 }}
+                onClick={() => handleSelectAnswer(index)}
+                disabled={showFeedback}
+                className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-200 ${
+                  showCorrect
+                    ? 'border-green-500 bg-green-50'
+                    : showIncorrect
+                    ? 'border-red-500 bg-red-50'
+                    : isSelected
+                    ? 'border-indigo-600 bg-indigo-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      showCorrect
+                        ? 'border-green-500 bg-green-500'
+                        : showIncorrect
+                        ? 'border-red-500 bg-red-500'
+                        : isSelected
+                        ? 'border-indigo-600 bg-indigo-600'
+                        : 'border-gray-300'
+                    }`}
+                  >
+                    {showCorrect && <CheckCircle2 className="w-4 h-4 text-white" />}
+                    {showIncorrect && <XCircle className="w-4 h-4 text-white" />}
+                    {!showFeedback && isSelected && (
+                      <div className="w-2 h-2 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span
+                    className={`text-sm ${
+                      showCorrect || showIncorrect ? 'font-medium' : ''
+                    }`}
+                  >
+                    {option.text}
+                  </span>
+                </div>
+              </motion.button>
+            );
+          })}
+
+          {/* Hint Button */}
+          {question.hint && !showFeedback && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowHint(!showHint)}
+              className="w-full text-gray-600 hover:text-indigo-600"
+            >
+              <Lightbulb className="w-4 h-4 mr-2" />
+              {showHint ? 'Ocultar pista' : 'Ver pista'}
+            </Button>
+          )}
+
+          {/* Hint */}
+          <AnimatePresence>
+            {showHint && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-amber-50 border border-amber-200 rounded-lg p-4"
+              >
+                <div className="flex gap-2">
+                  <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-900">{question.hint}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Feedback */}
+          <AnimatePresence>
+            {showFeedback && selectedOption && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-lg p-4 ${
+                  selectedOption.isCorrect
+                    ? 'bg-green-50 border border-green-200'
+                    : 'bg-red-50 border border-red-200'
+                }`}
+              >
+                <div className="flex gap-3">
+                  {selectedOption.isCorrect ? (
+                    <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  )}
+                  <div>
+                    <h4
+                      className={`font-semibold mb-2 ${
+                        selectedOption.isCorrect ? 'text-green-900' : 'text-red-900'
+                      }`}
+                    >
+                      {selectedOption.isCorrect ? '¡Correcto!' : 'Incorrecto'}
+                    </h4>
+                    <p
+                      className={`text-sm ${
+                        selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'
+                      }`}
+                    >
+                      {selectedOption.rationale}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Action Buttons */}
+          <div className="pt-4">
+            {!showFeedback ? (
+              <Button
+                onClick={handleConfirm}
+                disabled={selectedAnswer === null}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300"
+              >
+                Confirmar respuesta
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+              >
+                {questionNumber < totalQuestions ? 'Siguiente pregunta' : 'Ver resultados'}
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
