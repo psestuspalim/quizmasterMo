@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Lightbulb, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MathText from './MathText';
 
 export default function QuestionView({ 
   question, 
@@ -66,7 +67,7 @@ export default function QuestionView({
             </Badge>
           </div>
           <CardTitle className="text-xl font-semibold text-gray-900 leading-relaxed">
-            {question.question}
+            <MathText text={question.question} />
           </CardTitle>
         </CardHeader>
 
@@ -117,7 +118,7 @@ export default function QuestionView({
                       showCorrect || showIncorrect ? 'font-medium' : ''
                     }`}
                   >
-                    {option.text}
+                    <MathText text={option.text} />
                   </span>
                 </div>
               </motion.button>
@@ -147,7 +148,9 @@ export default function QuestionView({
               >
                 <div className="flex gap-2">
                   <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-900">{question.hint}</p>
+                  <p className="text-sm text-amber-900">
+                    <MathText text={question.hint} />
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -184,7 +187,7 @@ export default function QuestionView({
                         selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'
                       }`}
                     >
-                      {selectedOption.rationale}
+                      <MathText text={selectedOption.rationale} />
                     </p>
                   </div>
                 </div>
