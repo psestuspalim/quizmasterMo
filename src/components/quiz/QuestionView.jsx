@@ -97,24 +97,26 @@ export default function QuestionView({
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 font-semibold text-sm ${
                       showCorrect
-                        ? 'border-green-500 bg-green-500'
+                        ? 'border-green-500 bg-green-500 text-white'
                         : showIncorrect
-                        ? 'border-red-500 bg-red-500'
+                        ? 'border-red-500 bg-red-500 text-white'
                         : isSelected
-                        ? 'border-indigo-600 bg-indigo-600'
-                        : 'border-gray-300'
+                        ? 'border-indigo-600 bg-indigo-600 text-white'
+                        : 'border-gray-300 text-gray-600'
                     }`}
                   >
-                    {showCorrect && <CheckCircle2 className="w-4 h-4 text-white" />}
-                    {showIncorrect && <XCircle className="w-4 h-4 text-white" />}
-                    {!showFeedback && isSelected && (
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                    {showCorrect ? (
+                      <CheckCircle2 className="w-5 h-5 text-white" />
+                    ) : showIncorrect ? (
+                      <XCircle className="w-5 h-5 text-white" />
+                    ) : (
+                      String.fromCharCode(65 + index)
                     )}
                   </div>
                   <span
-                    className={`text-sm ${
+                    className={`text-sm flex-1 ${
                       showCorrect || showIncorrect ? 'font-medium' : ''
                     }`}
                   >
