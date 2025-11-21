@@ -27,8 +27,9 @@ export default function QuestionView({
   };
 
   const handleNext = () => {
-    const isCorrect = question.answerOptions[selectedAnswer].isCorrect;
-    onAnswer(isCorrect);
+    const selectedOption = question.answerOptions[selectedAnswer];
+    const isCorrect = selectedOption.isCorrect;
+    onAnswer(isCorrect, selectedOption, question);
     setSelectedAnswer(null);
     setShowFeedback(false);
     setShowHint(false);

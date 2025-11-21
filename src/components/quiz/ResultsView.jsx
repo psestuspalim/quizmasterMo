@@ -7,7 +7,9 @@ import { motion } from 'framer-motion';
 export default function ResultsView({ 
   score, 
   totalQuestions, 
+  wrongAnswers = [],
   onRetry, 
+  onRetryWrong,
   onHome 
 }) {
   const percentage = Math.round((score / totalQuestions) * 100);
@@ -127,7 +129,17 @@ export default function ResultsView({
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Intentar de nuevo
               </Button>
-              
+
+              {wrongAnswers.length > 0 && (
+                <Button
+                  onClick={onRetryWrong}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Repasar preguntas incorrectas
+                </Button>
+              )}
+
               <Button
                 onClick={onHome}
                 variant="outline"
