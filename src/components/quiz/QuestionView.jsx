@@ -21,10 +21,6 @@ export default function QuestionView({
   const handleSelectAnswer = (index) => {
     if (showFeedback) return;
     setSelectedAnswer(index);
-  };
-
-  const handleConfirm = () => {
-    if (selectedAnswer === null) return;
     setShowFeedback(true);
   };
 
@@ -249,7 +245,21 @@ export default function QuestionView({
             )}
           </div>
         </CardContent>
-      </Card>
-    </div>
-  );
-}
+        </Card>
+
+        {/* Next Button - Outside card, to the right */}
+        {showFeedback && (
+        <div className="flex justify-end mt-4">
+          <Button
+            onClick={handleNext}
+            className="bg-indigo-600 hover:bg-indigo-700"
+            size="lg"
+          >
+            {questionNumber < totalQuestions ? 'Siguiente pregunta' : 'Ver resultados'}
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+        )}
+        </div>
+        );
+        }
