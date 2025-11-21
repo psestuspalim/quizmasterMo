@@ -472,6 +472,8 @@ export default function QuizzesPage() {
                 question={selectedQuiz.questions[currentQuestionIndex]}
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={selectedQuiz.questions.length}
+                correctAnswers={score}
+                wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
               />
             </motion.div>
