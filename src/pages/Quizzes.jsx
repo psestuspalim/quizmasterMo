@@ -113,18 +113,22 @@ export default function QuizzesPage() {
   const handleUploadSuccess = async (quizData) => {
     await createQuizMutation.mutateAsync({
       ...quizData,
-      subject_id: selectedSubjectForUpload
+      subject_id: selectedSubject.id
     });
-    setSelectedSubjectForUpload('');
   };
 
-  const handleStartQuiz = (quiz) => {
-    const shuffledQuiz = {
-      ...quiz,
-      questions: quiz.questions.map(q => ({
+  const handleStartQuiz = (quiz, questionCount) => {
+    const shuffledQuestions = [...quiz.questions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, questionCount)
+      .map(q => ({
         ...q,
         answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
-      }))
+      }));
+    
+    const shuffledQuiz = {
+      ...quiz,
+      questions: shuffledQuestions
     };
     setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
@@ -429,25 +433,7 @@ export default function QuizzesPage() {
                 </p>
               </div>
 
-              <div className="max-w-2xl mx-auto mb-6">
-                <Label className="mb-2 block">Materia</Label>
-                <Select value={selectedSubjectForUpload} onValueChange={setSelectedSubjectForUpload}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una materia" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedSubjectForUpload && (
-                <FileUploader onUploadSuccess={handleUploadSuccess} />
-              )}
+              <FileUploader onUploadSuccess={handleUploadSuccess} />
             </motion.div>
           )}
 
