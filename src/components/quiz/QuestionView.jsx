@@ -43,28 +43,26 @@ export default function QuestionView({
   return (
     <div className="max-w-4xl mx-auto">
       {/* Score Bar */}
-      {answeredQuestions > 0 && (
-        <div className="mb-6">
-          <div className="flex h-4 rounded-full overflow-hidden shadow-md">
-            <motion.div
-              className="bg-green-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${correctPercentage}%` }}
-              transition={{ duration: 0.5 }}
-            />
-            <motion.div
-              className="bg-red-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${wrongPercentage}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-600 mt-1">
-            <span className="text-green-600 font-medium">✓ {correctAnswers} correctas</span>
-            <span className="text-red-600 font-medium">✗ {wrongAnswers} incorrectas</span>
-          </div>
+      <div className="mb-6">
+        <div className="flex h-4 rounded-full overflow-hidden shadow-md bg-gray-200">
+          <motion.div
+            className="bg-green-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${correctPercentage}%` }}
+            transition={{ duration: 0.5 }}
+          />
+          <motion.div
+            className="bg-red-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${wrongPercentage}%` }}
+            transition={{ duration: 0.5 }}
+          />
         </div>
-      )}
+        <div className="flex justify-between text-xs text-gray-600 mt-1">
+          <span className="text-green-600 font-medium">✓ {correctAnswers} correctas</span>
+          <span className="text-red-600 font-medium">✗ {wrongAnswers} incorrectas</span>
+        </div>
+      </div>
 
       {/* Progress Bar */}
       <div className="mb-8">
