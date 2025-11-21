@@ -98,7 +98,9 @@ export default function QuestionView({
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-3">
+        <CardContent>
+          <div className="flex gap-6">
+            <div className="flex-1 space-y-3">
           {question.answerOptions.map((option, index) => {
             const isSelected = selectedAnswer === index;
             const isCorrect = option.isCorrect;
@@ -223,23 +225,24 @@ export default function QuestionView({
               </motion.div>
             )}
           </AnimatePresence>
+            </div>
 
+            {/* Next Button - To the right of answers */}
+            {showFeedback && (
+              <div className="flex items-center">
+                <Button
+                  onClick={handleNext}
+                  className="bg-indigo-600 hover:bg-indigo-700 h-fit"
+                  size="lg"
+                >
+                  {questionNumber < totalQuestions ? 'Siguiente' : 'Resultados'}
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Next Button - Outside card, to the right */}
-      {showFeedback && (
-        <div className="flex justify-end mt-4">
-          <Button
-            onClick={handleNext}
-            className="bg-indigo-600 hover:bg-indigo-700"
-            size="lg"
-          >
-            {questionNumber < totalQuestions ? 'Siguiente pregunta' : 'Ver resultados'}
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
-      )}
         </div>
         );
         }
