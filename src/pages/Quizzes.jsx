@@ -483,6 +483,7 @@ export default function QuizzesPage() {
                 correctAnswers={score}
                 wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
+                onBack={currentQuestionIndex > 0 ? () => setCurrentQuestionIndex(currentQuestionIndex - 1) : null}
               />
             </motion.div>
           )}

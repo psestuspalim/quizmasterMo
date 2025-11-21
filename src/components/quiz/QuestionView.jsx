@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Lightbulb, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
 
@@ -12,7 +12,8 @@ export default function QuestionView({
   totalQuestions,
   correctAnswers = 0,
   wrongAnswers = 0,
-  onAnswer 
+  onAnswer,
+  onBack
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -227,16 +228,25 @@ export default function QuestionView({
           </AnimatePresence>
             </div>
 
-            {/* Next Button - To the right of answers */}
+            {/* Navigation Buttons - To the right of answers */}
             {showFeedback && (
-              <div className="flex items-center">
+              <div className="flex flex-col gap-3 items-center justify-center">
+                {onBack && questionNumber > 1 && (
+                  <Button
+                    onClick={onBack}
+                    variant="outline"
+                    size="icon"
+                    className="w-12 h-12"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </Button>
+                )}
                 <Button
                   onClick={handleNext}
-                  className="bg-indigo-600 hover:bg-indigo-700 h-fit"
-                  size="lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
+                  size="icon"
                 >
-                  {questionNumber < totalQuestions ? 'Siguiente' : 'Resultados'}
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                  <ChevronRight className="w-6 h-6" />
                 </Button>
               </div>
             )}
