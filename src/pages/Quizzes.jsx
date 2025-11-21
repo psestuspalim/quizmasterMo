@@ -44,7 +44,15 @@ export default function QuizzesPage() {
   };
 
   const handleStartQuiz = (quiz) => {
-    setSelectedQuiz(quiz);
+    // Mezclar las opciones de respuesta de cada pregunta
+    const shuffledQuiz = {
+      ...quiz,
+      questions: quiz.questions.map(q => ({
+        ...q,
+        answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
+      }))
+    };
+    setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
     setView('quiz');
@@ -63,6 +71,15 @@ export default function QuizzesPage() {
   };
 
   const handleRetry = () => {
+    // Volver a mezclar las opciones
+    const shuffledQuiz = {
+      ...selectedQuiz,
+      questions: selectedQuiz.questions.map(q => ({
+        ...q,
+        answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
+      }))
+    };
+    setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
     setView('quiz');
