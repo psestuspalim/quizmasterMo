@@ -224,31 +224,11 @@ export default function QuestionView({
             )}
           </AnimatePresence>
 
-          {/* Action Buttons */}
-          <div className="pt-4">
-            {!showFeedback ? (
-              <Button
-                onClick={handleConfirm}
-                disabled={selectedAnswer === null}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300"
-              >
-                Confirmar respuesta
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-              >
-                {questionNumber < totalQuestions ? 'Siguiente pregunta' : 'Ver resultados'}
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-          </div>
         </CardContent>
-        </Card>
+      </Card>
 
-        {/* Next Button - Outside card, to the right */}
-        {showFeedback && (
+      {/* Next Button - Outside card, to the right */}
+      {showFeedback && (
         <div className="flex justify-end mt-4">
           <Button
             onClick={handleNext}
@@ -259,7 +239,7 @@ export default function QuestionView({
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
-        )}
+      )}
         </div>
         );
         }
