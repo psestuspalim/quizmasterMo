@@ -1,8 +1,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { FolderOpen, FileText } from 'lucide-react';
+import { FolderOpen, FileText, CheckCircle2, XCircle } from 'lucide-react';
 
-export default function SubjectCard({ subject, quizCount, onClick }) {
+export default function SubjectCard({ subject, quizCount, stats, onClick }) {
+  const { totalCorrect = 0, totalWrong = 0, totalAnswered = 0 } = stats || {};
+  const correctPercentage = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
+  const wrongPercentage = totalAnswered > 0 ? (totalWrong / totalAnswered) * 100 : 0;
   return (
     <Card 
       className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2"
@@ -34,9 +37,34 @@ export default function SubjectCard({ subject, quizCount, onClick }) {
               <FileText className="w-4 h-4" />
               <span>{quizCount} cuestionarios</span>
             </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+
+            {totalAnswered > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-600" />
+                    {totalCorrect}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <XCircle className="w-3 h-3 text-red-600" />
+                    {totalWrong}
+                  </span>
+                </div>
+                <div className="flex h-2 rounded-full overflow-hidden bg-gray-200">
+                  <div 
+                    className="bg-green-500 transition-all duration-300"
+                    style={{ width: `${correctPercentage}%` }}
+                  />
+                  <div 
+                    className="bg-red-500 transition-all duration-300"
+                    style={{ width: `${wrongPercentage}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            </div>
+            </div>
+            </CardContent>
+            </Card>
+            );
+            }

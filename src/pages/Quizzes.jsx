@@ -65,6 +65,12 @@ export default function QuizzesPage() {
     queryFn: () => base44.entities.Quiz.list('-created_date'),
   });
 
+  const { data: attempts = [] } = useQuery({
+    queryKey: ['attempts', currentUser?.email],
+    queryFn: () => base44.entities.QuizAttempt.filter({ user_email: currentUser?.email }, '-created_date'),
+    enabled: !!currentUser?.email,
+  });
+
   const createSubjectMutation = useMutation({
     mutationFn: (subjectData) => base44.entities.Subject.create(subjectData),
     onSuccess: () => {
@@ -226,6 +232,21 @@ export default function QuizzesPage() {
     ? quizzes.filter(q => q.subject_id === selectedSubject.id)
     : [];
 
+  const getSubjectStats = (subjectId) => {
+    const subjectQuizIds = quizzes.filter(q => q.subject_id === subjectId).map(q => q.id);
+    const subjectAttempts = attempts.filter(a => subjectQuizIds.includes(a.quiz_id));
+    
+    if (subjectAttempts.length === 0) {
+      return { totalCorrect: 0, totalWrong: 0, totalAnswered: 0 };
+    }
+    
+    const totalCorrect = subjectAttempts.reduce((sum, a) => sum + a.score, 0);
+    const totalAnswered = subjectAttempts.reduce((sum, a) => sum + a.total_questions, 0);
+    const totalWrong = totalAnswered - totalCorrect;
+    
+    return { totalCorrect, totalWrong, totalAnswered };
+  };
+
   // Mostrar prompt de username si no tiene
   if (!currentUser || !currentUser.username) {
     return <UsernamePrompt onSubmit={handleUsernameSubmit} />;
@@ -323,6 +344,7 @@ export default function QuizzesPage() {
                       key={subject.id}
                       subject={subject}
                       quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                      stats={getSubjectStats(subject.id)}
                       onClick={() => {
                         setSelectedSubject(subject);
                         setView('list');
