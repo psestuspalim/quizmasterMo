@@ -211,7 +211,24 @@ export default function QuizzesPage() {
     setScore(0);
     setWrongAnswers([]);
     setCorrectAnswers([]);
+    setMarkedQuestions([]);
+    setDeckType(selectedDeck);
     setView('quiz');
+  };
+  
+  const handleMarkForReview = async (question, isMarked) => {
+    const newMarked = isMarked 
+      ? [...markedQuestions, question]
+      : markedQuestions.filter(q => q.question !== question.question);
+    
+    setMarkedQuestions(newMarked);
+    
+    await updateAttemptMutation.mutateAsync({
+      id: currentAttemptId,
+      data: {
+        marked_questions: newMarked
+      }
+    });
   };
 
   const handleAnswer = async (isCorrect, selectedOption, question) => {
