@@ -99,6 +99,10 @@ export default function QuizzesPage() {
     mutationFn: (attemptData) => base44.entities.QuizAttempt.create(attemptData),
   });
 
+  const updateAttemptMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.QuizAttempt.update(id, data),
+  });
+
   const updateUsernameMutation = useMutation({
     mutationFn: (username) => base44.auth.updateMe({ username }),
     onSuccess: (updatedUser) => {
@@ -123,7 +127,9 @@ export default function QuizzesPage() {
     });
   };
 
-  const handleStartQuiz = (quiz, questionCount) => {
+  const [currentAttemptId, setCurrentAttemptId] = useState(null);
+
+  const handleStartQuiz = async (quiz, questionCount) => {
     const shuffledQuestions = [...quiz.questions]
       .sort(() => Math.random() - 0.5)
       .slice(0, questionCount)
@@ -136,6 +142,21 @@ export default function QuizzesPage() {
       ...quiz,
       questions: shuffledQuestions
     };
+    
+    // Crear intento inicial
+    const attempt = await saveAttemptMutation.mutateAsync({
+      quiz_id: quiz.id,
+      subject_id: quiz.subject_id,
+      user_email: currentUser.email,
+      username: currentUser.username,
+      score: 0,
+      total_questions: shuffledQuestions.length,
+      answered_questions: 0,
+      is_completed: false,
+      wrong_questions: []
+    });
+    
+    setCurrentAttemptId(attempt.id);
     setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -143,44 +164,45 @@ export default function QuizzesPage() {
     setView('quiz');
   };
 
-  const handleAnswer = (isCorrect, selectedOption, question) => {
-    if (!isCorrect) {
-      const correctOption = question.answerOptions.find(opt => opt.isCorrect);
-      setWrongAnswers([...wrongAnswers, {
-        question: question.question,
-        selected_answer: selectedOption.text,
-        correct_answer: correctOption.text,
-        answerOptions: question.answerOptions,
-        hint: question.hint
-      }]);
+  const handleAnswer = async (isCorrect, selectedOption, question) => {
+    const newScore = isCorrect ? score + 1 : score;
+    const newWrongAnswers = !isCorrect ? [...wrongAnswers, {
+      question: question.question,
+      selected_answer: selectedOption.text,
+      correct_answer: question.answerOptions.find(opt => opt.isCorrect).text,
+      answerOptions: question.answerOptions,
+      hint: question.hint
+    }] : wrongAnswers;
+
+    if (isCorrect) {
+      setScore(newScore);
     } else {
-      setScore(score + 1);
+      setWrongAnswers(newWrongAnswers);
     }
 
-    if (currentQuestionIndex < selectedQuiz.questions.length - 1) {
+    const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
+    
+    // Actualizar intento después de cada respuesta
+    await updateAttemptMutation.mutateAsync({
+      id: currentAttemptId,
+      data: {
+        score: newScore,
+        answered_questions: currentQuestionIndex + 1,
+        wrong_questions: newWrongAnswers,
+        is_completed: isLastQuestion,
+        completed_at: isLastQuestion ? new Date().toISOString() : undefined
+      }
+    });
+
+    if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Guardar intento
-      saveAttemptMutation.mutate({
-        quiz_id: selectedQuiz.id,
-        user_email: currentUser.email,
-        username: currentUser.username,
-        score: isCorrect ? score + 1 : score,
-        total_questions: selectedQuiz.questions.length,
-        wrong_questions: isCorrect ? wrongAnswers : [...wrongAnswers, {
-          question: question.question,
-          selected_answer: selectedOption.text,
-          correct_answer: question.answerOptions.find(opt => opt.isCorrect).text,
-          answerOptions: question.answerOptions,
-          hint: question.hint
-        }],
-        completed_at: new Date().toISOString()
-      });
+      queryClient.invalidateQueries(['attempts']);
       setView('results');
     }
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     const shuffledQuiz = {
       ...selectedQuiz,
       questions: selectedQuiz.questions.map(q => ({
@@ -188,6 +210,21 @@ export default function QuizzesPage() {
         answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
       }))
     };
+    
+    // Crear nuevo intento
+    const attempt = await saveAttemptMutation.mutateAsync({
+      quiz_id: selectedQuiz.id,
+      subject_id: selectedQuiz.subject_id,
+      user_email: currentUser.email,
+      username: currentUser.username,
+      score: 0,
+      total_questions: selectedQuiz.questions.length,
+      answered_questions: 0,
+      is_completed: false,
+      wrong_questions: []
+    });
+    
+    setCurrentAttemptId(attempt.id);
     setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -195,7 +232,7 @@ export default function QuizzesPage() {
     setView('quiz');
   };
 
-  const handleRetryWrongQuestions = () => {
+  const handleRetryWrongQuestions = async () => {
     if (wrongAnswers.length === 0) return;
     
     const wrongQuestionsQuiz = {
@@ -208,6 +245,20 @@ export default function QuizzesPage() {
       }))
     };
     
+    // Crear nuevo intento
+    const attempt = await saveAttemptMutation.mutateAsync({
+      quiz_id: selectedQuiz.id,
+      subject_id: selectedQuiz.subject_id,
+      user_email: currentUser.email,
+      username: currentUser.username,
+      score: 0,
+      total_questions: wrongQuestionsQuiz.questions.length,
+      answered_questions: 0,
+      is_completed: false,
+      wrong_questions: []
+    });
+    
+    setCurrentAttemptId(attempt.id);
     setSelectedQuiz(wrongQuestionsQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);

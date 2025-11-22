@@ -23,6 +23,11 @@ export default function AdminProgress() {
     queryFn: () => base44.entities.Quiz.list(),
   });
 
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: () => base44.entities.Subject.list(),
+  });
+
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list('-created_date', 1000),
@@ -59,6 +64,66 @@ export default function AdminProgress() {
   const getQuizTitle = (quizId) => {
     const quiz = quizzes.find(q => q.id === quizId);
     return quiz?.title || 'Cuestionario eliminado';
+  };
+
+  const getSubjectName = (subjectId) => {
+    const subject = subjects.find(s => s.id === subjectId);
+    return subject?.name || 'Sin materia';
+  };
+
+  // Calcular estadísticas por quiz para el estudiante seleccionado
+  const getQuizStats = (student) => {
+    const quizStats = {};
+    student.attempts.forEach(attempt => {
+      if (!quizStats[attempt.quiz_id]) {
+        quizStats[attempt.quiz_id] = {
+          quizId: attempt.quiz_id,
+          quizTitle: getQuizTitle(attempt.quiz_id),
+          subjectId: attempt.subject_id,
+          attempts: [],
+          bestScore: 0,
+          avgScore: 0,
+          totalAttempts: 0
+        };
+      }
+      const percentage = (attempt.score / attempt.total_questions) * 100;
+      quizStats[attempt.quiz_id].attempts.push(attempt);
+      quizStats[attempt.quiz_id].bestScore = Math.max(quizStats[attempt.quiz_id].bestScore, percentage);
+      quizStats[attempt.quiz_id].totalAttempts += 1;
+    });
+
+    // Calcular promedio por quiz
+    Object.values(quizStats).forEach(stat => {
+      const total = stat.attempts.reduce((sum, att) => sum + (att.score / att.total_questions) * 100, 0);
+      stat.avgScore = total / stat.attempts.length;
+    });
+
+    return Object.values(quizStats);
+  };
+
+  // Calcular estadísticas por tema
+  const getSubjectStats = (student) => {
+    const subjectStats = {};
+    student.attempts.forEach(attempt => {
+      const subjectId = attempt.subject_id || 'sin-materia';
+      if (!subjectStats[subjectId]) {
+        subjectStats[subjectId] = {
+          subjectId,
+          subjectName: getSubjectName(subjectId),
+          totalCorrect: 0,
+          totalQuestions: 0,
+          attempts: []
+        };
+      }
+      subjectStats[subjectId].totalCorrect += attempt.score;
+      subjectStats[subjectId].totalQuestions += attempt.total_questions;
+      subjectStats[subjectId].attempts.push(attempt);
+    });
+
+    return Object.values(subjectStats).map(stat => ({
+      ...stat,
+      avgPercentage: (stat.totalCorrect / stat.totalQuestions) * 100
+    }));
   };
 
   return (
@@ -173,6 +238,73 @@ export default function AdminProgress() {
                   </CardContent>
                 </Card>
 
+                {/* Progreso por Tema */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Progreso por Tema</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {getSubjectStats(selectedStudent).map((subjectStat) => (
+                        <div key={subjectStat.subjectId} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-gray-900">{subjectStat.subjectName}</h4>
+                            <Badge className={
+                              subjectStat.avgPercentage >= 70 ? 'bg-green-100 text-green-800' :
+                              subjectStat.avgPercentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }>
+                              {Math.round(subjectStat.avgPercentage)}%
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {subjectStat.totalCorrect}/{subjectStat.totalQuestions} correctas • {subjectStat.attempts.length} intentos
+                          </div>
+                          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-indigo-600 transition-all"
+                              style={{ width: `${subjectStat.avgPercentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Progreso por Quiz */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Progreso por Cuestionario</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {getQuizStats(selectedStudent).map((quizStat) => (
+                        <div key={quizStat.quizId} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-gray-900">{quizStat.quizTitle}</h4>
+                            <div className="flex gap-2">
+                              <Badge variant="outline">
+                                Mejor: {Math.round(quizStat.bestScore)}%
+                              </Badge>
+                              <Badge className={
+                                quizStat.avgScore >= 70 ? 'bg-green-100 text-green-800' :
+                                quizStat.avgScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }>
+                                Prom: {Math.round(quizStat.avgScore)}%
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {quizStat.totalAttempts} {quizStat.totalAttempts === 1 ? 'intento' : 'intentos'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Historial de intentos */}
                 <Card>
                   <CardHeader>
@@ -181,28 +313,43 @@ export default function AdminProgress() {
                   <CardContent className="space-y-4 max-h-[500px] overflow-y-auto">
                     {selectedStudent.attempts.map((attempt) => {
                       const percentage = Math.round((attempt.score / attempt.total_questions) * 100);
+                      const isPartial = !attempt.is_completed;
                       
                       return (
                         <div key={attempt.id} className="border rounded-lg p-4">
                           <div className="flex items-start justify-between mb-3">
                             <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {getQuizTitle(attempt.quiz_id)}
-                              </h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-900">
+                                  {getQuizTitle(attempt.quiz_id)}
+                                </h4>
+                                {isPartial && (
+                                  <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                    Parcial
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                                 <Calendar className="w-4 h-4" />
                                 {format(new Date(attempt.completed_at || attempt.created_date), 'dd/MM/yyyy HH:mm')}
                               </div>
                             </div>
-                            <Badge
-                              className={
-                                percentage >= 70 ? 'bg-green-100 text-green-800' :
-                                percentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }
-                            >
-                              {attempt.score}/{attempt.total_questions} ({percentage}%)
-                            </Badge>
+                            <div className="text-right">
+                              <Badge
+                                className={
+                                  percentage >= 70 ? 'bg-green-100 text-green-800' :
+                                  percentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }
+                              >
+                                {attempt.score}/{attempt.total_questions} ({percentage}%)
+                              </Badge>
+                              {isPartial && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {attempt.answered_questions || 0} de {attempt.total_questions} respondidas
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {attempt.wrong_questions?.length > 0 && (
