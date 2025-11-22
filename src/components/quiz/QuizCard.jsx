@@ -17,15 +17,36 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
   const [showDialog, setShowDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [questionCount, setQuestionCount] = useState(quiz.total_questions);
+  const [selectedDeck, setSelectedDeck] = useState('all');
   
   // Calcular estadísticas
   const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
-  const totalCorrect = quizAttempts.reduce((sum, a) => sum + a.score, 0);
-  const totalWrong = quizAttempts.reduce((sum, a) => sum + (a.answered_questions || a.total_questions) - a.score, 0);
   
-  // Calcular faltantes del banco total
-  const totalAnswered = totalCorrect + totalWrong;
-  const totalRemaining = quiz.total_questions - totalAnswered;
+  // Recopilar todas las preguntas respondidas (correctas e incorrectas)
+  const answeredQuestions = new Set();
+  quizAttempts.forEach(attempt => {
+    // Agregar preguntas incorrectas
+    attempt.wrong_questions?.forEach(wq => {
+      answeredQuestions.add(wq.question);
+    });
+    // Calcular preguntas correctas (total - incorrectas del intento)
+    const correctInAttempt = attempt.score;
+    // No podemos identificar específicamente las correctas sin más info
+  });
+  
+  // Contar correctas e incorrectas totales
+  const allWrongQuestions = quizAttempts.flatMap(a => a.wrong_questions || []);
+  const uniqueWrong = new Map();
+  allWrongQuestions.forEach(wq => {
+    uniqueWrong.set(wq.question, wq);
+  });
+  
+  const totalWrong = uniqueWrong.size;
+  const totalCorrect = quizAttempts.reduce((sum, a) => sum + a.score, 0);
+  
+  // Las faltantes son las que nunca se han contestado
+  const totalAnswered = answeredQuestions.size;
+  const totalRemaining = Math.max(0, quiz.total_questions - totalAnswered);
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border border-gray-200">
       <CardHeader className="pb-3">
@@ -115,6 +136,46 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div>
+                <Label>Tipo de preguntas</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Button
+                    variant={selectedDeck === 'all' ? 'default' : 'outline'}
+                    onClick={() => setSelectedDeck('all')}
+                    className="w-full"
+                  >
+                    Todas
+                  </Button>
+                  <Button
+                    variant={selectedDeck === 'remaining' ? 'default' : 'outline'}
+                    onClick={() => setSelectedDeck('remaining')}
+                    className="w-full"
+                    disabled={totalRemaining === 0}
+                  >
+                    <Clock className="w-4 h-4 mr-1" />
+                    Faltantes ({totalRemaining})
+                  </Button>
+                  <Button
+                    variant={selectedDeck === 'wrong' ? 'default' : 'outline'}
+                    onClick={() => setSelectedDeck('wrong')}
+                    className="w-full"
+                    disabled={totalWrong === 0}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    Incorrectas ({totalWrong})
+                  </Button>
+                  <Button
+                    variant={selectedDeck === 'correct' ? 'default' : 'outline'}
+                    onClick={() => setSelectedDeck('correct')}
+                    className="w-full"
+                    disabled={totalCorrect === 0}
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Correctas ({totalCorrect})
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
                 <Label>Número de preguntas</Label>
                 <Input
                   type="number"
@@ -129,7 +190,7 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
               </div>
               <Button
                 onClick={() => {
-                  onStart(quiz, questionCount);
+                  onStart(quiz, questionCount, selectedDeck, quizAttempts);
                   setShowDialog(false);
                 }}
                 className="w-full bg-indigo-600 hover:bg-indigo-700"

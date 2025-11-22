@@ -130,10 +130,47 @@ export default function QuizzesPage() {
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
 
-  const handleStartQuiz = async (quiz, questionCount) => {
-    const shuffledQuestions = [...quiz.questions]
+  const handleStartQuiz = async (quiz, questionCount, deckType = 'all', quizAttempts = []) => {
+    let filteredQuestions = [...quiz.questions];
+    
+    if (deckType === 'wrong') {
+      // Solo preguntas incorrectas
+      const wrongQuestionsMap = new Map();
+      quizAttempts.forEach(attempt => {
+        attempt.wrong_questions?.forEach(wq => {
+          wrongQuestionsMap.set(wq.question, wq);
+        });
+      });
+      filteredQuestions = Array.from(wrongQuestionsMap.values());
+    } else if (deckType === 'remaining') {
+      // Solo preguntas que nunca se han contestado
+      const answeredQuestions = new Set();
+      quizAttempts.forEach(attempt => {
+        attempt.wrong_questions?.forEach(wq => {
+          answeredQuestions.add(wq.question);
+        });
+      });
+      filteredQuestions = quiz.questions.filter(q => !answeredQuestions.has(q.question));
+    } else if (deckType === 'correct') {
+      // Preguntas contestadas correctamente
+      const wrongQuestionsSet = new Set();
+      quizAttempts.forEach(attempt => {
+        attempt.wrong_questions?.forEach(wq => {
+          wrongQuestionsSet.add(wq.question);
+        });
+      });
+      const answeredQuestions = new Set();
+      quizAttempts.forEach(attempt => {
+        attempt.wrong_questions?.forEach(wq => {
+          answeredQuestions.add(wq.question);
+        });
+      });
+      filteredQuestions = quiz.questions.filter(q => answeredQuestions.has(q.question) && !wrongQuestionsSet.has(q.question));
+    }
+    
+    const shuffledQuestions = [...filteredQuestions]
       .sort(() => Math.random() - 0.5)
-      .slice(0, questionCount)
+      .slice(0, Math.min(questionCount, filteredQuestions.length))
       .map(q => ({
         ...q,
         answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
