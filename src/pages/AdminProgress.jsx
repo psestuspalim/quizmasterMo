@@ -23,24 +23,33 @@ export default function AdminProgress() {
     queryFn: () => base44.entities.Quiz.list(),
   });
 
-  // Agrupar por estudiante
-  const studentStats = attempts.reduce((acc, attempt) => {
-    if (!acc[attempt.user_email]) {
-      acc[attempt.user_email] = {
-        email: attempt.user_email,
-        username: attempt.username,
-        attempts: [],
-        totalQuizzes: 0,
-        totalCorrect: 0,
-        totalQuestions: 0,
-      };
-    }
-    acc[attempt.user_email].attempts.push(attempt);
-    acc[attempt.user_email].totalQuizzes += 1;
-    acc[attempt.user_email].totalCorrect += attempt.score;
-    acc[attempt.user_email].totalQuestions += attempt.total_questions;
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list('-created_date', 1000),
+  });
+
+  // Crear objeto con todos los usuarios
+  const studentStats = users.reduce((acc, user) => {
+    acc[user.email] = {
+      email: user.email,
+      username: user.username || user.full_name || 'Sin nombre',
+      attempts: [],
+      totalQuizzes: 0,
+      totalCorrect: 0,
+      totalQuestions: 0,
+    };
     return acc;
   }, {});
+
+  // Agregar intentos a los usuarios
+  attempts.forEach(attempt => {
+    if (studentStats[attempt.user_email]) {
+      studentStats[attempt.user_email].attempts.push(attempt);
+      studentStats[attempt.user_email].totalQuizzes += 1;
+      studentStats[attempt.user_email].totalCorrect += attempt.score;
+      studentStats[attempt.user_email].totalQuestions += attempt.total_questions;
+    }
+  });
 
   const students = Object.values(studentStats).filter(student =>
     student.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
