@@ -162,6 +162,7 @@ export default function QuizzesPage() {
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
+    setCorrectAnswers([]);
     setView('quiz');
   };
 
