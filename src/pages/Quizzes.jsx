@@ -497,6 +497,7 @@ export default function QuizzesPage() {
                     <QuizCard
                       key={quiz.id}
                       quiz={quiz}
+                      attempts={attempts}
                       onStart={handleStartQuiz}
                       onDelete={(id) => deleteQuizMutation.mutate(id)}
                     />
