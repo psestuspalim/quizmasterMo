@@ -1,18 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Home, RotateCcw, TrendingUp } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Trophy, Home, RotateCcw, TrendingUp, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import MathText from './MathText';
 
 export default function ResultsView({ 
   score, 
   totalQuestions, 
   wrongAnswers = [],
+  correctAnswers = [],
+  answeredQuestions = 0,
+  isPartial = false,
   onRetry, 
   onRetryWrong,
   onHome 
 }) {
-  const percentage = Math.round((score / totalQuestions) * 100);
+  const [showCorrect, setShowCorrect] = useState(false);
+  const [showWrong, setShowWrong] = useState(false);
+  
+  const answeredCount = answeredQuestions || (score + wrongAnswers.length);
+  const remainingQuestions = totalQuestions - answeredCount;
+  const percentage = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
   
   const getGrade = () => {
     if (percentage >= 90) return { text: '¡Excelente!', color: 'text-green-600', bg: 'bg-green-100' };
@@ -32,17 +41,17 @@ export default function ResultsView({
       >
         <Card className="border-0 shadow-2xl overflow-hidden">
           {/* Header with gradient */}
-          <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-8 text-white">
+          <div className={`bg-gradient-to-br ${isPartial ? 'from-orange-500 to-orange-700' : 'from-indigo-500 to-indigo-700'} p-8 text-white`}>
             <div className="flex justify-center mb-4">
               <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <Trophy className="w-10 h-10" />
+                {isPartial ? <AlertCircle className="w-10 h-10" /> : <Trophy className="w-10 h-10" />}
               </div>
             </div>
             <h2 className="text-3xl font-bold text-center mb-2">
-              Cuestionario completado
+              {isPartial ? 'Cuestionario parcial' : 'Cuestionario completado'}
             </h2>
             <p className="text-center text-indigo-100">
-              Has terminado todas las preguntas
+              {isPartial ? `Respondiste ${answeredCount} de ${totalQuestions} preguntas` : 'Has terminado todas las preguntas'}
             </p>
           </div>
 
@@ -93,22 +102,37 @@ export default function ResultsView({
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <Card className="bg-gray-50 border-0">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{score}</div>
-                  <div className="text-xs text-gray-500 mt-1">Correctas</div>
-                </CardContent>
-              </Card>
+            <div className={`grid ${isPartial ? 'grid-cols-4' : 'grid-cols-3'} gap-4 mb-8`}>
+              <Button
+                variant="outline"
+                onClick={() => setShowCorrect(!showCorrect)}
+                className="h-auto flex-col p-4 hover:bg-green-50"
+              >
+                <div className="text-2xl font-bold text-green-600">{score}</div>
+                <div className="text-xs text-gray-500 mt-1">Correctas</div>
+              </Button>
               
-              <Card className="bg-gray-50 border-0">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {totalQuestions - score}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Incorrectas</div>
-                </CardContent>
-              </Card>
+              <Button
+                variant="outline"
+                onClick={() => setShowWrong(!showWrong)}
+                className="h-auto flex-col p-4 hover:bg-red-50"
+              >
+                <div className="text-2xl font-bold text-red-600">
+                  {wrongAnswers.length}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Incorrectas</div>
+              </Button>
+              
+              {isPartial && (
+                <Card className="bg-gray-50 border-0">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-gray-600">
+                      {remainingQuestions}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Faltantes</div>
+                  </CardContent>
+                </Card>
+              )}
               
               <Card className="bg-gray-50 border-0">
                 <CardContent className="p-4 text-center">
@@ -119,6 +143,77 @@ export default function ResultsView({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Correct Answers Expandable */}
+            <AnimatePresence>
+              {showCorrect && correctAnswers.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 max-h-96 overflow-y-auto"
+                >
+                  <Card className="bg-green-50 border-green-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm text-green-800 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Preguntas correctas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {correctAnswers.map((q, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 text-sm">
+                          <p className="font-medium text-gray-900 mb-2">
+                            <MathText text={q.question} />
+                          </p>
+                          <p className="text-green-700">
+                            ✓ Tu respuesta: <MathText text={q.selected_answer} />
+                          </p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Wrong Answers Expandable */}
+            <AnimatePresence>
+              {showWrong && wrongAnswers.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 max-h-96 overflow-y-auto"
+                >
+                  <Card className="bg-red-50 border-red-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm text-red-800 flex items-center gap-2">
+                        <XCircle className="w-4 h-4" />
+                        Preguntas incorrectas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {wrongAnswers.map((wq, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 text-sm">
+                          <p className="font-medium text-gray-900 mb-2">
+                            <MathText text={wq.question} />
+                          </p>
+                          <div className="space-y-1">
+                            <p className="text-red-700">
+                              ❌ Tu respuesta: <MathText text={wq.selected_answer} />
+                            </p>
+                            <p className="text-green-700">
+                              ✓ Correcta: <MathText text={wq.correct_answer} />
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Action Buttons */}
             <div className="space-y-3">

@@ -29,6 +29,7 @@ export default function QuizzesPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState([]);
+  const [correctAnswers, setCorrectAnswers] = useState([]);
   const [showUploader, setShowUploader] = useState(false);
   const [showSubjectDialog, setShowSubjectDialog] = useState(false);
   const [newSubject, setNewSubject] = useState({ name: '', description: '', color: '#6366f1' });
@@ -173,9 +174,17 @@ export default function QuizzesPage() {
       answerOptions: question.answerOptions,
       hint: question.hint
     }] : wrongAnswers;
+    
+    const newCorrectAnswers = isCorrect ? [...correctAnswers, {
+      question: question.question,
+      selected_answer: selectedOption.text,
+      answerOptions: question.answerOptions,
+      hint: question.hint
+    }] : correctAnswers;
 
     if (isCorrect) {
       setScore(newScore);
+      setCorrectAnswers(newCorrectAnswers);
     } else {
       setWrongAnswers(newWrongAnswers);
     }
@@ -229,6 +238,7 @@ export default function QuizzesPage() {
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
+    setCorrectAnswers([]);
     setView('quiz');
   };
 
@@ -263,7 +273,22 @@ export default function QuizzesPage() {
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
+    setCorrectAnswers([]);
     setView('quiz');
+  };
+
+  const handleExitQuiz = async () => {
+    // Marcar como parcial si no está completo
+    if (currentAttemptId) {
+      await updateAttemptMutation.mutateAsync({
+        id: currentAttemptId,
+        data: {
+          is_completed: false
+        }
+      });
+      queryClient.invalidateQueries(['attempts']);
+    }
+    setView('results');
   };
 
   const handleHome = () => {
@@ -519,7 +544,7 @@ export default function QuizzesPage() {
               exit={{ opacity: 0 }}
             >
               <Button
-                onClick={handleHome}
+                onClick={handleExitQuiz}
                 variant="ghost"
                 className="mb-6"
               >
@@ -552,6 +577,9 @@ export default function QuizzesPage() {
                 score={score}
                 totalQuestions={selectedQuiz.questions.length}
                 wrongAnswers={wrongAnswers}
+                correctAnswers={correctAnswers}
+                answeredQuestions={score + wrongAnswers.length}
+                isPartial={score + wrongAnswers.length < selectedQuiz.questions.length}
                 onRetry={handleRetry}
                 onRetryWrong={handleRetryWrongQuestions}
                 onHome={handleHome}
