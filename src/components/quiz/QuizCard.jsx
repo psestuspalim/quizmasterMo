@@ -23,11 +23,9 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
   const totalCorrect = quizAttempts.reduce((sum, a) => sum + a.score, 0);
   const totalWrong = quizAttempts.reduce((sum, a) => sum + (a.answered_questions || a.total_questions) - a.score, 0);
   
-  // Buscar el último intento parcial
-  const lastPartialAttempt = quizAttempts.find(a => !a.is_completed);
-  const totalRemaining = lastPartialAttempt 
-    ? quiz.total_questions - (lastPartialAttempt.answered_questions || 0)
-    : 0;
+  // Calcular faltantes del banco total
+  const totalAnswered = totalCorrect + totalWrong;
+  const totalRemaining = quiz.total_questions - totalAnswered;
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border border-gray-200">
       <CardHeader className="pb-3">
