@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft } from 'lucide-react';
+import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
 
@@ -13,11 +13,13 @@ export default function QuestionView({
   correctAnswers = 0,
   wrongAnswers = 0,
   onAnswer,
-  onBack
+  onBack,
+  onMarkForReview
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [isMarked, setIsMarked] = useState(false);
 
   const handleSelectAnswer = (index) => {
     if (showFeedback) return;
@@ -88,6 +90,19 @@ export default function QuestionView({
             <Badge variant="outline" className="text-indigo-600 border-indigo-200">
               Pregunta {questionNumber}
             </Badge>
+            {onMarkForReview && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsMarked(!isMarked);
+                  onMarkForReview(question, !isMarked);
+                }}
+                className={isMarked ? 'text-yellow-600' : 'text-gray-400'}
+              >
+                <Bookmark className={`w-5 h-5 ${isMarked ? 'fill-yellow-600' : ''}`} />
+              </Button>
+            )}
           </div>
           <CardTitle className="text-xl font-semibold text-gray-900 leading-relaxed">
             <MathText text={question.question} />

@@ -30,11 +30,13 @@ export default function QuizzesPage() {
   const [score, setScore] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [markedQuestions, setMarkedQuestions] = useState([]);
   const [showUploader, setShowUploader] = useState(false);
   const [showSubjectDialog, setShowSubjectDialog] = useState(false);
   const [newSubject, setNewSubject] = useState({ name: '', description: '', color: '#6366f1' });
   const [selectedSubjectForUpload, setSelectedSubjectForUpload] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [deckType, setDeckType] = useState('all');
 
   const queryClient = useQueryClient();
 
@@ -130,10 +132,10 @@ export default function QuizzesPage() {
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
 
-  const handleStartQuiz = async (quiz, questionCount, deckType = 'all', quizAttempts = []) => {
+  const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
     let filteredQuestions = [...quiz.questions];
     
-    if (deckType === 'wrong') {
+    if (selectedDeck === 'wrong') {
       // Solo preguntas incorrectas
       const wrongQuestionsMap = new Map();
       quizAttempts.forEach(attempt => {
@@ -142,7 +144,7 @@ export default function QuizzesPage() {
         });
       });
       filteredQuestions = Array.from(wrongQuestionsMap.values());
-    } else if (deckType === 'remaining') {
+    } else if (selectedDeck === 'remaining') {
       // Solo preguntas que nunca se han contestado
       const answeredQuestions = new Set();
       quizAttempts.forEach(attempt => {
@@ -151,7 +153,7 @@ export default function QuizzesPage() {
         });
       });
       filteredQuestions = quiz.questions.filter(q => !answeredQuestions.has(q.question));
-    } else if (deckType === 'correct') {
+    } else if (selectedDeck === 'correct') {
       // Preguntas contestadas correctamente
       const wrongQuestionsSet = new Set();
       quizAttempts.forEach(attempt => {
@@ -166,6 +168,15 @@ export default function QuizzesPage() {
         });
       });
       filteredQuestions = quiz.questions.filter(q => answeredQuestions.has(q.question) && !wrongQuestionsSet.has(q.question));
+    } else if (selectedDeck === 'marked') {
+      // Solo preguntas marcadas
+      const markedQuestionsMap = new Map();
+      quizAttempts.forEach(attempt => {
+        attempt.marked_questions?.forEach(mq => {
+          markedQuestionsMap.set(mq.question, mq);
+        });
+      });
+      filteredQuestions = Array.from(markedQuestionsMap.values());
     }
     
     const shuffledQuestions = [...filteredQuestions]
@@ -204,6 +215,27 @@ export default function QuizzesPage() {
   };
 
   const handleAnswer = async (isCorrect, selectedOption, question) => {
+    // Si estamos en el deck de incorrectas y se responde correctamente, removerla del deck de incorrectas
+    let updatedWrongQuestions = wrongAnswers;
+    if (deckType === 'wrong' && isCorrect) {
+      // Remover de todas las preguntas incorrectas en la base de datos
+      const allAttempts = await base44.entities.QuizAttempt.filter({ 
+        quiz_id: selectedQuiz.id,
+        user_email: currentUser.email 
+      });
+      
+      for (const attempt of allAttempts) {
+        const filteredWrong = (attempt.wrong_questions || []).filter(
+          wq => wq.question !== question.question
+        );
+        if (filteredWrong.length !== (attempt.wrong_questions || []).length) {
+          await base44.entities.QuizAttempt.update(attempt.id, {
+            wrong_questions: filteredWrong
+          });
+        }
+      }
+    }
+    
     const newScore = isCorrect ? score + 1 : score;
     const newWrongAnswers = !isCorrect ? [...wrongAnswers, {
       question: question.question,
@@ -225,6 +257,7 @@ export default function QuizzesPage() {
       setCorrectAnswers(newCorrectAnswers);
     } else {
       setWrongAnswers(newWrongAnswers);
+      updatedWrongQuestions = newWrongAnswers;
     }
 
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
@@ -235,7 +268,7 @@ export default function QuizzesPage() {
       data: {
         score: newScore,
         answered_questions: currentQuestionIndex + 1,
-        wrong_questions: newWrongAnswers,
+        wrong_questions: updatedWrongQuestions,
         is_completed: isLastQuestion,
         completed_at: isLastQuestion ? new Date().toISOString() : undefined
       }
@@ -600,6 +633,7 @@ export default function QuizzesPage() {
                 wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
                 onBack={currentQuestionIndex > 0 ? () => setCurrentQuestionIndex(currentQuestionIndex - 1) : null}
+                onMarkForReview={handleMarkForReview}
               />
             </motion.div>
           )}

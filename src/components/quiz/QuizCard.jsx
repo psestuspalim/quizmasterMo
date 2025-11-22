@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History } from 'lucide-react';
+import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -47,6 +47,14 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
   // Las faltantes son las que nunca se han contestado
   const totalAnswered = answeredQuestions.size;
   const totalRemaining = Math.max(0, quiz.total_questions - totalAnswered);
+  
+  // Contar preguntas marcadas
+  const allMarkedQuestions = quizAttempts.flatMap(a => a.marked_questions || []);
+  const uniqueMarked = new Map();
+  allMarkedQuestions.forEach(mq => {
+    uniqueMarked.set(mq.question, mq);
+  });
+  const totalMarked = uniqueMarked.size;
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border border-gray-200">
       <CardHeader className="pb-3">
@@ -171,6 +179,15 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1" />
                     Correctas ({totalCorrect})
+                  </Button>
+                  <Button
+                    variant={selectedDeck === 'marked' ? 'default' : 'outline'}
+                    onClick={() => setSelectedDeck('marked')}
+                    className="w-full"
+                    disabled={totalMarked === 0}
+                  >
+                    <Bookmark className="w-4 h-4 mr-1" />
+                    Marcadas ({totalMarked})
                   </Button>
                 </div>
               </div>
