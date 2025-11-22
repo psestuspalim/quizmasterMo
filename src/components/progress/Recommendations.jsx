@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Target, BookOpen, TrendingUp, Award, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '../../pages/utils';
+import { createPageUrl } from '@/utils';
 
 export default function Recommendations({ analytics, quizzes, subjects }) {
   const recommendations = React.useMemo(() => {
