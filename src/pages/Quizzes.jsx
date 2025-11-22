@@ -528,6 +528,7 @@ export default function QuizzesPage() {
               </Button>
 
               <QuestionView
+                key={currentQuestionIndex}
                 question={selectedQuiz.questions[currentQuestionIndex]}
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={selectedQuiz.questions.length}
