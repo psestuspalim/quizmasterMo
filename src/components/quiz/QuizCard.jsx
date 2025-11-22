@@ -22,12 +22,12 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
   const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
   const totalCorrect = quizAttempts.reduce((sum, a) => sum + a.score, 0);
   const totalWrong = quizAttempts.reduce((sum, a) => sum + (a.answered_questions || a.total_questions) - a.score, 0);
-  const totalRemaining = quizAttempts.reduce((sum, a) => {
-    if (!a.is_completed) {
-      return sum + (a.total_questions - (a.answered_questions || 0));
-    }
-    return sum;
-  }, 0);
+  
+  // Buscar el último intento parcial
+  const lastPartialAttempt = quizAttempts.find(a => !a.is_completed);
+  const totalRemaining = lastPartialAttempt 
+    ? quiz.total_questions - (lastPartialAttempt.answered_questions || 0)
+    : 0;
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border border-gray-200">
       <CardHeader className="pb-3">
