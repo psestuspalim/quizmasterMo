@@ -25,13 +25,10 @@ export default function QuestionView({
     setShowFeedback(true);
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    await onAnswer(isCorrect, selectedOption, question);
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-    setShowHint(false);
+    onAnswer(isCorrect, selectedOption, question);
   };
 
   const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
