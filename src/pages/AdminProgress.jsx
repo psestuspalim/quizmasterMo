@@ -15,7 +15,7 @@ export default function AdminProgress() {
 
   const { data: attempts = [] } = useQuery({
     queryKey: ['quiz-attempts'],
-    queryFn: () => base44.entities.QuizAttempt.list('-created_date'),
+    queryFn: () => base44.entities.QuizAttempt.list('-created_date', 1000),
   });
 
   const { data: quizzes = [] } = useQuery({
