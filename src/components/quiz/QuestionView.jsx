@@ -25,10 +25,10 @@ export default function QuestionView({
     setShowFeedback(true);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, selectedOption, question);
+    await onAnswer(isCorrect, selectedOption, question);
     setSelectedAnswer(null);
     setShowFeedback(false);
     setShowHint(false);
@@ -99,6 +99,20 @@ export default function QuestionView({
 
         <CardContent>
           <div className="flex gap-6">
+            {/* Back Button - To the left of answers */}
+            {onBack && questionNumber > 1 && (
+              <div className="flex items-center">
+                <Button
+                  onClick={onBack}
+                  variant="outline"
+                  size="icon"
+                  className="w-12 h-12"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </Button>
+              </div>
+            )}
+
             <div className="flex-1 space-y-3">
           {question.answerOptions.map((option, index) => {
             const isSelected = selectedAnswer === index;
@@ -226,19 +240,9 @@ export default function QuestionView({
           </AnimatePresence>
             </div>
 
-            {/* Navigation Buttons - To the right of answers */}
+            {/* Next Button - To the right of answers */}
             {showFeedback && (
-              <div className="flex flex-col gap-3 items-center justify-center">
-                {onBack && questionNumber > 1 && (
-                  <Button
-                    onClick={onBack}
-                    variant="outline"
-                    size="icon"
-                    className="w-12 h-12"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </Button>
-                )}
+              <div className="flex items-center">
                 <Button
                   onClick={handleNext}
                   className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
