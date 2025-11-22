@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -438,13 +439,20 @@ export default function QuizzesPage() {
                       Selecciona una materia para ver sus cuestionarios
                     </p>
                   </div>
-                  <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                  <div className="flex gap-3">
+                    <Link to={createPageUrl('Progress')}>
+                      <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50">
+                        <TrendingUp className="w-5 h-5 mr-2" />
+                        Ver mi progreso
+                      </Button>
+                    </Link>
+                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-indigo-600 hover:bg-indigo-700">
                         <FolderPlus className="w-5 h-5 mr-2" />
                         Nueva materia
                       </Button>
-                    </DialogTrigger>
+                      </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Crear nueva materia</DialogTitle>
@@ -482,8 +490,9 @@ export default function QuizzesPage() {
                           Crear materia
                         </Button>
                       </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </div>
 
