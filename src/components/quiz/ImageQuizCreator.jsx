@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Plus, Trash2, Circle, ArrowRight, Save, X, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const BLOCK_SIZE = 10;
+const BLOCK_SIZE = 50;
 const COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
 const STORAGE_KEY = 'imageQuizCreator_draft';
 
@@ -42,8 +42,36 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   const [isUploading, setIsUploading] = useState(false);
   const [hoveredOption, setHoveredOption] = useState(null);
   const [selectionMode, setSelectionMode] = useState('option'); // 'option' or 'title'
+  const [descriptionsJson, setDescriptionsJson] = useState('');
+  const [showJsonInput, setShowJsonInput] = useState(false);
   const imageRef = useRef(null);
   const descriptionRef = useRef(null);
+
+  const applyDescriptionsFromJson = () => {
+    try {
+      const parsed = JSON.parse(descriptionsJson);
+      if (!Array.isArray(parsed)) return;
+      
+      const updatedImages = [...allImages];
+      parsed.forEach(item => {
+        const imgIndex = updatedImages.findIndex(img => 
+          img.url.toLowerCase().includes(item.nombre?.toLowerCase()) ||
+          img.originalName?.toLowerCase().includes(item.nombre?.toLowerCase())
+        );
+        if (imgIndex !== -1 && item.descripcion) {
+          updatedImages[imgIndex] = {
+            ...updatedImages[imgIndex],
+            description: item.descripcion
+          };
+        }
+      });
+      setAllImages(updatedImages);
+      setShowJsonInput(false);
+      setDescriptionsJson('');
+    } catch (e) {
+      alert('JSON inválido');
+    }
+  };
 
   // Guardar en localStorage cuando cambian los datos
   useEffect(() => {
