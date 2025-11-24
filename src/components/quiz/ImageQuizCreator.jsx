@@ -41,6 +41,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   const [markerType, setMarkerType] = useState('circle');
   const [isUploading, setIsUploading] = useState(false);
   const [hoveredOption, setHoveredOption] = useState(null);
+  const [selectionMode, setSelectionMode] = useState('option'); // 'option' or 'title'
   const imageRef = useRef(null);
   const descriptionRef = useRef(null);
 
@@ -179,30 +180,56 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
     const selectedText = selection.toString().trim();
     
     if (selectedText && selectedText.length > 1) {
-      const newOpt = addOption(selectedText);
-      if (newOpt) {
-        setSelectedOption(newOpt.id);
+      if (selectionMode === 'title') {
+        updateCurrentImage({ title: selectedText });
+      } else {
+        const newOpt = addOption(selectedText);
+        if (newOpt) {
+          setSelectedOption(newOpt.id);
+        }
       }
       selection.removeAllRanges();
     }
   };
 
+  const markCurrentAsComplete = () => {
+    if (!currentImage) return;
+    updateCurrentImage({ isComplete: true });
+  };
+
+  const handleNextImage = () => {
+    markCurrentAsComplete();
+    setCurrentIndex(Math.min(blockImages.length - 1, currentIndex + 1));
+    setSelectedOption(null);
+    setHoveredOption(null);
+  };
+
+  const handlePrevImage = () => {
+    setCurrentIndex(Math.max(0, currentIndex - 1));
+    setSelectedOption(null);
+    setHoveredOption(null);
+  };
+
   const handleSaveAll = () => {
     if (allImages.length === 0) return;
 
+    // Filtrar solo opciones que tienen marcadores
     const questions = allImages.map(img => {
-      const title = img.options.map(o => o.text).join(', ');
+      const optionsWithMarkers = img.options.filter(o => 
+        img.markers.some(m => m.optionId === o.id)
+      );
+      const title = img.title || optionsWithMarkers.map(o => o.text).join(', ');
       return {
         type: 'image',
         question: title,
         description: img.description || '',
         imageUrl: img.url,
-        options: img.options.map(o => ({
+        options: optionsWithMarkers.map(o => ({
           ...o,
           markers: img.markers.filter(m => m.optionId === o.id)
         }))
       };
-    });
+    }).filter(q => q.options.length > 0);
 
     if (questions.length === 1) {
       onSave(questions[0]);
@@ -229,9 +256,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   };
 
   const isImageComplete = (img) => {
-    return img.options.length > 0 && img.options.every(o => 
-      img.markers.some(m => m.optionId === o.id)
-    );
+    return img.isComplete || (img.options.length > 0 && img.markers.length > 0);
   };
 
   // Renderizar descripción con opciones vinculadas coloreadas
@@ -368,7 +393,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
                 className={`relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                   idx === currentIndex ? 'border-indigo-600 ring-2 ring-indigo-200 scale-105' : 'border-gray-200 hover:border-gray-400'
                 }`}
-                onClick={() => { setCurrentIndex(idx); setSelectedOption(null); setHoveredOption(null); }}
+                onClick={() => { markCurrentAsComplete(); setCurrentIndex(idx); setSelectedOption(null); setHoveredOption(null); }}
               >
                 <img src={img.url} alt="" className="w-16 h-16 object-cover" />
                 {isImageComplete(img) && (
@@ -427,10 +452,41 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
               </div>
             </div>
 
-            {/* Descripción - seleccionar texto para crear opciones */}
+            {/* Título personalizado */}
+            {currentImage.title && (
+              <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+                <span className="text-xs text-green-700">Título:</span>
+                <span className="text-sm font-medium text-green-800">{currentImage.title}</span>
+                <button onClick={() => updateCurrentImage({ title: '' })} className="ml-auto text-green-600 hover:text-red-500">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Descripción - seleccionar texto para crear opciones o título */}
             <div>
-              <Label className="text-xs text-gray-600">Descripción (selecciona texto para crear opciones)</Label>
-              <div className="relative mt-1">
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs text-gray-600">Descripción (selecciona texto)</Label>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant={selectionMode === 'option' ? 'default' : 'outline'}
+                    onClick={() => setSelectionMode('option')}
+                    className="h-6 text-xs px-2"
+                  >
+                    + Opción
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={selectionMode === 'title' ? 'default' : 'outline'}
+                    onClick={() => setSelectionMode('title')}
+                    className="h-6 text-xs px-2"
+                  >
+                    = Título
+                  </Button>
+                </div>
+              </div>
+              <div className="relative">
                 <textarea
                   ref={descriptionRef}
                   value={currentImage.description || ''}
