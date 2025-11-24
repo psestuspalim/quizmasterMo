@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, Medal, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+// Generador de pseudónimos aleatorios pero consistentes
+const adjectives = ['Veloz', 'Sabio', 'Astuto', 'Audaz', 'Noble', 'Ágil', 'Brillante', 'Curioso', 'Tenaz', 'Valiente', 'Sereno', 'Intrépido'];
+const animals = ['León', 'Águila', 'Búho', 'Delfín', 'Zorro', 'Lobo', 'Halcón', 'Tigre', 'Oso', 'Ciervo', 'Fénix', 'Dragón'];
+
+const generatePseudonym = (email) => {
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = ((hash << 5) - hash) + email.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const adjIndex = Math.abs(hash) % adjectives.length;
+  const animalIndex = Math.abs(hash >> 4) % animals.length;
+  const number = Math.abs(hash) % 100;
+  return `${adjectives[adjIndex]} ${animals[animalIndex]} ${number}`;
+};
+
 export default function Leaderboard({ users, currentUserEmail, title = "Tabla de Clasificación" }) {
+  const pseudonyms = useMemo(() => {
+    const map = new Map();
+    users.forEach(user => {
+      map.set(user.user_email, generatePseudonym(user.user_email));
+    });
+    return map;
+  }, [users]);
+
   const getMedalIcon = (position) => {
     if (position === 0) return <Crown className="w-5 h-5 text-yellow-500" />;
     if (position === 1) return <Medal className="w-5 h-5 text-gray-400" />;
@@ -44,7 +68,9 @@ export default function Leaderboard({ users, currentUserEmail, title = "Tabla de
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {user.username || 'Usuario'}
+                    {user.user_email === currentUserEmail 
+                      ? (user.username || 'Usuario') 
+                      : pseudonyms.get(user.user_email)}
                     {user.user_email === currentUserEmail && (
                       <span className="ml-2 text-xs text-indigo-600">(Tú)</span>
                     )}
