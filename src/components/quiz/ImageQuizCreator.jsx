@@ -47,18 +47,32 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   const imageRef = useRef(null);
   const descriptionRef = useRef(null);
 
+  const normalizeString = (str) => {
+    if (!str) return '';
+    return str.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+      .replace(/[^a-z0-9]/g, ''); // Solo alfanuméricos
+  };
+
   const applyDescriptionsFromJson = () => {
     try {
       const parsed = JSON.parse(descriptionsJson);
       if (!Array.isArray(parsed)) return;
       
       const updatedImages = [...allImages];
+      let matched = 0;
+      
       parsed.forEach(item => {
-        const imgIndex = updatedImages.findIndex(img => 
-          img.url.toLowerCase().includes(item.nombre?.toLowerCase()) ||
-          img.originalName?.toLowerCase().includes(item.nombre?.toLowerCase())
-        );
+        const searchName = normalizeString(item.nombre);
+        const imgIndex = updatedImages.findIndex(img => {
+          const imgName = normalizeString(img.originalName);
+          const urlName = normalizeString(img.url.split('/').pop());
+          return imgName.includes(searchName) || urlName.includes(searchName) ||
+                 searchName.includes(imgName) || searchName.includes(urlName);
+        });
+        
         if (imgIndex !== -1) {
+          matched++;
           const updates = { ...updatedImages[imgIndex] };
           
           if (item.descripcion) {
@@ -73,19 +87,21 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
               text: text.trim(),
               isCorrect: true
             }));
-            updates.options = [...updates.options, ...newOptions.filter(
-              no => !updates.options.some(o => o.text.toLowerCase() === no.text.toLowerCase())
+            updates.options = [...(updates.options || []), ...newOptions.filter(
+              no => !(updates.options || []).some(o => o.text.toLowerCase() === no.text.toLowerCase())
             )];
           }
           
           updatedImages[imgIndex] = updates;
         }
       });
+      
       setAllImages(updatedImages);
       setShowJsonInput(false);
       setDescriptionsJson('');
+      alert(`Se aplicaron ${matched} de ${parsed.length} elementos`);
     } catch (e) {
-      alert('JSON inválido');
+      alert('JSON inválido: ' + e.message);
     }
   };
 
