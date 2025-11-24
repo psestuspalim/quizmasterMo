@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
+import ImageQuestionView from './ImageQuestionView';
 
 export default function QuestionView({ 
   question, 
@@ -20,6 +21,18 @@ export default function QuestionView({
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isMarked, setIsMarked] = useState(false);
+
+  // Si es pregunta de imagen, usar el componente especializado
+  if (question.type === 'image') {
+    return (
+      <ImageQuestionView
+        question={question}
+        questionNumber={questionNumber}
+        totalQuestions={totalQuestions}
+        onAnswer={(isCorrect, details) => onAnswer(isCorrect, details, question)}
+      />
+    );
+  }
 
   const handleSelectAnswer = (index) => {
     if (showFeedback) return;
