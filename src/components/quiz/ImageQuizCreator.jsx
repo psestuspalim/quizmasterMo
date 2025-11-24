@@ -58,11 +58,27 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
           img.url.toLowerCase().includes(item.nombre?.toLowerCase()) ||
           img.originalName?.toLowerCase().includes(item.nombre?.toLowerCase())
         );
-        if (imgIndex !== -1 && item.descripcion) {
-          updatedImages[imgIndex] = {
-            ...updatedImages[imgIndex],
-            description: item.descripcion
-          };
+        if (imgIndex !== -1) {
+          const updates = { ...updatedImages[imgIndex] };
+          
+          if (item.descripcion) {
+            updates.description = item.descripcion;
+          }
+          if (item.titulo) {
+            updates.title = item.titulo;
+          }
+          if (item.opciones && Array.isArray(item.opciones)) {
+            const newOptions = item.opciones.map(text => ({
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              text: text.trim(),
+              isCorrect: true
+            }));
+            updates.options = [...updates.options, ...newOptions.filter(
+              no => !updates.options.some(o => o.text.toLowerCase() === no.text.toLowerCase())
+            )];
+          }
+          
+          updatedImages[imgIndex] = updates;
         }
       });
       setAllImages(updatedImages);
@@ -690,11 +706,11 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
         {/* JSON Input */}
         {showJsonInput && (
           <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-            <Label className="text-xs text-gray-600">Pega JSON con formato: [{`"nombre": "img1", "descripcion": "..."`}]</Label>
+            <Label className="text-xs text-gray-600">JSON: nombre, descripcion, titulo, opciones (array)</Label>
             <textarea
               value={descriptionsJson}
               onChange={(e) => setDescriptionsJson(e.target.value)}
-              placeholder='[{"nombre": "imagen1.png", "descripcion": "Descripción aquí..."}]'
+              placeholder='[{"nombre": "img1.png", "descripcion": "...", "titulo": "Título", "opciones": ["opcion1", "opcion2"]}]'
               className="w-full h-32 p-2 border rounded-lg text-xs font-mono"
             />
             <Button onClick={applyDescriptionsFromJson} className="w-full" size="sm">
