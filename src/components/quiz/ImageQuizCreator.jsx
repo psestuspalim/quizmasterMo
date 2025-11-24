@@ -482,15 +482,19 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
             </div>
 
             {/* Título personalizado */}
-            {currentImage.title && (
-              <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
-                <span className="text-xs text-green-700">Título:</span>
-                <span className="text-sm font-medium text-green-800">{currentImage.title}</span>
-                <button onClick={() => updateCurrentImage({ title: '' })} className="ml-auto text-green-600 hover:text-red-500">
-                  <X className="w-3 h-3" />
+            <div className="flex items-center gap-2">
+              <Input
+                value={currentImage.title || ''}
+                onChange={(e) => updateCurrentImage({ title: e.target.value })}
+                placeholder="Título de la imagen (opcional)"
+                className="text-sm flex-1"
+              />
+              {currentImage.title && (
+                <button onClick={() => updateCurrentImage({ title: '' })} className="text-gray-400 hover:text-red-500">
+                  <X className="w-4 h-4" />
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Descripción - seleccionar texto para crear opciones o título */}
             <div>
