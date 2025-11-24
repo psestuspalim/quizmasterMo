@@ -115,6 +115,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
         uploadedImages.push({
           url: file_url,
           file,
+          originalName: file.name,
           options: newOptions,
           markers: [],
           description: ''
@@ -649,20 +650,54 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
           </>
         )}
 
+        {/* Botón siguiente imagen */}
+        {currentImage && currentIndex < blockImages.length - 1 && (
+          <Button 
+            onClick={handleNextImage}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base"
+          >
+            Siguiente imagen ({currentIndex + 2}/{blockImages.length})
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Button>
+        )}
+
         {/* Botones */}
-        <div className="flex gap-3 pt-2 border-t">
-          <Button variant="outline" onClick={handleCancel} className="flex-1">
+        <div className="flex gap-2 pt-2 border-t">
+          <Button variant="outline" onClick={handleCancel} size="sm">
             Cancelar
           </Button>
           <Button 
+            variant="outline"
+            onClick={() => setShowJsonInput(!showJsonInput)}
+            size="sm"
+          >
+            {showJsonInput ? 'Ocultar' : 'JSON'}
+          </Button>
+          <Button 
             onClick={handleSaveAll} 
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-            disabled={allImages.length === 0 || !allImages.some(img => img.options.length > 0)}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            disabled={allImages.length === 0 || !allImages.some(img => img.markers.length > 0)}
           >
             <Save className="w-4 h-4 mr-2" />
-            Guardar {allImages.length > 1 ? `${allImages.length} Preguntas` : 'Pregunta'}
+            Guardar ({allImages.filter(isImageComplete).length}/{allImages.length})
           </Button>
         </div>
+
+        {/* JSON Input */}
+        {showJsonInput && (
+          <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
+            <Label className="text-xs text-gray-600">Pega JSON con formato: [{"nombre": "img1", "descripcion": "..."}]</Label>
+            <textarea
+              value={descriptionsJson}
+              onChange={(e) => setDescriptionsJson(e.target.value)}
+              placeholder='[{"nombre": "imagen1.png", "descripcion": "Descripción aquí..."}]'
+              className="w-full h-32 p-2 border rounded-lg text-xs font-mono"
+            />
+            <Button onClick={applyDescriptionsFromJson} className="w-full" size="sm">
+              Aplicar descripciones
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
