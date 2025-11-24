@@ -53,15 +53,29 @@ export default function FileUploader({ onUploadSuccess }) {
   };
 
   const handleImageQuizSave = async (questionData) => {
-    await onUploadSuccess({
-      title: questionData.question,
-      description: 'Cuestionario con imagen',
-      questions: [{
-        ...questionData,
+    // Si son múltiples preguntas
+    if (questionData.multipleQuestions) {
+      const questions = questionData.multipleQuestions.map(q => ({
+        ...q,
         type: 'image'
-      }],
-      total_questions: 1
-    });
+      }));
+      await onUploadSuccess({
+        title: `Cuestionario con ${questions.length} imágenes`,
+        description: 'Cuestionario con imágenes',
+        questions,
+        total_questions: questions.length
+      });
+    } else {
+      await onUploadSuccess({
+        title: questionData.question,
+        description: questionData.description || 'Cuestionario con imagen',
+        questions: [{
+          ...questionData,
+          type: 'image'
+        }],
+        total_questions: 1
+      });
+    }
   };
 
   const handleDrop = (e) => {
