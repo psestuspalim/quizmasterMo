@@ -686,7 +686,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
         {/* JSON Input */}
         {showJsonInput && (
           <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-            <Label className="text-xs text-gray-600">Pega JSON con formato: [{"nombre": "img1", "descripcion": "..."}]</Label>
+            <Label className="text-xs text-gray-600">Pega JSON con formato: [{`"nombre": "img1", "descripcion": "..."`}]</Label>
             <textarea
               value={descriptionsJson}
               onChange={(e) => setDescriptionsJson(e.target.value)}
