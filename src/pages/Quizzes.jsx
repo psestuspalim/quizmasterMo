@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,9 @@ import QuestionView from '../components/quiz/QuestionView';
 import ResultsView from '../components/quiz/ResultsView';
 import SubjectCard from '../components/quiz/SubjectCard';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
+import PointsDisplay from '../components/gamification/PointsDisplay';
+import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
+import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('subjects'); // 'subjects', 'list', 'upload', 'quiz', 'results'
@@ -39,6 +42,8 @@ export default function QuizzesPage() {
   const [selectedSubjectForUpload, setSelectedSubjectForUpload] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [deckType, setDeckType] = useState('all');
+  const [userStats, setUserStats] = useState(null);
+  const [newBadge, setNewBadge] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -75,6 +80,22 @@ export default function QuizzesPage() {
     queryFn: () => base44.entities.QuizAttempt.filter({ user_email: currentUser?.email }, '-created_date'),
     enabled: !!currentUser?.email,
   });
+
+  // Cargar estadísticas de gamificación
+  const { data: userStatsData } = useQuery({
+    queryKey: ['user-stats', currentUser?.email],
+    queryFn: async () => {
+      const stats = await base44.entities.UserStats.filter({ user_email: currentUser?.email });
+      return stats[0] || null;
+    },
+    enabled: !!currentUser?.email,
+  });
+
+  useEffect(() => {
+    if (userStatsData) {
+      setUserStats(userStatsData);
+    }
+  }, [userStatsData]);
 
   const createSubjectMutation = useMutation({
     mutationFn: (subjectData) => base44.entities.Subject.create(subjectData),
@@ -114,6 +135,83 @@ export default function QuizzesPage() {
   const updateAttemptMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.QuizAttempt.update(id, data),
   });
+
+  const createUserStatsMutation = useMutation({
+    mutationFn: (data) => base44.entities.UserStats.create(data),
+    onSuccess: (data) => {
+      setUserStats(data);
+      queryClient.invalidateQueries(['user-stats']);
+    }
+  });
+
+  const updateUserStatsMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.UserStats.update(id, data),
+    onSuccess: (data) => {
+      setUserStats(data);
+      queryClient.invalidateQueries(['user-stats']);
+    }
+  });
+
+  const updateGamificationStats = async (correctCount, totalCount, isPerfect) => {
+    const isFirstQuiz = !userStats;
+    const streakDays = userStats?.streak_days || 0;
+    const earnedPoints = calculatePoints(correctCount, totalCount, isPerfect, isFirstQuiz, 0);
+    
+    const newTotalPoints = (userStats?.total_points || 0) + earnedPoints;
+    const newLevel = calculateLevel(newTotalPoints);
+    const newTotalCorrect = (userStats?.total_correct || 0) + correctCount;
+    const newTotalQuestions = (userStats?.total_questions || 0) + totalCount;
+    const newPerfectScores = (userStats?.perfect_scores || 0) + (isPerfect ? 1 : 0);
+
+    // Calcular racha
+    let newStreakDays = streakDays;
+    const lastActivity = userStats?.last_activity ? new Date(userStats.last_activity) : null;
+    const today = new Date();
+    if (lastActivity) {
+      const diffDays = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        newStreakDays = streakDays + 1;
+      } else if (diffDays > 1) {
+        newStreakDays = 1;
+      }
+    } else {
+      newStreakDays = 1;
+    }
+
+    const updatedStats = {
+      total_points: newTotalPoints,
+      level: newLevel,
+      total_correct: newTotalCorrect,
+      total_questions: newTotalQuestions,
+      perfect_scores: newPerfectScores,
+      streak_days: newStreakDays,
+      last_activity: today.toISOString(),
+      badges: userStats?.badges || []
+    };
+
+    // Verificar nuevas insignias
+    const subjectsAttempted = [...new Set(attempts.map(a => a.subject_id))];
+    const newBadges = checkNewBadges(updatedStats, subjectsAttempted, subjects.length);
+    
+    if (newBadges.length > 0) {
+      const badgesWithDate = newBadges.map(b => ({
+        ...b,
+        earned_at: new Date().toISOString()
+      }));
+      updatedStats.badges = [...(userStats?.badges || []), ...badgesWithDate];
+      setNewBadge(badgesWithDate[0]);
+    }
+
+    if (userStats?.id) {
+      await updateUserStatsMutation.mutateAsync({ id: userStats.id, data: updatedStats });
+    } else {
+      await createUserStatsMutation.mutateAsync({
+        user_email: currentUser.email,
+        username: currentUser.username,
+        ...updatedStats
+      });
+    }
+  };
 
   const updateUsernameMutation = useMutation({
     mutationFn: (username) => base44.auth.updateMe({ username }),
@@ -303,6 +401,12 @@ export default function QuizzesPage() {
     if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      // Actualizar gamificación al completar
+      const finalScore = newScore;
+      const finalTotal = selectedQuiz.questions.length;
+      const isPerfect = finalScore === finalTotal;
+      await updateGamificationStats(finalScore, finalTotal, isPerfect);
+      
       queryClient.invalidateQueries(['attempts']);
       setView('results');
     }
@@ -437,6 +541,16 @@ export default function QuizzesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
+              {/* Points Display */}
+              {userStats && (
+                <div className="mb-6 max-w-md">
+                  <PointsDisplay 
+                    points={userStats.total_points || 0} 
+                    level={userStats.level || 1} 
+                  />
+                </div>
+              )}
+
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -448,10 +562,22 @@ export default function QuizzesPage() {
                     </p>
                   </div>
                   <div className="flex gap-3">
+                    <Link to={createPageUrl('Leaderboard')}>
+                      <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50">
+                        <Crown className="w-5 h-5 mr-2" />
+                        Ranking
+                      </Button>
+                    </Link>
+                    <Link to={createPageUrl('Badges')}>
+                      <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+                        <Award className="w-5 h-5 mr-2" />
+                        Insignias
+                      </Button>
+                    </Link>
                     <Link to={createPageUrl('Progress')}>
                       <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50">
                         <TrendingUp className="w-5 h-5 mr-2" />
-                        Ver mi progreso
+                        Progreso
                       </Button>
                     </Link>
                     <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
@@ -696,6 +822,13 @@ export default function QuizzesPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Badge Unlock Modal */}
+        <BadgeUnlockModal 
+          badge={newBadge} 
+          open={!!newBadge} 
+          onClose={() => setNewBadge(null)} 
+        />
       </div>
     </div>
   );
