@@ -27,6 +27,16 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setImageUrl(file_url);
       setImage(file);
+
+      // Extraer opciones del nombre del archivo
+      const fileName = file.name.replace(/\.[^/.]+$/, ''); // Quitar extensión
+      const elements = fileName.split(',').map(el => el.trim()).filter(el => el);
+      const newOptions = elements.map(text => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        text,
+        isCorrect: true
+      }));
+      setOptions(newOptions);
     } catch (error) {
       console.error('Error uploading image:', error);
     }
