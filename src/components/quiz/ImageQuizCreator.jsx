@@ -10,7 +10,6 @@ import { base44 } from '@/api/base44Client';
 export default function ImageQuizCreator({ onSave, onCancel }) {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
-  const [title, setTitle] = useState('');
   const [options, setOptions] = useState([]);
   const [newOption, setNewOption] = useState('');
   const [markers, setMarkers] = useState([]);
@@ -76,7 +75,10 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   };
 
   const handleSave = () => {
-    if (!imageUrl || !title || options.length === 0) return;
+    if (!imageUrl || options.length === 0) return;
+
+    // Generar título automático con los nombres de las opciones
+    const title = options.map(o => o.text).join(', ');
 
     const questionData = {
       type: 'image',
@@ -103,16 +105,6 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
         <CardTitle>Crear Pregunta con Imagen</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Título */}
-        <div>
-          <Label>Título (elementos en la imagen)</Label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ej: Identifica los huesos del cráneo"
-          />
-        </div>
-
         {/* Subir imagen */}
         <div>
           <Label>Imagen</Label>
@@ -292,7 +284,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
           <Button 
             onClick={handleSave} 
             className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-            disabled={!imageUrl || !title || options.length === 0}
+            disabled={!imageUrl || options.length === 0}
           >
             <Save className="w-4 h-4 mr-2" />
             Guardar Pregunta
