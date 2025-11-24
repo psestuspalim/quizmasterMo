@@ -100,6 +100,13 @@ export default function QuizzesPage() {
     },
   });
 
+  const deleteSubjectMutation = useMutation({
+    mutationFn: (subjectId) => base44.entities.Subject.delete(subjectId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['subjects']);
+    },
+  });
+
   const saveAttemptMutation = useMutation({
     mutationFn: (attemptData) => base44.entities.QuizAttempt.create(attemptData),
   });
@@ -519,6 +526,8 @@ export default function QuizzesPage() {
                       subject={subject}
                       quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
                       stats={getSubjectStats(subject.id)}
+                      isAdmin={currentUser?.role === 'admin'}
+                      onDelete={(id) => deleteSubjectMutation.mutate(id)}
                       onClick={() => {
                         setSelectedSubject(subject);
                         setView('list');

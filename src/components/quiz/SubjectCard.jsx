@@ -1,17 +1,31 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { FolderOpen, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FolderOpen, FileText, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 
-export default function SubjectCard({ subject, quizCount, stats, onClick }) {
+export default function SubjectCard({ subject, quizCount, stats, onClick, onDelete, isAdmin }) {
   const { totalCorrect = 0, totalWrong = 0, totalAnswered = 0 } = stats || {};
   const correctPercentage = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
   const wrongPercentage = totalAnswered > 0 ? (totalWrong / totalAnswered) * 100 : 0;
   return (
     <Card 
-      className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2"
+      className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 relative"
       style={{ borderColor: subject.color || '#6366f1' }}
       onClick={onClick}
     >
+      {isAdmin && onDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(subject.id);
+          }}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 z-10"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )}
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div 
