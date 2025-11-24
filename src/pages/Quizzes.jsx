@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import FileUploader from '../components/quiz/FileUploader';
 import QuizCard from '../components/quiz/QuizCard';
+import QuizEditor from '../components/quiz/QuizEditor';
 import QuestionView from '../components/quiz/QuestionView';
 import ResultsView from '../components/quiz/ResultsView';
 import SubjectCard from '../components/quiz/SubjectCard';
@@ -44,6 +45,7 @@ export default function QuizzesPage() {
   const [deckType, setDeckType] = useState('all');
   const [userStats, setUserStats] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
+  const [editingQuiz, setEditingQuiz] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -118,6 +120,14 @@ export default function QuizzesPage() {
     mutationFn: (quizId) => base44.entities.Quiz.delete(quizId),
     onSuccess: () => {
       queryClient.invalidateQueries(['quizzes']);
+    },
+  });
+
+  const updateQuizMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Quiz.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['quizzes']);
+      setEditingQuiz(null);
     },
   });
 
@@ -505,8 +515,10 @@ export default function QuizzesPage() {
     setShowUploader(false);
   };
 
+  const isAdmin = currentUser?.role === 'admin';
+
   const subjectQuizzes = selectedSubject 
-    ? quizzes.filter(q => q.subject_id === selectedSubject.id)
+    ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
     : [];
 
   const getSubjectStats = (subjectId) => {
@@ -665,8 +677,32 @@ export default function QuizzesPage() {
             </motion.div>
           )}
 
-          {/* List View */}
-          {view === 'list' && !showUploader && selectedSubject && (
+          {/* Quiz Editor View */}
+                      {editingQuiz && (
+                        <motion.div
+                          key="editor"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                        >
+                          <Button
+                            onClick={() => setEditingQuiz(null)}
+                            variant="ghost"
+                            className="mb-6"
+                          >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Volver
+                          </Button>
+                          <QuizEditor
+                            quiz={editingQuiz}
+                            onSave={(updatedQuiz) => updateQuizMutation.mutate({ id: editingQuiz.id, data: updatedQuiz })}
+                            onCancel={() => setEditingQuiz(null)}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* List View */}
+                      {view === 'list' && !showUploader && !editingQuiz && selectedSubject && (
             <motion.div
               key="list"
               initial={{ opacity: 0, y: 20 }}
@@ -727,12 +763,14 @@ export default function QuizzesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {subjectQuizzes.map((quiz) => (
                     <QuizCard
-                      key={quiz.id}
-                      quiz={quiz}
-                      attempts={attempts}
-                      onStart={handleStartQuiz}
-                      onDelete={(id) => deleteQuizMutation.mutate(id)}
-                    />
+                                              key={quiz.id}
+                                              quiz={quiz}
+                                              attempts={attempts}
+                                              onStart={handleStartQuiz}
+                                              onDelete={(id) => deleteQuizMutation.mutate(id)}
+                                              onEdit={(quiz) => setEditingQuiz(quiz)}
+                                              isAdmin={isAdmin}
+                                            />
                   ))}
                 </div>
               )}
