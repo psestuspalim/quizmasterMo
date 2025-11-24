@@ -23,6 +23,7 @@ import QuizEditor from '../components/quiz/QuizEditor';
 import QuestionView from '../components/quiz/QuestionView';
 import ResultsView from '../components/quiz/ResultsView';
 import SubjectCard from '../components/quiz/SubjectCard';
+import SubjectEditor from '../components/quiz/SubjectEditor';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
@@ -46,6 +47,7 @@ export default function QuizzesPage() {
   const [userStats, setUserStats] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
   const [editingQuiz, setEditingQuiz] = useState(null);
+  const [editingSubject, setEditingSubject] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -136,6 +138,20 @@ export default function QuizzesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries(['subjects']);
     },
+  });
+
+  const updateSubjectMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Subject.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['subjects']);
+      setEditingSubject(null);
+    },
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: currentUser?.role === 'admin',
   });
 
   const saveAttemptMutation = useMutation({
@@ -517,6 +533,16 @@ export default function QuizzesPage() {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  // Filtrar materias según visibilidad
+  const visibleSubjects = subjects.filter(subject => {
+    if (isAdmin) return true;
+    if (subject.is_hidden) return false;
+    if (subject.visibility === 'specific') {
+      return subject.allowed_users?.includes(currentUser?.email);
+    }
+    return true;
+  });
+
   const subjectQuizzes = selectedSubject 
     ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
     : [];
@@ -545,8 +571,33 @@ export default function QuizzesPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
-          {/* Subjects View */}
-          {view === 'subjects' && (
+          {/* Subject Editor View */}
+                      {editingSubject && (
+                        <motion.div
+                          key="subject-editor"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                        >
+                          <Button
+                            onClick={() => setEditingSubject(null)}
+                            variant="ghost"
+                            className="mb-6"
+                          >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Volver
+                          </Button>
+                          <SubjectEditor
+                            subject={editingSubject}
+                            users={allUsers}
+                            onSave={(data) => updateSubjectMutation.mutate({ id: editingSubject.id, data })}
+                            onCancel={() => setEditingSubject(null)}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Subjects View */}
+                      {view === 'subjects' && !editingSubject && (
             <motion.div
               key="subjects"
               initial={{ opacity: 0, y: 20 }}
@@ -642,7 +693,7 @@ export default function QuizzesPage() {
                 </div>
               </div>
 
-              {subjects.length === 0 ? (
+              {visibleSubjects.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="flex justify-center mb-6">
                     <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
@@ -658,21 +709,22 @@ export default function QuizzesPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {subjects.map((subject) => (
-                    <SubjectCard
-                      key={subject.id}
-                      subject={subject}
-                      quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                      stats={getSubjectStats(subject.id)}
-                      isAdmin={currentUser?.role === 'admin'}
-                      onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                      onClick={() => {
-                        setSelectedSubject(subject);
-                        setView('list');
-                      }}
-                    />
-                  ))}
-                </div>
+                                      {visibleSubjects.map((subject) => (
+                                        <SubjectCard
+                                          key={subject.id}
+                                          subject={subject}
+                                          quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                                          stats={getSubjectStats(subject.id)}
+                                          isAdmin={isAdmin}
+                                          onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                                          onEdit={(subject) => setEditingSubject(subject)}
+                                          onClick={() => {
+                                            setSelectedSubject(subject);
+                                            setView('list');
+                                          }}
+                                        />
+                                      ))}
+                                    </div>
               )}
             </motion.div>
           )}

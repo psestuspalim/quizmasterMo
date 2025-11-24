@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FolderOpen, FileText, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { FolderOpen, FileText, CheckCircle2, XCircle, Trash2, Pencil, EyeOff, Users } from 'lucide-react';
 
-export default function SubjectCard({ subject, quizCount, stats, onClick, onDelete, isAdmin }) {
+export default function SubjectCard({ subject, quizCount, stats, onClick, onDelete, onEdit, isAdmin }) {
   const { totalCorrect = 0, totalWrong = 0, totalAnswered = 0 } = stats || {};
   const correctPercentage = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
   const wrongPercentage = totalAnswered > 0 ? (totalWrong / totalAnswered) * 100 : 0;
@@ -13,19 +14,36 @@ export default function SubjectCard({ subject, quizCount, stats, onClick, onDele
       style={{ borderColor: subject.color || '#6366f1' }}
       onClick={onClick}
     >
-      {isAdmin && onDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(subject.id);
-          }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 z-10"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      )}
+      {isAdmin && (
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(subject);
+                      }}
+                      className="text-gray-400 hover:text-indigo-600"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(subject.id);
+                      }}
+                      className="text-gray-400 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div 
@@ -39,9 +57,17 @@ export default function SubjectCard({ subject, quizCount, stats, onClick, onDele
           </div>
           
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              {subject.name}
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {subject.name}
+                              </h3>
+                              {subject.is_hidden && (
+                                <EyeOff className="w-4 h-4 text-orange-500" />
+                              )}
+                              {subject.visibility === 'specific' && (
+                                <Users className="w-4 h-4 text-blue-500" />
+                              )}
+                            </div>
             {subject.description && (
               <p className="text-sm text-gray-500 mb-3">
                 {subject.description}
