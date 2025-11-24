@@ -65,11 +65,15 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
       parsed.forEach(item => {
         const searchName = normalizeString(item.nombre);
         const imgIndex = updatedImages.findIndex(img => {
-          const imgName = normalizeString(img.originalName);
-          const urlName = normalizeString(img.url.split('/').pop());
-          return imgName.includes(searchName) || urlName.includes(searchName) ||
+          const imgName = normalizeString(img.originalName || '');
+          const urlName = normalizeString(decodeURIComponent(img.url.split('/').pop() || ''));
+          // Comparar con flexibilidad
+          return imgName === searchName || urlName === searchName ||
+                 imgName.includes(searchName) || urlName.includes(searchName) ||
                  searchName.includes(imgName) || searchName.includes(urlName);
         });
+        
+        console.log('Buscando:', item.nombre, '→ searchName:', searchName, '→ encontrado:', imgIndex !== -1);
         
         if (imgIndex !== -1) {
           matched++;
