@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History, Bookmark } from 'lucide-react';
+import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History, Bookmark, Pencil, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
-export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
+export default function QuizCard({ quiz, attempts = [], onStart, onDelete, onEdit, isAdmin }) {
   const [showDialog, setShowDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [questionCount, setQuestionCount] = useState(quiz.total_questions);
@@ -59,21 +59,41 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete }) {
     <Card className="group hover:shadow-lg transition-all duration-300 border border-gray-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
-              {quiz.title}
-            </CardTitle>
-            <p className="text-sm text-gray-500">{quiz.description}</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(quiz.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CardTitle className="text-lg font-semibold text-gray-900">
+                            {quiz.title}
+                          </CardTitle>
+                          {quiz.is_hidden && (
+                            <Badge variant="outline" className="text-orange-600 border-orange-300">
+                              <EyeOff className="w-3 h-3 mr-1" />
+                              Oculto
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{quiz.description}</p>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(quiz)}
+                            className="text-gray-400 hover:text-indigo-600"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(quiz.id)}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
       </CardHeader>
       
       <CardContent>
