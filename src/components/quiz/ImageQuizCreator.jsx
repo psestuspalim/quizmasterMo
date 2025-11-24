@@ -9,11 +9,33 @@ import { base44 } from '@/api/base44Client';
 
 const BLOCK_SIZE = 10;
 const COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
+const STORAGE_KEY = 'imageQuizCreator_draft';
 
 export default function ImageQuizCreator({ onSave, onCancel }) {
-  const [allImages, setAllImages] = useState([]);
-  const [currentBlock, setCurrentBlock] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [allImages, setAllImages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.allImages || [];
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [currentBlock, setCurrentBlock] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).currentBlock || 0;
+    } catch (e) {}
+    return 0;
+  });
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).currentIndex || 0;
+    } catch (e) {}
+    return 0;
+  });
   const [newOption, setNewOption] = useState('');
   const [selectedOption, setSelectedOption] = useState(null);
   const [markerType, setMarkerType] = useState('circle');
@@ -21,6 +43,21 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
   const [hoveredOption, setHoveredOption] = useState(null);
   const imageRef = useRef(null);
   const descriptionRef = useRef(null);
+
+  // Guardar en localStorage cuando cambian los datos
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        allImages,
+        currentBlock,
+        currentIndex
+      }));
+    } catch (e) {}
+  }, [allImages, currentBlock, currentIndex]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   const blockStart = currentBlock * BLOCK_SIZE;
   const blockEnd = Math.min(blockStart + BLOCK_SIZE, allImages.length);
@@ -172,6 +209,12 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
     } else {
       onSave({ multipleQuestions: questions });
     }
+    clearDraft();
+  };
+
+  const handleCancel = () => {
+    clearDraft();
+    onCancel();
   };
 
   const getOptionColor = (optionId) => {
@@ -524,7 +567,7 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
 
         {/* Botones */}
         <div className="flex gap-3 pt-2 border-t">
-          <Button variant="outline" onClick={onCancel} className="flex-1">
+          <Button variant="outline" onClick={handleCancel} className="flex-1">
             Cancelar
           </Button>
           <Button 
