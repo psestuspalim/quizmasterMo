@@ -161,13 +161,14 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
     }
     
     if (uploadedImages.length > 0) {
-      const currentImages = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').allImages || allImages;
-      const newImages = [...currentImages, ...uploadedImages];
-      setAllImages(newImages);
-      if (currentImages.length === 0) {
-        setCurrentBlock(0);
-        setCurrentIndex(0);
-      }
+      setAllImages(prev => {
+        const newImages = [...prev, ...uploadedImages];
+        if (prev.length === 0) {
+          setCurrentBlock(0);
+          setCurrentIndex(0);
+        }
+        return newImages;
+      });
     }
     setIsUploading(false);
   };
