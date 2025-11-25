@@ -120,6 +120,17 @@ export default function QuestionView({
           <CardTitle className="text-xl font-semibold text-gray-900 leading-relaxed">
             <MathText text={question.question} />
           </CardTitle>
+          
+          {/* Imagen si existe */}
+          {question.imageUrl && (
+            <div className="mt-4 rounded-lg overflow-hidden border">
+              <img 
+                src={question.imageUrl} 
+                alt="Pregunta" 
+                className="w-full h-auto max-h-[400px] object-contain bg-gray-100"
+              />
+            </div>
+          )}
         </CardHeader>
 
         <CardContent>

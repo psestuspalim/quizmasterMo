@@ -89,14 +89,14 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
     if (validImages.length === 0) return;
 
     const questions = validImages.map(img => ({
-      type: 'tissue',
+      type: 'text',
       question: '¿Qué tipo de tejido se muestra en la imagen?',
       imageUrl: img.url,
       correctAnswer: img.tissueType,
       answerOptions: TISSUE_TYPES.map(t => ({
         text: t,
         isCorrect: t === img.tissueType,
-        rationale: t === img.tissueType ? 'Correcto' : 'Incorrecto'
+        rationale: t === img.tissueType ? `Correcto, es ${img.tissueType}` : `Incorrecto, la respuesta correcta es ${img.tissueType}`
       }))
     }));
 
