@@ -55,7 +55,8 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
         uploaded.push({
           url: file_url,
           originalName: file.name,
-          tissueType: null
+          tissueType: null,
+          feedback: ''
         });
       } catch (error) {
         console.error('Error uploading:', file.name, error);
