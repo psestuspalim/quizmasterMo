@@ -211,15 +211,20 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
     if (!selectedOption || !imageRef.current || !currentImage) return;
 
     const rect = imageRef.current.getBoundingClientRect();
+    // Calcular posición exacta del clic relativa a la imagen
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Asegurar que esté dentro de los límites
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
 
     const newMarker = {
       id: Date.now().toString(),
       optionId: selectedOption,
       type: markerType,
-      x,
-      y
+      x: clampedX,
+      y: clampedY
     };
 
     updateCurrentImage({
@@ -376,19 +381,22 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
         return <span key={idx}>{part.content}</span>;
       }
       const color = getOptionColor(part.option.id);
-      const isHovered = hoveredOption === part.option.id;
+      const isActive = hoveredOption === part.option.id || selectedOption === part.option.id;
       return (
         <span
           key={idx}
-          className="px-1 rounded cursor-pointer transition-all"
+          className="px-1.5 py-0.5 rounded cursor-pointer transition-all duration-200 inline-block mx-0.5"
           style={{ 
-            backgroundColor: isHovered ? `${color}40` : `${color}20`,
+            backgroundColor: isActive ? `${color}50` : `${color}15`,
             borderBottom: `2px solid ${color}`,
-            fontWeight: isHovered ? '600' : '500'
+            fontWeight: isActive ? '600' : '500',
+            color: isActive ? color : 'inherit',
+            transform: isActive ? 'scale(1.05)' : 'scale(1)',
+            boxShadow: isActive ? `0 2px 8px ${color}40` : 'none'
           }}
           onMouseEnter={() => setHoveredOption(part.option.id)}
           onMouseLeave={() => setHoveredOption(null)}
-          onClick={() => setSelectedOption(part.option.id)}
+          onClick={() => setSelectedOption(selectedOption === part.option.id ? null : part.option.id)}
         >
           {part.content}
         </span>
@@ -488,37 +496,54 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
             {/* Imagen con marcadores */}
             <div className="relative border rounded-lg overflow-hidden bg-gray-100">
               <div 
-                className={`relative ${selectedOption ? 'cursor-crosshair' : 'cursor-default'}`}
-                onClick={handleImageClick}
+                className={`relative inline-block w-full ${selectedOption ? 'cursor-crosshair' : 'cursor-default'}`}
               >
                 <img
                   ref={imageRef}
                   src={currentImage.url}
                   alt="Quiz"
-                  className="w-full h-auto max-h-[400px] object-contain mx-auto"
+                  className="w-full h-auto max-h-[400px] object-contain mx-auto block"
+                  onClick={handleImageClick}
+                  draggable={false}
                 />
-                {currentImage.markers.map((marker) => {
-                  const isHighlighted = hoveredOption === marker.optionId || selectedOption === marker.optionId;
-                  return (
-                    <div
-                      key={marker.id}
-                      className={`absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all ${isHighlighted ? 'scale-125 z-10' : ''}`}
-                      style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                    >
-                      {marker.type === 'circle' ? (
-                        <div 
-                          className={`w-8 h-8 rounded-full border-4 ${isHighlighted ? 'animate-pulse' : ''}`}
-                          style={{ borderColor: getOptionColor(marker.optionId), boxShadow: isHighlighted ? `0 0 12px ${getOptionColor(marker.optionId)}` : 'none' }}
-                        />
-                      ) : (
-                        <ArrowRight 
-                          className={`w-6 h-6 ${isHighlighted ? 'animate-pulse' : ''}`}
-                          style={{ color: getOptionColor(marker.optionId), filter: isHighlighted ? `drop-shadow(0 0 6px ${getOptionColor(marker.optionId)})` : 'none' }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                {/* Contenedor de marcadores posicionado sobre la imagen */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {currentImage.markers.map((marker) => {
+                    const isHighlighted = hoveredOption === marker.optionId || selectedOption === marker.optionId;
+                    const color = getOptionColor(marker.optionId);
+                    return (
+                      <div
+                        key={marker.id}
+                        className={`absolute transition-all duration-200 ${isHighlighted ? 'scale-125 z-10' : 'z-0'}`}
+                        style={{ 
+                          left: `${marker.x}%`, 
+                          top: `${marker.y}%`,
+                          transform: 'translate(-50%, -50%)'
+                        }}
+                      >
+                        {marker.type === 'circle' ? (
+                          <div 
+                            className={`w-7 h-7 rounded-full border-[3px] bg-white/30 ${isHighlighted ? 'animate-pulse' : ''}`}
+                            style={{ 
+                              borderColor: color, 
+                              boxShadow: isHighlighted ? `0 0 12px ${color}, 0 0 4px ${color}` : `0 2px 4px rgba(0,0,0,0.3)`
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className={`${isHighlighted ? 'animate-pulse' : ''}`}
+                            style={{ 
+                              color: color,
+                              filter: `drop-shadow(0 2px 2px rgba(0,0,0,0.4)) ${isHighlighted ? `drop-shadow(0 0 6px ${color})` : ''}`
+                            }}
+                          >
+                            <ArrowRight className="w-6 h-6" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -602,25 +627,32 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
                   {currentImage.options.map((option) => {
                     const hasMarker = currentImage.markers.some(m => m.optionId === option.id);
                     const isSelected = selectedOption === option.id;
-                    const isHovered = hoveredOption === option.id;
+                    const isActive = isSelected || hoveredOption === option.id;
                     const color = getOptionColor(option.id);
                     
                     return (
                       <Badge
                         key={option.id}
                         variant="outline"
-                        className={`px-2 py-1.5 cursor-pointer transition-all text-xs ${
+                        className={`px-2.5 py-1.5 cursor-pointer transition-all duration-200 text-xs ${
                           isSelected ? 'ring-2 ring-offset-1' : ''
                         }`}
                         style={{ 
                           borderColor: color,
-                          backgroundColor: (isSelected || isHovered) ? `${color}20` : 'white',
-                          boxShadow: isSelected ? `0 0 8px ${color}50` : 'none'
+                          borderWidth: isActive ? '2px' : '1px',
+                          backgroundColor: isActive ? `${color}25` : 'white',
+                          boxShadow: isActive ? `0 2px 8px ${color}40` : 'none',
+                          color: isActive ? color : 'inherit',
+                          transform: isActive ? 'scale(1.05)' : 'scale(1)'
                         }}
                         onClick={() => setSelectedOption(isSelected ? null : option.id)}
                         onMouseEnter={() => setHoveredOption(option.id)}
                         onMouseLeave={() => setHoveredOption(null)}
                       >
+                        <span 
+                          className="w-2.5 h-2.5 rounded-full mr-1.5 inline-block" 
+                          style={{ backgroundColor: color }}
+                        />
                         {hasMarker && <Check className="w-3 h-3 mr-1" style={{ color }} />}
                         {option.text}
                         <button
