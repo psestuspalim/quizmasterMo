@@ -73,8 +73,6 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
                  searchName.includes(imgName) || searchName.includes(urlName);
         });
         
-        console.log('Buscando:', item.nombre, '→ searchName:', searchName, '→ encontrado:', imgIndex !== -1);
-        
         if (imgIndex !== -1) {
           matched++;
           const updates = { ...updatedImages[imgIndex] };
