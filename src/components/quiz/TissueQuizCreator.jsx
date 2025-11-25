@@ -23,18 +23,30 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
   const [images, setImages] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved) || [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.images || [];
+      }
     } catch (e) {}
     return [];
   });
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.currentIndex || 0;
+      }
+    } catch (e) {}
+    return 0;
+  });
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ images, currentIndex }));
     } catch (e) {}
-  }, [images]);
+  }, [images, currentIndex]);
 
   const clearDraft = () => {
     localStorage.removeItem(STORAGE_KEY);
