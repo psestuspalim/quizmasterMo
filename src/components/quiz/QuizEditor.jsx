@@ -186,6 +186,16 @@ export default function QuizEditor({ quiz, onSave, onCancel }) {
                       </div>
 
                       <div>
+                        <Label>Retroalimentación (se muestra en respuestas incorrectas)</Label>
+                        <Textarea
+                          value={question.feedback || ''}
+                          onChange={(e) => updateQuestion(qIndex, 'feedback', e.target.value)}
+                          placeholder="Explicación que se mostrará cuando respondan incorrectamente..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <div>
                         <div className="flex items-center justify-between mb-2">
                           <Label>Opciones de respuesta</Label>
                           <Button
