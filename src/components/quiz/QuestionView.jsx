@@ -22,8 +22,8 @@ export default function QuestionView({
   const [showHint, setShowHint] = useState(false);
   const [isMarked, setIsMarked] = useState(false);
 
-  // Si es pregunta de imagen, usar el componente especializado
-  if (question.type === 'image') {
+  // Si es pregunta de imagen (sin answerOptions), usar el componente especializado
+  if (question.type === 'image' && !question.answerOptions) {
     return (
       <ImageQuestionView
         question={question}
