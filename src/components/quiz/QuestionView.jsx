@@ -21,6 +21,7 @@ export default function QuestionView({
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [isMarked, setIsMarked] = useState(false);
+  const [userNote, setUserNote] = useState('');
 
   // Si es pregunta de imagen (sin answerOptions), usar el componente especializado
   if (question.type === 'image' && !question.answerOptions) {
@@ -43,7 +44,8 @@ export default function QuestionView({
   const handleNext = () => {
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, selectedOption, question);
+    onAnswer(isCorrect, { ...selectedOption, userNote }, question);
+    setUserNote('');
   };
 
   const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
@@ -150,6 +152,7 @@ export default function QuestionView({
             )}
 
             <div className="flex-1 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {question.answerOptions.map((option, index) => {
             const isSelected = selectedAnswer === index;
             const isCorrect = option.isCorrect;
@@ -204,6 +207,7 @@ export default function QuestionView({
               </motion.button>
             );
           })}
+          </div>
 
           {/* Hint Button */}
           {question.hint && !showFeedback && (
@@ -254,7 +258,7 @@ export default function QuestionView({
                   ) : (
                     <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
                   )}
-                  <div>
+                  <div className="flex-1">
                     <h4
                       className={`font-semibold mb-2 ${
                         selectedOption.isCorrect ? 'text-green-900' : 'text-red-900'
@@ -269,6 +273,22 @@ export default function QuestionView({
                     >
                       <MathText text={selectedOption.rationale} />
                     </p>
+                    
+                    {/* Campo de notas para respuestas incorrectas */}
+                    {!selectedOption.isCorrect && (
+                      <div className="mt-3 pt-3 border-t border-red-200">
+                        <label className="text-xs text-red-700 font-medium mb-1 block">
+                          Escribe tus dudas o notas para repasar:
+                        </label>
+                        <textarea
+                          value={userNote}
+                          onChange={(e) => setUserNote(e.target.value)}
+                          placeholder="Anota aquí lo que no entendiste..."
+                          className="w-full p-2 text-sm border border-red-200 rounded-md bg-white focus:ring-2 focus:ring-red-300 focus:border-red-300 resize-none"
+                          rows={2}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
