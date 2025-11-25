@@ -76,6 +76,13 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
     setImages(updated);
   };
 
+  const setFeedback = (feedback) => {
+    if (!currentImage) return;
+    const updated = [...images];
+    updated[currentIndex] = { ...updated[currentIndex], feedback };
+    setImages(updated);
+  };
+
   const removeImage = (idx) => {
     const updated = images.filter((_, i) => i !== idx);
     setImages(updated);
@@ -96,7 +103,11 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
       answerOptions: TISSUE_TYPES.map(t => ({
         text: t,
         isCorrect: t === img.tissueType,
-        rationale: t === img.tissueType ? `Correcto, es ${img.tissueType}` : `Incorrecto, la respuesta correcta es ${img.tissueType}`
+        rationale: t === img.tissueType 
+          ? `Correcto, es ${img.tissueType}` 
+          : img.feedback 
+            ? `${img.feedback}` 
+            : `Incorrecto, la respuesta correcta es ${img.tissueType}`
       }))
     }));
 
@@ -194,6 +205,18 @@ export default function TissueQuizCreator({ onSave, onCancel }) {
                   </Button>
                 ))}
               </div>
+            </div>
+
+            {/* Campo de retroalimentación */}
+            <div>
+              <p className="text-sm text-gray-600 mb-2">Retroalimentación (se muestra si responden mal):</p>
+              <textarea
+                value={currentImage.feedback || ''}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Ej: Observa las células con múltiples vacuolas lipídicas pequeñas, característico del tejido adiposo pardo..."
+                className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 resize-none"
+                rows={3}
+              />
             </div>
 
             {/* Navegación */}

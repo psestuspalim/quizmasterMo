@@ -240,6 +240,28 @@ export default function QuestionView({
             )}
           </AnimatePresence>
 
+          {/* Campo de notas para respuestas incorrectas - ARRIBA del feedback */}
+          <AnimatePresence>
+            {showFeedback && selectedOption && !selectedOption.isCorrect && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg p-4 bg-amber-50 border border-amber-200"
+              >
+                <label className="text-sm text-amber-800 font-medium mb-2 block">
+                  📝 Escribe tus dudas o notas para repasar:
+                </label>
+                <textarea
+                  value={userNote}
+                  onChange={(e) => setUserNote(e.target.value)}
+                  placeholder="Anota aquí lo que no entendiste..."
+                  className="w-full p-3 text-sm border border-amber-200 rounded-md bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 resize-none"
+                  rows={3}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Feedback */}
           <AnimatePresence>
             {showFeedback && selectedOption && (
@@ -273,22 +295,6 @@ export default function QuestionView({
                     >
                       <MathText text={selectedOption.rationale} />
                     </p>
-                    
-                    {/* Campo de notas para respuestas incorrectas */}
-                    {!selectedOption.isCorrect && (
-                      <div className="mt-3 pt-3 border-t border-red-200">
-                        <label className="text-xs text-red-700 font-medium mb-1 block">
-                          Escribe tus dudas o notas para repasar:
-                        </label>
-                        <textarea
-                          value={userNote}
-                          onChange={(e) => setUserNote(e.target.value)}
-                          placeholder="Anota aquí lo que no entendiste..."
-                          className="w-full p-2 text-sm border border-red-200 rounded-md bg-white focus:ring-2 focus:ring-red-300 focus:border-red-300 resize-none"
-                          rows={2}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               </motion.div>
