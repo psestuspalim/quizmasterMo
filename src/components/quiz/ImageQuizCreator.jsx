@@ -495,56 +495,49 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
           <>
             {/* Imagen con marcadores */}
             <div className="relative border rounded-lg overflow-hidden bg-gray-100">
-              <div 
-                className={`relative inline-block w-full ${selectedOption ? 'cursor-crosshair' : 'cursor-default'}`}
-              >
-                <img
-                  ref={imageRef}
-                  src={currentImage.url}
-                  alt="Quiz"
-                  className="w-full h-auto max-h-[400px] object-contain mx-auto block"
-                  onClick={handleImageClick}
-                  draggable={false}
-                />
-                {/* Contenedor de marcadores posicionado sobre la imagen */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {currentImage.markers.map((marker) => {
-                    const isHighlighted = hoveredOption === marker.optionId || selectedOption === marker.optionId;
-                    const color = getOptionColor(marker.optionId);
-                    return (
-                      <div
-                        key={marker.id}
-                        className={`absolute transition-all duration-200 ${isHighlighted ? 'scale-125 z-10' : 'z-0'}`}
+              <img
+                ref={imageRef}
+                src={currentImage.url}
+                alt="Quiz"
+                className={`w-full h-auto max-h-[400px] object-contain mx-auto block ${selectedOption ? 'cursor-crosshair' : 'cursor-default'}`}
+                onClick={handleImageClick}
+                draggable={false}
+              />
+              {/* Marcadores */}
+              {currentImage.markers.map((marker) => {
+                const isHighlighted = hoveredOption === marker.optionId || selectedOption === marker.optionId;
+                const color = getOptionColor(marker.optionId);
+                return (
+                  <div
+                    key={marker.id}
+                    className={`absolute pointer-events-none transition-all duration-200 ${isHighlighted ? 'scale-125 z-10' : 'z-0'}`}
+                    style={{ 
+                      left: `${marker.x}%`, 
+                      top: `${marker.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  >
+                    {marker.type === 'circle' ? (
+                      <div 
+                        className={`w-7 h-7 rounded-full border-[3px] ${isHighlighted ? 'animate-pulse' : ''}`}
                         style={{ 
-                          left: `${marker.x}%`, 
-                          top: `${marker.y}%`,
-                          transform: 'translate(-50%, -50%)'
+                          borderColor: color,
+                          backgroundColor: `${color}30`,
+                          boxShadow: isHighlighted ? `0 0 12px ${color}, 0 0 4px ${color}` : `0 2px 4px rgba(0,0,0,0.3)`
                         }}
-                      >
-                        {marker.type === 'circle' ? (
-                          <div 
-                            className={`w-7 h-7 rounded-full border-[3px] bg-white/30 ${isHighlighted ? 'animate-pulse' : ''}`}
-                            style={{ 
-                              borderColor: color, 
-                              boxShadow: isHighlighted ? `0 0 12px ${color}, 0 0 4px ${color}` : `0 2px 4px rgba(0,0,0,0.3)`
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className={`${isHighlighted ? 'animate-pulse' : ''}`}
-                            style={{ 
-                              color: color,
-                              filter: `drop-shadow(0 2px 2px rgba(0,0,0,0.4)) ${isHighlighted ? `drop-shadow(0 0 6px ${color})` : ''}`
-                            }}
-                          >
-                            <ArrowRight className="w-6 h-6" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                      />
+                    ) : (
+                      <ArrowRight 
+                        className={`w-6 h-6 ${isHighlighted ? 'animate-pulse' : ''}`}
+                        style={{ 
+                          color: color,
+                          filter: `drop-shadow(0 2px 2px rgba(0,0,0,0.4)) ${isHighlighted ? `drop-shadow(0 0 6px ${color})` : ''}`
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Título personalizado */}

@@ -131,43 +131,64 @@ export default function ImageQuestionView({
               ref={imageRef}
               src={question.imageUrl}
               alt={question.question}
-              className="w-full h-auto"
+              className="w-full h-auto block"
             />
             
             {/* Marcadores animados */}
             <AnimatePresence>
-              {revealedMarkers.map((marker, idx) => (
-                <motion.div
-                  key={marker.id || idx}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                  style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                >
-                  {marker.type === 'circle' ? (
-                    <motion.div 
-                      className="w-12 h-12 rounded-full border-4"
-                      style={{ borderColor: getMarkerColor(marker.optionId) }}
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5, repeat: 2 }}
-                    />
-                  ) : (
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 0.5, repeat: 2 }}
-                    >
-                      <ArrowRight 
-                        className="w-10 h-10"
-                        style={{ color: getMarkerColor(marker.optionId) }}
+              {revealedMarkers.map((marker, idx) => {
+                const color = getMarkerColor(marker.optionId);
+                return (
+                  <motion.div
+                    key={marker.id || idx}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="absolute pointer-events-none"
+                    style={{ 
+                      left: `${marker.x}%`, 
+                      top: `${marker.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  >
+                    {marker.type === 'circle' ? (
+                      <motion.div 
+                        className="w-10 h-10 rounded-full border-4"
+                        style={{ 
+                          borderColor: color,
+                          backgroundColor: `${color}30`,
+                          boxShadow: `0 0 8px ${color}`
+                        }}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 0.5, repeat: 2 }}
                       />
-                    </motion.div>
-                  )}
-                </motion.div>
-              ))}
+                    ) : (
+                      <motion.div
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 0.5, repeat: 2 }}
+                      >
+                        <ArrowRight 
+                          className="w-8 h-8"
+                          style={{ 
+                            color: color,
+                            filter: `drop-shadow(0 0 4px ${color})`
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
+
+          {/* Descripción */}
+          {question.description && (
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700 leading-relaxed">{question.description}</p>
+            </div>
+          )}
 
           {/* Opciones como botones */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
