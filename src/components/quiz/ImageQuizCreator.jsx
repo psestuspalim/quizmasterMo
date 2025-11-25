@@ -133,9 +133,10 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
     if (files.length === 0) return;
 
     setIsUploading(true);
-    try {
-      const uploadedImages = [];
-      for (const file of files) {
+    const uploadedImages = [];
+    
+    for (const file of files) {
+      try {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         
         const fileName = file.name.replace(/\.[^/.]+$/, '');
@@ -148,20 +149,26 @@ export default function ImageQuizCreator({ onSave, onCancel }) {
 
         uploadedImages.push({
           url: file_url,
-          file,
           originalName: file.name,
           options: newOptions,
           markers: [],
-          description: ''
+          description: '',
+          title: ''
         });
+      } catch (error) {
+        console.error('Error uploading file:', file.name, error);
       }
-      setAllImages([...allImages, ...uploadedImages]);
-      if (allImages.length === 0) {
-        setCurrentBlock(0);
-        setCurrentIndex(0);
-      }
-    } catch (error) {
-      console.error('Error uploading images:', error);
+    }
+    
+    if (uploadedImages.length > 0) {
+      setAllImages(prev => {
+        const newImages = [...prev, ...uploadedImages];
+        if (prev.length === 0) {
+          setCurrentBlock(0);
+          setCurrentIndex(0);
+        }
+        return newImages;
+      });
     }
     setIsUploading(false);
   };
