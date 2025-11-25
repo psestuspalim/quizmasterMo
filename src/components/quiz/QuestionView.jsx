@@ -293,7 +293,7 @@ export default function QuestionView({
                         selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'
                       }`}
                     >
-                      <MathText text={selectedOption.rationale} />
+                      <MathText text={selectedOption.isCorrect ? selectedOption.rationale : (question.feedback || selectedOption.rationale)} />
                     </p>
                   </div>
                 </div>
