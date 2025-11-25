@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Upload, FileJson, AlertCircle, Image } from 'lucide-react';
+import { Upload, FileJson, AlertCircle, Image, Microscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ImageQuizCreator from './ImageQuizCreator';
+import TissueQuizCreator from './TissueQuizCreator';
 
 export default function FileUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
@@ -97,16 +98,20 @@ export default function FileUploader({ onUploadSuccess }) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="json">
-            <FileJson className="w-4 h-4 mr-2" />
-            Archivo JSON
-          </TabsTrigger>
-          <TabsTrigger value="image">
-            <Image className="w-4 h-4 mr-2" />
-            Pregunta con Imagen
-          </TabsTrigger>
-        </TabsList>
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="json">
+                    <FileJson className="w-4 h-4 mr-2" />
+                    JSON
+                  </TabsTrigger>
+                  <TabsTrigger value="image">
+                    <Image className="w-4 h-4 mr-2" />
+                    Imagen
+                  </TabsTrigger>
+                  <TabsTrigger value="tissue">
+                    <Microscope className="w-4 h-4 mr-2" />
+                    Tejidos
+                  </TabsTrigger>
+                </TabsList>
 
         <TabsContent value="json">
           <Card
@@ -164,12 +169,19 @@ export default function FileUploader({ onUploadSuccess }) {
         </TabsContent>
 
         <TabsContent value="image">
-          <ImageQuizCreator 
-            onSave={handleImageQuizSave}
-            onCancel={() => setActiveTab('json')}
-          />
-        </TabsContent>
-      </Tabs>
+                    <ImageQuizCreator 
+                      onSave={handleImageQuizSave}
+                      onCancel={() => setActiveTab('json')}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="tissue">
+                    <TissueQuizCreator 
+                      onSave={handleImageQuizSave}
+                      onCancel={() => setActiveTab('json')}
+                    />
+                  </TabsContent>
+                </Tabs>
     </div>
   );
 }
