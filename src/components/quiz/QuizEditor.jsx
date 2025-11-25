@@ -158,6 +158,17 @@ export default function QuizEditor({ quiz, onSave, onCancel }) {
                     className="overflow-hidden"
                   >
                     <div className="p-4 space-y-4 border-t">
+                      {/* Mostrar imagen si existe */}
+                      {question.imageUrl && (
+                        <div className="rounded-lg overflow-hidden border bg-gray-100">
+                          <img 
+                            src={question.imageUrl} 
+                            alt="Imagen de la pregunta" 
+                            className="w-full h-auto max-h-[300px] object-contain"
+                          />
+                        </div>
+                      )}
+
                       <div>
                         <Label>Pregunta</Label>
                         <Textarea
