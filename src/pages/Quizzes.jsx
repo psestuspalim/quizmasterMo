@@ -598,7 +598,7 @@ export default function QuizzesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <AnimatePresence mode="wait">
           {/* Subject Editor View */}
                       {editingSubject && (
@@ -643,40 +643,40 @@ export default function QuizzesPage() {
                 </div>
               )}
 
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 sm:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
                   <div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
                       Materias
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Selecciona una materia para ver sus cuestionarios
                     </p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     <Link to={createPageUrl('Leaderboard')}>
-                      <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50">
-                        <Crown className="w-5 h-5 mr-2" />
-                        Ranking
+                      <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                        <Crown className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                        <span className="hidden sm:inline">Ranking</span>
                       </Button>
                     </Link>
                     <Link to={createPageUrl('Badges')}>
-                      <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
-                        <Award className="w-5 h-5 mr-2" />
-                        Insignias
+                      <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                        <Award className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                        <span className="hidden sm:inline">Insignias</span>
                       </Button>
                     </Link>
                     <Link to={createPageUrl('Progress')}>
-                      <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50">
-                        <TrendingUp className="w-5 h-5 mr-2" />
-                        Progreso
+                      <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                        <span className="hidden sm:inline">Progreso</span>
                       </Button>
                     </Link>
                     <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
                     <DialogTrigger asChild>
-                      <Button className="bg-indigo-600 hover:bg-indigo-700">
-                        <FolderPlus className="w-5 h-5 mr-2" />
-                        Nueva materia
+                      <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                        <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                        <span className="hidden sm:inline">Nueva materia</span>
                       </Button>
                       </DialogTrigger>
                     <DialogContent>
@@ -737,7 +737,7 @@ export default function QuizzesPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                                       {visibleSubjects.map((subject) => (
                                         <SubjectCard
                                           key={subject.id}
@@ -799,21 +799,21 @@ export default function QuizzesPage() {
                 Volver a materias
               </Button>
 
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 sm:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                   <div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
                       {selectedSubject.name}
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       {selectedSubject.description || 'Cuestionarios de esta materia'}
                     </p>
                   </div>
                   <Button
                     onClick={() => setShowUploader(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9 sm:h-10"
                   >
-                    <Plus className="w-5 h-5 mr-2" />
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                     Nuevo cuestionario
                   </Button>
                 </div>
@@ -841,7 +841,7 @@ export default function QuizzesPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                   {subjectQuizzes.map((quiz) => (
                     <QuizCard
                                               key={quiz.id}
