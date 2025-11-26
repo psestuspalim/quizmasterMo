@@ -32,28 +32,55 @@ export default function FileUploader({ onUploadSuccess }) {
       let title = file.name.replace('.json', '');
       
       // Formato nuevo con quizMetadata y questions
-      if (data.questions && Array.isArray(data.questions)) {
-        title = data.quizMetadata?.title || title;
-        questions = data.questions.map(q => ({
-          type: q.type || 'text',
-          question: q.questionText,
-          hint: q.cinephileTip || '',
-          feedback: q.analysis || '',
-          difficulty: q.difficulty || 'moderado',
-          answerOptions: q.options.map(opt => ({
-            text: opt.text,
-            isCorrect: opt.isCorrect,
-            rationale: opt.feedback || ''
-          }))
-        }));
-      }
+                  if (data.questions && Array.isArray(data.questions)) {
+                    title = data.quizMetadata?.title || title;
+                    const totalQ = data.questions.length;
+                    const easyCount = Math.ceil(totalQ * 0.2);
+                    const hardCount = Math.ceil(totalQ * 0.2);
+
+                    questions = data.questions.map((q, idx) => {
+                      let difficulty = 'moderado';
+                      if (idx < easyCount) {
+                        difficulty = 'fácil';
+                      } else if (idx >= totalQ - hardCount) {
+                        difficulty = 'difícil';
+                      }
+
+                      return {
+                        type: q.type || 'text',
+                        question: q.questionText,
+                        hint: q.cinephileTip || '',
+                        feedback: q.analysis || '',
+                        difficulty: q.difficulty || difficulty,
+                        answerOptions: q.options.map(opt => ({
+                          text: opt.text,
+                          isCorrect: opt.isCorrect,
+                          rationale: opt.feedback || ''
+                        }))
+                      };
+                    });
+                  }
       // Formato original con array "quiz"
-      else if (data.quiz && Array.isArray(data.quiz)) {
-        questions = data.quiz.map(q => ({
-          ...q,
-          type: q.type || 'text'
-        }));
-      }
+                  else if (data.quiz && Array.isArray(data.quiz)) {
+                    const totalQ = data.quiz.length;
+                    const easyCount = Math.ceil(totalQ * 0.2);
+                    const hardCount = Math.ceil(totalQ * 0.2);
+
+                    questions = data.quiz.map((q, idx) => {
+                      let difficulty = 'moderado';
+                      if (idx < easyCount) {
+                        difficulty = 'fácil';
+                      } else if (idx >= totalQ - hardCount) {
+                        difficulty = 'difícil';
+                      }
+
+                      return {
+                        ...q,
+                        type: q.type || 'text',
+                        difficulty: q.difficulty || difficulty
+                      };
+                    });
+                  }
       else {
         throw new Error('Formato de archivo inválido. Debe contener "quiz" o "questions"');
       }
