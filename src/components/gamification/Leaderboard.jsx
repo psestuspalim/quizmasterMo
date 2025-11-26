@@ -81,7 +81,7 @@ export default function Leaderboard({ users, currentUserEmail, title = "Tabla de
               <div className="text-right">
                 <p className="font-bold text-indigo-600">{user.total_points} pts</p>
                 <p className="text-xs text-gray-500">
-                  {Math.round((user.total_correct / Math.max(user.total_questions, 1)) * 100)}% precisión
+                  {Math.min(100, Math.round((user.total_correct / Math.max(user.total_questions, 1)) * 100))}% precisión
                 </p>
               </div>
             </motion.div>
