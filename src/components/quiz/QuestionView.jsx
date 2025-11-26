@@ -300,6 +300,27 @@ export default function QuestionView({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Cinephile Tip / Hint después de responder */}
+          <AnimatePresence>
+            {showFeedback && question.hint && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg p-4 bg-purple-50 border border-purple-200"
+              >
+                <div className="flex gap-3">
+                  <span className="text-xl flex-shrink-0">🎬</span>
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-1 text-purple-900">Tip Cinéfilo</h4>
+                    <p className="text-sm text-purple-800">
+                      <MathText text={question.hint} />
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
             </div>
 
             {/* Next Button - To the right of answers */}
