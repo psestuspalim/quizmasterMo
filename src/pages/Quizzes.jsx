@@ -550,16 +550,42 @@ export default function QuizzesPage() {
     : [];
 
   const getSubjectStats = (subjectId) => {
-    const subjectQuizIds = quizzes.filter(q => q.subject_id === subjectId).map(q => q.id);
+    const subjectQuizzes = quizzes.filter(q => q.subject_id === subjectId);
+    const subjectQuizIds = subjectQuizzes.map(q => q.id);
     const subjectAttempts = attempts.filter(a => subjectQuizIds.includes(a.quiz_id));
     
     if (subjectAttempts.length === 0) {
       return { totalCorrect: 0, totalWrong: 0, totalAnswered: 0 };
     }
     
-    const totalCorrect = subjectAttempts.reduce((sum, a) => sum + a.score, 0);
-    const totalAnswered = subjectAttempts.reduce((sum, a) => sum + a.total_questions, 0);
-    const totalWrong = totalAnswered - totalCorrect;
+    // Contar preguntas únicas correctas e incorrectas
+    const wrongQuestions = new Set();
+    const correctQuestions = new Set();
+    
+    subjectAttempts.forEach(attempt => {
+      attempt.wrong_questions?.forEach(wq => {
+        wrongQuestions.add(wq.question);
+      });
+    });
+    
+    // Las correctas son preguntas que fueron contestadas pero no están en wrong
+    subjectQuizzes.forEach(quiz => {
+      quiz.questions?.forEach(q => {
+        if (!wrongQuestions.has(q.question)) {
+          // Verificar si fue contestada en algún intento
+          const wasAnswered = subjectAttempts.some(attempt => 
+            attempt.quiz_id === quiz.id && attempt.answered_questions > 0
+          );
+          if (wasAnswered) {
+            correctQuestions.add(q.question);
+          }
+        }
+      });
+    });
+    
+    const totalCorrect = correctQuestions.size;
+    const totalWrong = wrongQuestions.size;
+    const totalAnswered = totalCorrect + totalWrong;
     
     return { totalCorrect, totalWrong, totalAnswered };
   };
