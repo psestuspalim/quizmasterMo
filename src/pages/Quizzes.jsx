@@ -392,14 +392,16 @@ export default function QuizzesPage() {
       selected_answer: selectedOption.text,
       correct_answer: question.answerOptions.find(opt => opt.isCorrect).text,
       answerOptions: question.answerOptions,
-      hint: question.hint
+      hint: question.hint,
+      difficulty: question.difficulty
     }] : wrongAnswers;
     
     const newCorrectAnswers = isCorrect ? [...correctAnswers, {
       question: question.question,
       selected_answer: selectedOption.text,
       answerOptions: question.answerOptions,
-      hint: question.hint
+      hint: question.hint,
+      difficulty: question.difficulty
     }] : correctAnswers;
 
     if (isCorrect) {
