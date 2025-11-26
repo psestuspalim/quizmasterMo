@@ -86,12 +86,13 @@ export default function FileUploader({ onUploadSuccess }) {
       }
 
       await onUploadSuccess({
-        title,
-        description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
-        questions,
-        total_questions: questions.length,
-        file_name: file.name
-      });
+                title,
+                description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
+                questions,
+                total_questions: questions.length,
+                file_name: file.name,
+                is_hidden: false
+              });
 
     } catch (err) {
       setError(err.message || 'Error al procesar el archivo');
