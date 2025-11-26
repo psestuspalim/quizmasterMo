@@ -28,21 +28,40 @@ export default function FileUploader({ onUploadSuccess }) {
       const text = await file.text();
       const data = JSON.parse(text);
       
-      if (!data.quiz || !Array.isArray(data.quiz)) {
-        throw new Error('Formato de archivo inválido. Debe contener un array "quiz"');
+      let questions = [];
+      let title = file.name.replace('.json', '');
+      
+      // Formato nuevo con quizMetadata y questions
+      if (data.questions && Array.isArray(data.questions)) {
+        title = data.quizMetadata?.title || title;
+        questions = data.questions.map(q => ({
+          type: q.type || 'text',
+          question: q.questionText,
+          hint: q.analysis || q.cinephileTip || '',
+          feedback: q.analysis || '',
+          answerOptions: q.options.map(opt => ({
+            text: opt.text,
+            isCorrect: opt.isCorrect,
+            rationale: opt.feedback || ''
+          }))
+        }));
+      }
+      // Formato original con array "quiz"
+      else if (data.quiz && Array.isArray(data.quiz)) {
+        questions = data.quiz.map(q => ({
+          ...q,
+          type: q.type || 'text'
+        }));
+      }
+      else {
+        throw new Error('Formato de archivo inválido. Debe contener "quiz" o "questions"');
       }
 
-      // Agregar tipo 'text' a preguntas existentes
-      const questionsWithType = data.quiz.map(q => ({
-        ...q,
-        type: q.type || 'text'
-      }));
-
       await onUploadSuccess({
-        title: file.name.replace('.json', ''),
-        description: `Cuestionario con ${data.quiz.length} preguntas`,
-        questions: questionsWithType,
-        total_questions: data.quiz.length,
+        title,
+        description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
+        questions,
+        total_questions: questions.length,
         file_name: file.name
       });
 
