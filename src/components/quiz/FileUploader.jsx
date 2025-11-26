@@ -37,7 +37,7 @@ export default function FileUploader({ onUploadSuccess }) {
         questions = data.questions.map(q => ({
           type: q.type || 'text',
           question: q.questionText,
-          hint: q.analysis || q.cinephileTip || '',
+          hint: q.cinephileTip || '',
           feedback: q.analysis || '',
           answerOptions: q.options.map(opt => ({
             text: opt.text,
