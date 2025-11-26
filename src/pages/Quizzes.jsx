@@ -317,7 +317,8 @@ export default function QuizzesPage() {
       .slice(0, Math.min(questionCount, filteredQuestions.length))
       .map(q => ({
         ...q,
-        answerOptions: [...q.answerOptions].sort(() => Math.random() - 0.5)
+        difficulty: q.difficulty || 'moderado',
+        answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
       }));
     
     const shuffledQuiz = {
