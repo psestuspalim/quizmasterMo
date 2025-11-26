@@ -127,23 +127,23 @@ export default function AdminProgress() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
             Progreso de Estudiantes
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Panel administrativo para seguimiento de rendimiento
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Lista de estudiantes */}
           <div className="lg:col-span-1">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Estudiantes</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg">Estudiantes</CardTitle>
                 <div className="relative mt-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -154,7 +154,7 @@ export default function AdminProgress() {
                   />
                 </div>
               </CardHeader>
-              <CardContent className="max-h-[600px] overflow-y-auto space-y-2">
+              <CardContent className="max-h-[400px] sm:max-h-[600px] overflow-y-auto space-y-2 p-3 sm:p-6">
                 {students.map((student) => {
                   const avgScore = student.totalQuestions > 0
                     ? Math.round((student.totalCorrect / student.totalQuestions) * 100)
@@ -214,25 +214,25 @@ export default function AdminProgress() {
                     </CardTitle>
                     <p className="text-sm text-gray-500">{selectedStudent.email}</p>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-indigo-600">
+                        <div className="text-xl sm:text-3xl font-bold text-indigo-600">
                           {selectedStudent.totalQuizzes}
                         </div>
-                        <div className="text-sm text-gray-500">Intentos</div>
+                        <div className="text-xs sm:text-sm text-gray-500">Intentos</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-green-600">
+                        <div className="text-xl sm:text-3xl font-bold text-green-600">
                           {selectedStudent.totalCorrect}
                         </div>
-                        <div className="text-sm text-gray-500">Correctas</div>
+                        <div className="text-xs sm:text-sm text-gray-500">Correctas</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900">
+                        <div className="text-xl sm:text-3xl font-bold text-gray-900">
                           {Math.round((selectedStudent.totalCorrect / selectedStudent.totalQuestions) * 100)}%
                         </div>
-                        <div className="text-sm text-gray-500">Promedio</div>
+                        <div className="text-xs sm:text-sm text-gray-500">Promedio</div>
                       </div>
                     </div>
                   </CardContent>
@@ -247,8 +247,8 @@ export default function AdminProgress() {
                     <div className="space-y-3">
                       {getSubjectStats(selectedStudent).map((subjectStat) => (
                         <div key={subjectStat.subjectId} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold text-gray-900">{subjectStat.subjectName}</h4>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{subjectStat.subjectName}</h4>
                             <Badge className={
                               subjectStat.avgPercentage >= 70 ? 'bg-green-100 text-green-800' :
                               subjectStat.avgPercentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
@@ -281,17 +281,17 @@ export default function AdminProgress() {
                     <div className="space-y-3">
                       {getQuizStats(selectedStudent).map((quizStat) => (
                         <div key={quizStat.quizId} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium text-gray-900">{quizStat.quizTitle}</h4>
-                            <div className="flex gap-2">
-                              <Badge variant="outline">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <h4 className="font-medium text-gray-900 text-sm sm:text-base">{quizStat.quizTitle}</h4>
+                            <div className="flex gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-xs">
                                 Mejor: {Math.round(quizStat.bestScore)}%
                               </Badge>
-                              <Badge className={
+                              <Badge className={`text-xs ${
                                 quizStat.avgScore >= 70 ? 'bg-green-100 text-green-800' :
                                 quizStat.avgScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-red-100 text-red-800'
-                              }>
+                              }`}>
                                 Prom: {Math.round(quizStat.avgScore)}%
                               </Badge>
                             </div>
@@ -310,17 +310,17 @@ export default function AdminProgress() {
                   <CardHeader>
                     <CardTitle className="text-lg">Historial de Intentos</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 max-h-[500px] overflow-y-auto">
+                  <CardContent className="space-y-4 max-h-[400px] sm:max-h-[500px] overflow-y-auto p-3 sm:p-6">
                     {selectedStudent.attempts.map((attempt) => {
                       const percentage = Math.round((attempt.score / attempt.total_questions) * 100);
                       const isPartial = !attempt.is_completed;
                       
                       return (
-                        <div key={attempt.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold text-gray-900">
+                        <div key={attempt.id} className="border rounded-lg p-3 sm:p-4">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base break-words">
                                   {getQuizTitle(attempt.quiz_id)}
                                 </h4>
                                 {isPartial && (
@@ -329,18 +329,18 @@ export default function AdminProgress() {
                                   </Badge>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                                <Calendar className="w-4 h-4" />
+                              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mt-1">
+                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                                 {format(new Date(attempt.completed_at || attempt.created_date), 'dd/MM/yyyy HH:mm')}
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left sm:text-right flex-shrink-0">
                               <Badge
-                                className={
+                                className={`text-xs ${
                                   percentage >= 70 ? 'bg-green-100 text-green-800' :
                                   percentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-red-100 text-red-800'
-                                }
+                                }`}
                               >
                                 {attempt.score}/{attempt.total_questions} ({percentage}%)
                               </Badge>
@@ -353,22 +353,22 @@ export default function AdminProgress() {
                           </div>
 
                           {attempt.wrong_questions?.length > 0 && (
-                            <div className="mt-4 border-t pt-4">
-                              <div className="flex items-center gap-2 text-sm font-medium text-red-600 mb-3">
-                                <AlertCircle className="w-4 h-4" />
+                            <div className="mt-3 sm:mt-4 border-t pt-3 sm:pt-4">
+                              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-red-600 mb-2 sm:mb-3">
+                                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Preguntas incorrectas ({attempt.wrong_questions.length})
                               </div>
-                              <div className="space-y-3">
+                              <div className="space-y-2 sm:space-y-3">
                                 {attempt.wrong_questions.map((wq, idx) => (
-                                  <div key={idx} className="bg-red-50 rounded-lg p-3 text-sm">
-                                    <p className="font-medium text-gray-900 mb-2">
+                                  <div key={idx} className="bg-red-50 rounded-lg p-2 sm:p-3 text-xs sm:text-sm">
+                                    <p className="font-medium text-gray-900 mb-2 break-words">
                                       <MathText text={wq.question} />
                                     </p>
                                     <div className="space-y-1">
-                                      <p className="text-red-700">
+                                      <p className="text-red-700 break-words">
                                         ❌ Respondió: <MathText text={wq.selected_answer} />
                                       </p>
-                                      <p className="text-green-700">
+                                      <p className="text-green-700 break-words">
                                         ✓ Correcta: <MathText text={wq.correct_answer} />
                                       </p>
                                     </div>
