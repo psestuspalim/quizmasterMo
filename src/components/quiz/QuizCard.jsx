@@ -22,30 +22,57 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete, onEdi
   // Calcular estadísticas
   const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
   
-  // Recopilar todas las preguntas respondidas (correctas e incorrectas)
-  const answeredQuestions = new Set();
+  // Recopilar preguntas únicas correctas e incorrectas
+  const correctQuestions = new Set();
+  const wrongQuestions = new Map();
+  
   quizAttempts.forEach(attempt => {
     // Agregar preguntas incorrectas
     attempt.wrong_questions?.forEach(wq => {
-      answeredQuestions.add(wq.question);
+      wrongQuestions.set(wq.question, wq);
     });
-    // Calcular preguntas correctas (total - incorrectas del intento)
-    const correctInAttempt = attempt.score;
-    // No podemos identificar específicamente las correctas sin más info
   });
   
-  // Contar correctas e incorrectas totales
-  const allWrongQuestions = quizAttempts.flatMap(a => a.wrong_questions || []);
-  const uniqueWrong = new Map();
-  allWrongQuestions.forEach(wq => {
-    uniqueWrong.set(wq.question, wq);
+  // Las preguntas del quiz que no están en wrongQuestions y fueron respondidas son correctas
+  // Usamos la info de los intentos para determinar cuáles se respondieron correctamente
+  quiz.questions?.forEach(q => {
+    if (!wrongQuestions.has(q.question)) {
+      // Verificar si esta pregunta fue respondida en algún intento
+      // Si hay intentos y la pregunta no está en las incorrectas, asumimos que se respondió bien
+    }
   });
   
-  const totalWrong = uniqueWrong.size;
-  const totalCorrect = quizAttempts.reduce((sum, a) => sum + a.score, 0);
+  // Contar preguntas respondidas (correctas + incorrectas únicas)
+  const totalWrong = wrongQuestions.size;
   
-  // Las faltantes son las que nunca se han contestado
-  const totalAnswered = answeredQuestions.size;
+  // Calcular correctas: preguntas del quiz que no están en wrongQuestions pero fueron contestadas
+  // Necesitamos trackear qué preguntas se han contestado
+  const allAnsweredQuestions = new Set();
+  quizAttempts.forEach(attempt => {
+    attempt.wrong_questions?.forEach(wq => allAnsweredQuestions.add(wq.question));
+  });
+  
+  // Las correctas son las que están en el quiz, no están en wrong, pero sí fueron parte de algún intento
+  // Aproximación: total respondidas - incorrectas únicas
+  const totalQuestionsAnswered = allAnsweredQuestions.size;
+  
+  // Para saber las correctas únicas, necesitamos ver qué preguntas del quiz original 
+  // fueron contestadas y no están en wrongQuestions
+  quiz.questions?.forEach(q => {
+    // Si la pregunta fue respondida en algún intento y no está en wrong, es correcta
+    const wasAnsweredCorrectly = quizAttempts.some(attempt => {
+      // Si el intento incluyó esta pregunta y no está en sus wrong_questions
+      const isInWrong = attempt.wrong_questions?.some(wq => wq.question === q.question);
+      // Asumimos que fue parte del intento si el intento tiene preguntas
+      return !isInWrong && attempt.answered_questions > 0;
+    });
+    if (wasAnsweredCorrectly && !wrongQuestions.has(q.question)) {
+      correctQuestions.add(q.question);
+    }
+  });
+  
+  const totalCorrect = correctQuestions.size;
+  const totalAnswered = totalCorrect + totalWrong;
   const totalRemaining = Math.max(0, quiz.total_questions - totalAnswered);
   
   // Contar preguntas marcadas
