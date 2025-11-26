@@ -3,6 +3,7 @@ import AdminProgress from './pages/AdminProgress';
 import Progress from './pages/Progress';
 import Leaderboard from './pages/Leaderboard';
 import Badges from './pages/Badges';
+import ChallengePlay from './pages/ChallengePlay';
 
 
 export const PAGES = {
@@ -11,6 +12,7 @@ export const PAGES = {
     "Progress": Progress,
     "Leaderboard": Leaderboard,
     "Badges": Badges,
+    "ChallengePlay": ChallengePlay,
 }
 
 export const pagesConfig = {

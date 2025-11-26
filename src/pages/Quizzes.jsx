@@ -28,6 +28,8 @@ import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
+import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
+import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('subjects'); // 'subjects', 'list', 'upload', 'quiz', 'results'
@@ -633,15 +635,32 @@ export default function QuizzesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              {/* Points Display */}
-              {userStats && (
-                <div className="mb-6 max-w-md">
-                  <PointsDisplay 
-                    points={userStats.total_points || 0} 
-                    level={userStats.level || 1} 
-                  />
-                </div>
-              )}
+              {/* Challenge Notifications */}
+                              <ChallengeNotifications 
+                                currentUser={currentUser}
+                                onStartChallenge={(challenge) => {
+                                  window.location.href = `/ChallengePlay?id=${challenge.id}`;
+                                }}
+                              />
+
+                              {/* Points Display and Online Users */}
+                              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                                {userStats && (
+                                  <div className="flex-1 max-w-md">
+                                    <PointsDisplay 
+                                      points={userStats.total_points || 0} 
+                                      level={userStats.level || 1} 
+                                    />
+                                  </div>
+                                )}
+                                <div className="w-full sm:w-64">
+                                  <OnlineUsersPanel 
+                                    currentUser={currentUser}
+                                    quizzes={quizzes}
+                                    subjects={subjects}
+                                  />
+                                </div>
+                              </div>
 
               <div className="mb-4 sm:mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
