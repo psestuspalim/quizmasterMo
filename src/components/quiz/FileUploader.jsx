@@ -39,6 +39,7 @@ export default function FileUploader({ onUploadSuccess }) {
           question: q.questionText,
           hint: q.cinephileTip || '',
           feedback: q.analysis || '',
+          difficulty: q.difficulty || 'moderado',
           answerOptions: q.options.map(opt => ({
             text: opt.text,
             isCorrect: opt.isCorrect,

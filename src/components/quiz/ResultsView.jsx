@@ -18,6 +18,33 @@ export default function ResultsView({
 }) {
   const [showCorrect, setShowCorrect] = useState(false);
   const [showWrong, setShowWrong] = useState(false);
+  const [showDifficulty, setShowDifficulty] = useState(false);
+
+  // Calcular estadísticas por dificultad
+  const difficultyStats = (() => {
+    const stats = {
+      fácil: { correct: 0, total: 0 },
+      moderado: { correct: 0, total: 0 },
+      difícil: { correct: 0, total: 0 }
+    };
+    
+    correctAnswers.forEach(q => {
+      const diff = q.difficulty || 'moderado';
+      if (stats[diff]) {
+        stats[diff].correct++;
+        stats[diff].total++;
+      }
+    });
+    
+    wrongAnswers.forEach(q => {
+      const diff = q.difficulty || 'moderado';
+      if (stats[diff]) {
+        stats[diff].total++;
+      }
+    });
+    
+    return stats;
+  })();
   
   const answeredCount = answeredQuestions || (score + wrongAnswers.length);
   const remainingQuestions = totalQuestions - answeredCount;
@@ -214,6 +241,92 @@ export default function ResultsView({
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Difficulty Stats */}
+            {(difficultyStats.fácil.total > 0 || difficultyStats.moderado.total > 0 || difficultyStats.difícil.total > 0) && (
+              <div className="mb-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDifficulty(!showDifficulty)}
+                  className="w-full mb-3"
+                >
+                  📊 {showDifficulty ? 'Ocultar' : 'Ver'} estadísticas por dificultad
+                </Button>
+                
+                <AnimatePresence>
+                  {showDifficulty && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <Card className="bg-purple-50 border-purple-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm text-purple-800">
+                            Rendimiento por dificultad
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Fácil */}
+                          {difficultyStats.fácil.total > 0 && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-medium text-green-700">🟢 Fácil</span>
+                                <span className="text-sm text-gray-600">
+                                  {difficultyStats.fácil.correct}/{difficultyStats.fácil.total} ({Math.round((difficultyStats.fácil.correct / difficultyStats.fácil.total) * 100)}%)
+                                </span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-green-500 transition-all duration-500"
+                                  style={{ width: `${(difficultyStats.fácil.correct / difficultyStats.fácil.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Moderado */}
+                          {difficultyStats.moderado.total > 0 && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-medium text-yellow-700">🟡 Moderado</span>
+                                <span className="text-sm text-gray-600">
+                                  {difficultyStats.moderado.correct}/{difficultyStats.moderado.total} ({Math.round((difficultyStats.moderado.correct / difficultyStats.moderado.total) * 100)}%)
+                                </span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-yellow-500 transition-all duration-500"
+                                  style={{ width: `${(difficultyStats.moderado.correct / difficultyStats.moderado.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Difícil */}
+                          {difficultyStats.difícil.total > 0 && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-medium text-red-700">🔴 Difícil</span>
+                                <span className="text-sm text-gray-600">
+                                  {difficultyStats.difícil.correct}/{difficultyStats.difícil.total} ({Math.round((difficultyStats.difícil.correct / difficultyStats.difícil.total) * 100)}%)
+                                </span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-red-500 transition-all duration-500"
+                                  style={{ width: `${(difficultyStats.difícil.correct / difficultyStats.difícil.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="space-y-3">
