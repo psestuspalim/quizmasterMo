@@ -22,6 +22,8 @@ export default function QuestionView({
   const [showHint, setShowHint] = useState(false);
   const [isMarked, setIsMarked] = useState(false);
   const [userNote, setUserNote] = useState('');
+  const [difficultyRating, setDifficultyRating] = useState(null);
+  const [showDifficultySelector, setShowDifficultySelector] = useState(false);
 
   // Si es pregunta de imagen (sin answerOptions), usar el componente especializado
   if (question.type === 'image' && !question.answerOptions) {
@@ -39,14 +41,26 @@ export default function QuestionView({
     if (showFeedback) return;
     setSelectedAnswer(index);
     setShowFeedback(true);
+    setShowDifficultySelector(true);
   };
 
   const handleNext = () => {
+    if (!difficultyRating) return;
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, { ...selectedOption, userNote }, question);
+    onAnswer(isCorrect, { ...selectedOption, userNote, difficultyRating }, question);
     setUserNote('');
+    setDifficultyRating(null);
+    setShowDifficultySelector(false);
   };
+
+  const difficultyOptions = [
+    { value: 1, label: 'Muy fácil', color: 'bg-green-500 hover:bg-green-600', emoji: '😄' },
+    { value: 2, label: 'Fácil', color: 'bg-green-400 hover:bg-green-500', emoji: '🙂' },
+    { value: 3, label: 'Normal', color: 'bg-yellow-400 hover:bg-yellow-500', emoji: '😐' },
+    { value: 4, label: 'Difícil', color: 'bg-orange-400 hover:bg-orange-500', emoji: '😓' },
+    { value: 5, label: 'Muy difícil', color: 'bg-red-500 hover:bg-red-600', emoji: '😰' },
+  ];
 
   const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
 
@@ -303,63 +317,99 @@ export default function QuestionView({
                       </AnimatePresence>
 
                       {/* Cinephile Tip / Hint después de responder */}
-                      <AnimatePresence>
-                        {showFeedback && question.hint && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-lg p-3 sm:p-4 bg-purple-50 border border-purple-200"
-                          >
-                            <div className="flex gap-2 sm:gap-3">
-                              <span className="text-base sm:text-xl flex-shrink-0">🎬</span>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold mb-1 text-purple-900 text-sm sm:text-base">Tip Cinéfilo</h4>
-                                <p className="text-xs sm:text-sm text-purple-800 break-words">
-                                  <MathText text={question.hint} />
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                                              <AnimatePresence>
+                                                {showFeedback && question.hint && (
+                                                  <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="rounded-lg p-3 sm:p-4 bg-purple-50 border border-purple-200"
+                                                  >
+                                                    <div className="flex gap-2 sm:gap-3">
+                                                      <span className="text-base sm:text-xl flex-shrink-0">🎬</span>
+                                                      <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold mb-1 text-purple-900 text-sm sm:text-base">Tip Cinéfilo</h4>
+                                                        <p className="text-xs sm:text-sm text-purple-800 break-words">
+                                                          <MathText text={question.hint} />
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                  </motion.div>
+                                                )}
+                                              </AnimatePresence>
+
+                                              {/* Selector de dificultad percibida */}
+                                              <AnimatePresence>
+                                                {showDifficultySelector && (
+                                                  <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="rounded-lg p-3 sm:p-4 bg-indigo-50 border border-indigo-200"
+                                                  >
+                                                    <h4 className="font-semibold mb-3 text-indigo-900 text-sm sm:text-base text-center">
+                                                      ¿Qué tan fácil fue esta pregunta?
+                                                    </h4>
+                                                    <div className="flex justify-center gap-1 sm:gap-2">
+                                                      {difficultyOptions.map((option) => (
+                                                        <button
+                                                          key={option.value}
+                                                          onClick={() => setDifficultyRating(option.value)}
+                                                          className={`flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all ${
+                                                            difficultyRating === option.value
+                                                              ? `${option.color} text-white scale-110 shadow-lg`
+                                                              : 'bg-white border border-gray-200 hover:border-indigo-300'
+                                                          }`}
+                                                        >
+                                                          <span className="text-lg sm:text-2xl">{option.emoji}</span>
+                                                          <span className="text-[10px] sm:text-xs mt-1 whitespace-nowrap">{option.label}</span>
+                                                        </button>
+                                                      ))}
+                                                    </div>
+                                                    {!difficultyRating && (
+                                                      <p className="text-xs text-center text-gray-500 mt-2">
+                                                        Selecciona para continuar
+                                                      </p>
+                                                    )}
+                                                  </motion.div>
+                                                )}
+                                              </AnimatePresence>
             </div>
 
                           {/* Next Button - Desktop only */}
-                          {showFeedback && (
-                            <div className="hidden sm:flex items-center">
-                              <Button
-                                onClick={handleNext}
-                                className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
-                                size="icon"
-                              >
-                                <ChevronRight className="w-6 h-6" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                                                      {showFeedback && difficultyRating && (
+                                                        <div className="hidden sm:flex items-center">
+                                                          <Button
+                                                            onClick={handleNext}
+                                                            className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
+                                                            size="icon"
+                                                          >
+                                                            <ChevronRight className="w-6 h-6" />
+                                                          </Button>
+                                                        </div>
+                                                      )}
+                                                    </div>
 
-                        {/* Mobile Navigation - Fixed at bottom */}
-                        {showFeedback && (
-                          <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-3 z-50">
-                            {onBack && questionNumber > 1 && (
-                              <Button
-                                onClick={onBack}
-                                variant="outline"
-                                className="flex-1 h-12"
-                              >
-                                <ChevronLeft className="w-5 h-5 mr-1" />
-                                Anterior
-                              </Button>
-                            )}
-                            <Button
-                              onClick={handleNext}
-                              className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700"
-                            >
-                              Siguiente
-                              <ChevronRight className="w-5 h-5 ml-1" />
-                            </Button>
-                          </div>
-                        )}
+                                                    {/* Mobile Navigation - Fixed at bottom */}
+                                                    {showFeedback && difficultyRating && (
+                                                      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-3 z-50">
+                                                        {onBack && questionNumber > 1 && (
+                                                          <Button
+                                                            onClick={onBack}
+                                                            variant="outline"
+                                                            className="flex-1 h-12"
+                                                          >
+                                                            <ChevronLeft className="w-5 h-5 mr-1" />
+                                                            Anterior
+                                                          </Button>
+                                                        )}
+                                                        <Button
+                                                          onClick={handleNext}
+                                                          className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700"
+                                                        >
+                                                          Siguiente
+                                                          <ChevronRight className="w-5 h-5 ml-1" />
+                                                        </Button>
+                                                      </div>
+                                                    )}
                       </CardContent>
                     </Card>
 

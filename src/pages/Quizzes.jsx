@@ -270,6 +270,49 @@ export default function QuizzesPage() {
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
     let filteredQuestions = [...quiz.questions];
     
+    // Si es modo repaso SRS, filtrar por preguntas que necesitan revisión
+    if (selectedDeck === 'review') {
+      try {
+        const difficulties = await base44.entities.QuestionDifficulty.filter({
+          user_email: currentUser.email,
+          quiz_id: quiz.id
+        });
+        
+        const now = new Date();
+        const dueQuestions = difficulties.filter(d => 
+          new Date(d.next_review) <= now
+        );
+        
+        if (dueQuestions.length > 0) {
+          // Ordenar por prioridad (más difíciles primero, luego por fecha)
+          dueQuestions.sort((a, b) => {
+            if (b.difficulty_rating !== a.difficulty_rating) {
+              return b.difficulty_rating - a.difficulty_rating;
+            }
+            return new Date(a.next_review) - new Date(b.next_review);
+          });
+          
+          const dueTexts = dueQuestions.map(d => d.question_text);
+          filteredQuestions = quiz.questions.filter(q => 
+            dueTexts.includes(q.question)
+          );
+        } else {
+          // Si no hay preguntas pendientes, mostrar las más difíciles
+          const hardQuestions = difficulties
+            .filter(d => d.difficulty_rating >= 4)
+            .map(d => d.question_text);
+          
+          if (hardQuestions.length > 0) {
+            filteredQuestions = quiz.questions.filter(q => 
+              hardQuestions.includes(q.question)
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error loading SRS data:', error);
+      }
+    }
+    
     if (selectedDeck === 'wrong') {
       // Solo preguntas incorrectas
       const wrongQuestionsMap = new Map();
@@ -367,7 +410,79 @@ export default function QuizzesPage() {
     });
   };
 
+  const saveDifficultyRating = async (question, difficultyRating, quizId) => {
+    if (!difficultyRating || !currentUser?.email) return;
+    
+    try {
+      const existing = await base44.entities.QuestionDifficulty.filter({
+        user_email: currentUser.email,
+        quiz_id: quizId,
+        question_text: question.question
+      });
+
+      // Calcular nuevo intervalo y ease factor usando SM-2
+      let easeFactor = 2.5;
+      let interval = 1;
+      let repetitions = 0;
+
+      if (existing.length > 0) {
+        easeFactor = existing[0].ease_factor || 2.5;
+        interval = existing[0].interval || 1;
+        repetitions = existing[0].repetitions || 0;
+      }
+
+      // Ajustar ease factor según la dificultad percibida (1-5)
+      // 1=muy fácil -> +0.15, 5=muy difícil -> -0.30
+      const adjustment = (3 - difficultyRating) * 0.15;
+      easeFactor = Math.max(1.3, easeFactor + adjustment);
+
+      // Calcular nuevo intervalo
+      if (difficultyRating <= 2) {
+        // Fácil: aumentar intervalo
+        repetitions++;
+        if (repetitions === 1) interval = 1;
+        else if (repetitions === 2) interval = 6;
+        else interval = Math.round(interval * easeFactor);
+      } else if (difficultyRating === 3) {
+        // Normal: mantener progreso
+        repetitions++;
+        interval = Math.round(interval * 1.2);
+      } else {
+        // Difícil: resetear o reducir intervalo
+        repetitions = 0;
+        interval = 1;
+      }
+
+      const nextReview = new Date();
+      nextReview.setDate(nextReview.getDate() + interval);
+
+      const data = {
+        user_email: currentUser.email,
+        quiz_id: quizId,
+        question_text: question.question,
+        difficulty_rating: difficultyRating,
+        ease_factor: easeFactor,
+        interval: interval,
+        repetitions: repetitions,
+        next_review: nextReview.toISOString(),
+        last_reviewed: new Date().toISOString()
+      };
+
+      if (existing.length > 0) {
+        await base44.entities.QuestionDifficulty.update(existing[0].id, data);
+      } else {
+        await base44.entities.QuestionDifficulty.create(data);
+      }
+    } catch (error) {
+      console.error('Error saving difficulty rating:', error);
+    }
+  };
+
   const handleAnswer = async (isCorrect, selectedOption, question) => {
+    // Guardar rating de dificultad para SRS
+    if (selectedOption.difficultyRating) {
+      await saveDifficultyRating(question, selectedOption.difficultyRating, selectedQuiz.id);
+    }
     // Si estamos en el deck de incorrectas y se responde correctamente, removerla del deck de incorrectas
     let updatedWrongQuestions = wrongAnswers;
     if (deckType === 'wrong' && isCorrect) {
