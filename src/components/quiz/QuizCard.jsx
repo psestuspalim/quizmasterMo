@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History, Bookmark, Pencil, EyeOff } from 'lucide-react';
+import { FileText, Calendar, PlayCircle, Trash2, CheckCircle2, XCircle, Clock, History, Bookmark, Pencil, EyeOff, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -231,11 +231,19 @@ export default function QuizCard({ quiz, attempts = [], onStart, onDelete, onEdi
                             <Button
                               variant={selectedDeck === 'marked' ? 'default' : 'outline'}
                               onClick={() => setSelectedDeck('marked')}
-                              className="w-full text-xs sm:text-sm h-9 sm:h-10 col-span-2 sm:col-span-1"
+                              className="w-full text-xs sm:text-sm h-9 sm:h-10"
                               disabled={totalMarked === 0}
                             >
                               <Bookmark className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               Marcadas ({totalMarked})
+                            </Button>
+                            <Button
+                              variant={selectedDeck === 'review' ? 'default' : 'outline'}
+                              onClick={() => setSelectedDeck('review')}
+                              className="w-full text-xs sm:text-sm h-9 sm:h-10 col-span-2"
+                            >
+                              <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              Repasar (SRS)
                             </Button>
                           </div>
                         </div>
