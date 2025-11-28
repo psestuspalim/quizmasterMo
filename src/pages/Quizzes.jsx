@@ -25,6 +25,7 @@ import ResultsView from '../components/quiz/ResultsView';
 import SubjectCard from '../components/quiz/SubjectCard';
 import SubjectEditor from '../components/quiz/SubjectEditor';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
+import FolderCard from '../components/quiz/FolderCard';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
@@ -50,6 +51,10 @@ export default function QuizzesPage() {
   const [newBadge, setNewBadge] = useState(null);
   const [editingQuiz, setEditingQuiz] = useState(null);
   const [editingSubject, setEditingSubject] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [newFolder, setNewFolder] = useState({ name: '', description: '', color: '#f59e0b' });
+  const [editingFolder, setEditingFolder] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -74,6 +79,11 @@ export default function QuizzesPage() {
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
     queryFn: () => base44.entities.Subject.list('-created_date'),
+  });
+
+  const { data: folders = [] } = useQuery({
+    queryKey: ['folders'],
+    queryFn: () => base44.entities.Folder.list('-created_date'),
   });
 
   const { data: quizzes = [] } = useQuery({
@@ -149,6 +159,39 @@ export default function QuizzesPage() {
       setEditingSubject(null);
     },
   });
+
+  const createFolderMutation = useMutation({
+    mutationFn: (folderData) => base44.entities.Folder.create(folderData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['folders']);
+      setShowFolderDialog(false);
+      setNewFolder({ name: '', description: '', color: '#f59e0b' });
+    },
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: (folderId) => base44.entities.Folder.delete(folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['folders']);
+    },
+  });
+
+  const updateFolderMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Folder.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['folders']);
+      setEditingFolder(null);
+    },
+  });
+
+  const handleCreateFolder = async () => {
+    if (newFolder.name.trim()) {
+      await createFolderMutation.mutateAsync({
+        ...newFolder,
+        parent_id: currentFolderId
+      });
+    }
+  };
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['all-users'],
