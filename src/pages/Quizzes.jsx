@@ -712,7 +712,9 @@ export default function QuizzesPage() {
 
       // Filtrar carpetas y materias según la carpeta actual
       const currentFolders = folders.filter(f => f.parent_id === currentFolderId);
-      const currentSubjects = visibleSubjects.filter(s => s.folder_id === currentFolderId);
+      const currentSubjects = visibleSubjects.filter(s => 
+        currentFolderId ? s.folder_id === currentFolderId : !s.folder_id
+      );
 
       // Obtener la carpeta actual para mostrar breadcrumb
       const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
