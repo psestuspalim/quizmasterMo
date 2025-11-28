@@ -803,136 +803,228 @@ export default function QuizzesPage() {
                       )}
 
                       {/* Subjects View */}
-                      {view === 'subjects' && !editingSubject && (
-            <motion.div
-              key="subjects"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              {/* Challenge Notifications */}
-                              <ChallengeNotifications 
-                                currentUser={currentUser}
-                                onStartChallenge={(challenge) => {
-                                  window.location.href = `/ChallengePlay?id=${challenge.id}`;
-                                }}
-                              />
+                                      {view === 'subjects' && !editingSubject && !editingFolder && (
+                                <motion.div
+                                  key="subjects"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                                  {/* Challenge Notifications */}
+                                                  <ChallengeNotifications 
+                                                    currentUser={currentUser}
+                                                    onStartChallenge={(challenge) => {
+                                                      window.location.href = `/ChallengePlay?id=${challenge.id}`;
+                                                    }}
+                                                  />
 
-                              {/* Points Display and Online Users */}
-                              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                {userStats && (
-                                  <div className="flex-1 max-w-md">
-                                    <PointsDisplay 
-                                      points={userStats.total_points || 0} 
-                                      level={userStats.level || 1} 
-                                    />
+                                                  {/* Points Display and Online Users */}
+                                                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                                                    {userStats && (
+                                                      <div className="flex-1 max-w-md">
+                                                        <PointsDisplay 
+                                                          points={userStats.total_points || 0} 
+                                                          level={userStats.level || 1} 
+                                                        />
+                                                      </div>
+                                                    )}
+                                                    <div className="w-full sm:w-64">
+                                                      <OnlineUsersPanel 
+                                                        currentUser={currentUser}
+                                                        quizzes={quizzes}
+                                                        subjects={subjects}
+                                                      />
+                                                    </div>
+                                                  </div>
+
+                                  <div className="mb-4 sm:mb-8">
+                                    {/* Breadcrumb */}
+                                    {currentFolderId && (
+                                      <div className="flex items-center gap-2 mb-4 text-sm">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setCurrentFolderId(null)}
+                                          className="text-gray-600 hover:text-gray-900 px-2"
+                                        >
+                                          Inicio
+                                        </Button>
+                                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                                        <span className="font-medium text-gray-900">{currentFolder?.name}</span>
+                                      </div>
+                                    )}
+
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+                                      <div>
+                                        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
+                                          {currentFolder ? currentFolder.name : 'Materias'}
+                                        </h1>
+                                        <p className="text-sm sm:text-base text-gray-600">
+                                          {currentFolder ? currentFolder.description || 'Contenido de la carpeta' : 'Selecciona una materia para ver sus cuestionarios'}
+                                        </p>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2 sm:gap-3">
+                                        {!currentFolderId && (
+                                          <>
+                                            <Link to={createPageUrl('Leaderboard')}>
+                                              <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                <Crown className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                <span className="hidden sm:inline">Ranking</span>
+                                              </Button>
+                                            </Link>
+                                            <Link to={createPageUrl('Badges')}>
+                                              <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                <Award className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                <span className="hidden sm:inline">Insignias</span>
+                                              </Button>
+                                            </Link>
+                                            <Link to={createPageUrl('Progress')}>
+                                              <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                <span className="hidden sm:inline">Progreso</span>
+                                              </Button>
+                                            </Link>
+                                          </>
+                                        )}
+
+                                        {/* Botón Nueva Carpeta */}
+                                        <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                                          <DialogTrigger asChild>
+                                            <Button variant="outline" className="border-amber-500 text-amber-600 hover:bg-amber-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                              <Folder className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                              <span className="hidden sm:inline">Nueva carpeta</span>
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent>
+                                            <DialogHeader>
+                                              <DialogTitle>Crear nueva carpeta</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 mt-4">
+                                              <div>
+                                                <Label>Nombre</Label>
+                                                <Input
+                                                  value={newFolder.name}
+                                                  onChange={(e) => setNewFolder({...newFolder, name: e.target.value})}
+                                                  placeholder="Ej: Primer Semestre"
+                                                />
+                                              </div>
+                                              <div>
+                                                <Label>Descripción</Label>
+                                                <Input
+                                                  value={newFolder.description}
+                                                  onChange={(e) => setNewFolder({...newFolder, description: e.target.value})}
+                                                  placeholder="Descripción opcional"
+                                                />
+                                              </div>
+                                              <div>
+                                                <Label>Color</Label>
+                                                <input
+                                                  type="color"
+                                                  value={newFolder.color}
+                                                  onChange={(e) => setNewFolder({...newFolder, color: e.target.value})}
+                                                  className="w-full h-10 rounded-md border cursor-pointer"
+                                                />
+                                              </div>
+                                              <Button 
+                                                onClick={handleCreateFolder}
+                                                className="w-full bg-amber-500 hover:bg-amber-600"
+                                              >
+                                                Crear carpeta
+                                              </Button>
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+
+                                        <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                                        <DialogTrigger asChild>
+                                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                            <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                            <span className="hidden sm:inline">Nueva materia</span>
+                                          </Button>
+                                          </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Crear nueva materia</DialogTitle>
+                                          </DialogHeader>
+                                          <div className="space-y-4 mt-4">
+                                            <div>
+                                              <Label>Nombre</Label>
+                                              <Input
+                                                value={newSubject.name}
+                                                onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
+                                                placeholder="Ej: Física"
+                                              />
+                                            </div>
+                                            <div>
+                                              <Label>Descripción</Label>
+                                              <Input
+                                                value={newSubject.description}
+                                                onChange={(e) => setNewSubject({...newSubject, description: e.target.value})}
+                                                placeholder="Descripción opcional"
+                                              />
+                                            </div>
+                                            <div>
+                                              <Label>Color</Label>
+                                              <input
+                                                type="color"
+                                                value={newSubject.color}
+                                                onChange={(e) => setNewSubject({...newSubject, color: e.target.value})}
+                                                className="w-full h-10 rounded-md border cursor-pointer"
+                                              />
+                                            </div>
+                                            <Button 
+                                              onClick={handleCreateSubject}
+                                              className="w-full bg-indigo-600 hover:bg-indigo-700"
+                                            >
+                                              Crear materia
+                                            </Button>
+                                          </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
-                                <div className="w-full sm:w-64">
-                                  <OnlineUsersPanel 
-                                    currentUser={currentUser}
-                                    quizzes={quizzes}
-                                    subjects={subjects}
-                                  />
-                                </div>
-                              </div>
 
-              <div className="mb-4 sm:mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
-                      Materias
-                    </h1>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      Selecciona una materia para ver sus cuestionarios
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    <Link to={createPageUrl('Leaderboard')}>
-                      <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                        <Crown className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                        <span className="hidden sm:inline">Ranking</span>
-                      </Button>
-                    </Link>
-                    <Link to={createPageUrl('Badges')}>
-                      <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                        <Award className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                        <span className="hidden sm:inline">Insignias</span>
-                      </Button>
-                    </Link>
-                    <Link to={createPageUrl('Progress')}>
-                      <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                        <span className="hidden sm:inline">Progreso</span>
-                      </Button>
-                    </Link>
-                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                        <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                        <span className="hidden sm:inline">Nueva materia</span>
-                      </Button>
-                      </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Crear nueva materia</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 mt-4">
-                        <div>
-                          <Label>Nombre</Label>
-                          <Input
-                            value={newSubject.name}
-                            onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
-                            placeholder="Ej: Física"
-                          />
-                        </div>
-                        <div>
-                          <Label>Descripción</Label>
-                          <Input
-                            value={newSubject.description}
-                            onChange={(e) => setNewSubject({...newSubject, description: e.target.value})}
-                            placeholder="Descripción opcional"
-                          />
-                        </div>
-                        <div>
-                          <Label>Color</Label>
-                          <input
-                            type="color"
-                            value={newSubject.color}
-                            onChange={(e) => setNewSubject({...newSubject, color: e.target.value})}
-                            className="w-full h-10 rounded-md border cursor-pointer"
-                          />
-                        </div>
-                        <Button 
-                          onClick={handleCreateSubject}
-                          className="w-full bg-indigo-600 hover:bg-indigo-700"
-                        >
-                          Crear materia
-                        </Button>
-                      </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-              </div>
+                                  {currentFolders.length === 0 && currentSubjects.length === 0 ? (
+                                    <div className="text-center py-16">
+                                      <div className="flex justify-center mb-6">
+                                        <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
+                                          <BookOpen className="w-12 h-12 text-gray-400" />
+                                        </div>
+                                      </div>
+                                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                        {currentFolderId ? 'Carpeta vacía' : 'No hay materias'}
+                                      </h3>
+                                      <p className="text-gray-500 mb-6">
+                                        {currentFolderId ? 'Agrega materias o subcarpetas aquí' : 'Comienza creando tu primera materia o carpeta'}
+                                      </p>
+                                      {currentFolderId && (
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => setCurrentFolderId(null)}
+                                        >
+                                          <ArrowLeft className="w-4 h-4 mr-2" />
+                                          Volver
+                                        </Button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                                      {/* Carpetas primero */}
+                                      {currentFolders.map((folder) => (
+                                        <FolderCard
+                                          key={folder.id}
+                                          folder={folder}
+                                          itemCount={getFolderItemCount(folder.id)}
+                                          isAdmin={isAdmin}
+                                          onDelete={(id) => deleteFolderMutation.mutate(id)}
+                                          onEdit={(folder) => setEditingFolder(folder)}
+                                          onClick={() => setCurrentFolderId(folder.id)}
+                                        />
+                                      ))}
 
-              {visibleSubjects.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="flex justify-center mb-6">
-                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
-                      <BookOpen className="w-12 h-12 text-gray-400" />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No hay materias
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Comienza creando tu primera materia
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                                      {visibleSubjects.map((subject) => (
+                                      {/* Materias después */}
+                                      {currentSubjects.map((subject) => (
                                         <SubjectCard
                                           key={subject.id}
                                           subject={subject}
@@ -948,9 +1040,69 @@ export default function QuizzesPage() {
                                         />
                                       ))}
                                     </div>
-              )}
-            </motion.div>
-          )}
+                                  )}
+                                </motion.div>
+                              )}
+
+                              {/* Folder Editor View */}
+                              {editingFolder && (
+                                <motion.div
+                                  key="folder-editor"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                                  <Button
+                                    onClick={() => setEditingFolder(null)}
+                                    variant="ghost"
+                                    className="mb-6"
+                                  >
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    Volver
+                                  </Button>
+                                  <Card className="max-w-lg mx-auto">
+                                    <CardHeader>
+                                      <CardTitle>Editar carpeta</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                      <div>
+                                        <Label>Nombre</Label>
+                                        <Input
+                                          value={editingFolder.name}
+                                          onChange={(e) => setEditingFolder({...editingFolder, name: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label>Descripción</Label>
+                                        <Input
+                                          value={editingFolder.description || ''}
+                                          onChange={(e) => setEditingFolder({...editingFolder, description: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label>Color</Label>
+                                        <input
+                                          type="color"
+                                          value={editingFolder.color || '#f59e0b'}
+                                          onChange={(e) => setEditingFolder({...editingFolder, color: e.target.value})}
+                                          className="w-full h-10 rounded-md border cursor-pointer"
+                                        />
+                                      </div>
+                                      <div className="flex gap-3">
+                                        <Button variant="outline" onClick={() => setEditingFolder(null)} className="flex-1">
+                                          Cancelar
+                                        </Button>
+                                        <Button 
+                                          onClick={() => updateFolderMutation.mutate({ id: editingFolder.id, data: editingFolder })}
+                                          className="flex-1 bg-amber-500 hover:bg-amber-600"
+                                        >
+                                          Guardar
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </motion.div>
+                              )}
 
           {/* Quiz Editor View */}
                       {editingQuiz && (
