@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -296,10 +296,13 @@ export default function QuizzesPage() {
   };
 
   const handleCreateSubject = async () => {
-    if (newSubject.name.trim()) {
-      await createSubjectMutation.mutateAsync(newSubject);
-    }
-  };
+        if (newSubject.name.trim()) {
+          await createSubjectMutation.mutateAsync({
+            ...newSubject,
+            folder_id: currentFolderId
+          });
+        }
+      };
 
   const handleUploadSuccess = async (quizData) => {
     await createQuizMutation.mutateAsync({
@@ -697,14 +700,28 @@ export default function QuizzesPage() {
   const isAdmin = currentUser?.role === 'admin';
 
   // Filtrar materias según visibilidad
-  const visibleSubjects = subjects.filter(subject => {
-    if (isAdmin) return true;
-    if (subject.is_hidden) return false;
-    if (subject.visibility === 'specific') {
-      return subject.allowed_users?.includes(currentUser?.email);
-    }
-    return true;
-  });
+      const visibleSubjects = subjects.filter(subject => {
+        if (isAdmin) return true;
+        if (subject.is_hidden) return false;
+        if (subject.visibility === 'specific') {
+          return subject.allowed_users?.includes(currentUser?.email);
+        }
+        return true;
+      });
+
+      // Filtrar carpetas y materias según la carpeta actual
+      const currentFolders = folders.filter(f => f.parent_id === currentFolderId);
+      const currentSubjects = visibleSubjects.filter(s => s.folder_id === currentFolderId);
+
+      // Obtener la carpeta actual para mostrar breadcrumb
+      const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
+
+      // Función para contar elementos en una carpeta
+      const getFolderItemCount = (folderId) => {
+        const subFolders = folders.filter(f => f.parent_id === folderId).length;
+        const subSubjects = visibleSubjects.filter(s => s.folder_id === folderId).length;
+        return subFolders + subSubjects;
+      };
 
   const subjectQuizzes = selectedSubject 
     ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
