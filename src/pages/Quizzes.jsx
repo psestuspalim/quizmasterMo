@@ -843,7 +843,7 @@ export default function QuizzesPage() {
                                   <div className="mb-4 sm:mb-8">
                                     {/* Breadcrumb */}
                                     {currentFolderId && (
-                                      <div className="flex items-center gap-2 mb-4 text-sm">
+                                      <div className="flex items-center gap-2 mb-4 text-sm flex-wrap">
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -852,8 +852,32 @@ export default function QuizzesPage() {
                                         >
                                           Inicio
                                         </Button>
-                                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                                        <span className="font-medium text-gray-900">{currentFolder?.name}</span>
+                                        {(() => {
+                                          // Construir la ruta de carpetas
+                                          const path = [];
+                                          let folder = currentFolder;
+                                          while (folder) {
+                                            path.unshift(folder);
+                                            folder = folders.find(f => f.id === folder.parent_id);
+                                          }
+                                          return path.map((f, idx) => (
+                                            <React.Fragment key={f.id}>
+                                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                                              {idx === path.length - 1 ? (
+                                                <span className="font-medium text-gray-900">{f.name}</span>
+                                              ) : (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => setCurrentFolderId(f.id)}
+                                                  className="text-gray-600 hover:text-gray-900 px-2"
+                                                >
+                                                  {f.name}
+                                                </Button>
+                                              )}
+                                            </React.Fragment>
+                                          ));
+                                        })()}
                                       </div>
                                     )}
 
