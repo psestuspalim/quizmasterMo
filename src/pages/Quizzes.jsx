@@ -808,7 +808,7 @@ export default function QuizzesPage() {
                       )}
 
                       {/* Subjects View */}
-                                      {view === 'subjects' && !editingSubject && !editingFolder && (
+                                      {view === 'subjects' && !editingSubject && !editingFolder && !showBulkUploader && (
                                 <motion.div
                                   key="subjects"
                                   initial={{ opacity: 0, y: 20 }}
