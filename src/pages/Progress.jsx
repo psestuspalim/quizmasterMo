@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft } from 'lucide-react';
+import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -13,6 +13,8 @@ import SubjectProgress from '../components/progress/SubjectProgress';
 import TrendAnalysis from '../components/progress/TrendAnalysis';
 import WeakPoints from '../components/progress/WeakPoints';
 import Recommendations from '../components/progress/Recommendations';
+import AttemptHistory from '../components/progress/AttemptHistory';
+import QuizCompletionBadges from '../components/progress/QuizCompletionBadges';
 
 export default function ProgressPage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -204,31 +206,55 @@ export default function ProgressPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
-            <TabsTrigger value="overview">
-              <Award className="w-4 h-4 mr-2" />
-              General
+          <TabsList className="flex flex-wrap w-full lg:w-auto gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">
+              <Award className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">General</span>
             </TabsTrigger>
-            <TabsTrigger value="subjects">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Por Materia
+            <TabsTrigger value="badges" className="text-xs sm:text-sm">
+              <Trophy className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Completados</span>
             </TabsTrigger>
-            <TabsTrigger value="trends">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Tendencias
+            <TabsTrigger value="history" className="text-xs sm:text-sm">
+              <History className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Historial</span>
             </TabsTrigger>
-            <TabsTrigger value="weak">
-              <AlertCircle className="w-4 h-4 mr-2" />
-              Puntos Débiles
+            <TabsTrigger value="subjects" className="text-xs sm:text-sm">
+              <BookOpen className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Por Materia</span>
             </TabsTrigger>
-            <TabsTrigger value="recommendations">
-              <Target className="w-4 h-4 mr-2" />
-              Recomendaciones
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">
+              <TrendingUp className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tendencias</span>
+            </TabsTrigger>
+            <TabsTrigger value="weak" className="text-xs sm:text-sm">
+              <AlertCircle className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Puntos Débiles</span>
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="text-xs sm:text-sm">
+              <Target className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Recomendaciones</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <OverviewStats analytics={analytics} />
+          </TabsContent>
+
+          <TabsContent value="badges" className="space-y-6">
+            <QuizCompletionBadges 
+              quizzes={quizzes}
+              attempts={attempts}
+              subjects={subjects}
+            />
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <AttemptHistory 
+              attempts={attempts}
+              quizzes={quizzes}
+              subjects={subjects}
+            />
           </TabsContent>
 
           <TabsContent value="subjects" className="space-y-6">
