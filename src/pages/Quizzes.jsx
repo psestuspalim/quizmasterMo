@@ -34,6 +34,7 @@ import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
 import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
 import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
+import SessionTimer from '../components/ui/SessionTimer';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('subjects'); // 'subjects', 'list', 'upload', 'quiz', 'results'
@@ -1488,12 +1489,15 @@ export default function QuizzesPage() {
         </AnimatePresence>
 
         {/* Badge Unlock Modal */}
-        <BadgeUnlockModal 
-          badge={newBadge} 
-          open={!!newBadge} 
-          onClose={() => setNewBadge(null)} 
-        />
-      </div>
-    </div>
-  );
+                  <BadgeUnlockModal 
+                    badge={newBadge} 
+                    open={!!newBadge} 
+                    onClose={() => setNewBadge(null)} 
+                  />
+
+                  {/* Session Timer */}
+                  <SessionTimer />
+                </div>
+              </div>
+            );
 }
