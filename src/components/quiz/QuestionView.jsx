@@ -41,17 +41,13 @@ export default function QuestionView({
     if (showFeedback) return;
     setSelectedAnswer(index);
     setShowFeedback(true);
-    setShowDifficultySelector(true);
   };
 
   const handleNext = () => {
-    if (!difficultyRating) return;
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, { ...selectedOption, userNote, difficultyRating }, question);
+    onAnswer(isCorrect, { ...selectedOption, userNote }, question);
     setUserNote('');
-    setDifficultyRating(null);
-    setShowDifficultySelector(false);
   };
 
   const difficultyOptions = [
@@ -337,59 +333,25 @@ export default function QuestionView({
                                                 )}
                                               </AnimatePresence>
 
-                                              {/* Selector de dificultad percibida */}
-                                              <AnimatePresence>
-                                                {showDifficultySelector && (
-                                                  <motion.div
-                                                    initial={{ opacity: 0, y: -10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    className="rounded-lg p-3 sm:p-4 bg-indigo-50 border border-indigo-200"
-                                                  >
-                                                    <h4 className="font-semibold mb-3 text-indigo-900 text-sm sm:text-base text-center">
-                                                      ¿Qué tan fácil fue esta pregunta?
-                                                    </h4>
-                                                    <div className="flex justify-center gap-1 sm:gap-2">
-                                                      {difficultyOptions.map((option) => (
-                                                        <button
-                                                          key={option.value}
-                                                          onClick={() => setDifficultyRating(option.value)}
-                                                          className={`flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all ${
-                                                            difficultyRating === option.value
-                                                              ? `${option.color} text-white scale-110 shadow-lg`
-                                                              : 'bg-white border border-gray-200 hover:border-indigo-300'
-                                                          }`}
-                                                        >
-                                                          <span className="text-lg sm:text-2xl">{option.emoji}</span>
-                                                          <span className="text-[10px] sm:text-xs mt-1 whitespace-nowrap">{option.label}</span>
-                                                        </button>
-                                                      ))}
-                                                    </div>
-                                                    {!difficultyRating && (
-                                                      <p className="text-xs text-center text-gray-500 mt-2">
-                                                        Selecciona para continuar
-                                                      </p>
-                                                    )}
-                                                  </motion.div>
-                                                )}
-                                              </AnimatePresence>
+
             </div>
 
                           {/* Next Button - Desktop only */}
-                                                      {showFeedback && difficultyRating && (
-                                                        <div className="hidden sm:flex items-center">
-                                                          <Button
-                                                            onClick={handleNext}
-                                                            className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
-                                                            size="icon"
-                                                          >
-                                                            <ChevronRight className="w-6 h-6" />
-                                                          </Button>
-                                                        </div>
-                                                      )}
-                                                    </div>
+                                                                                      {showFeedback && (
+                                                                                        <div className="hidden sm:flex items-center">
+                                                                                          <Button
+                                                                                            onClick={handleNext}
+                                                                                            className="bg-indigo-600 hover:bg-indigo-700 w-12 h-12"
+                                                                                            size="icon"
+                                                                                          >
+                                                                                            <ChevronRight className="w-6 h-6" />
+                                                                                          </Button>
+                                                                                        </div>
+                                                                                      )}
+                                                                                    </div>
 
-                                                    {/* Mobile Navigation - Fixed at bottom */}
-                                                    {showFeedback && difficultyRating && (
+                                                                                    {/* Mobile Navigation - Fixed at bottom */}
+                                                                                    {showFeedback && (
                                                       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-3 z-50">
                                                         {onBack && questionNumber > 1 && (
                                                           <Button
