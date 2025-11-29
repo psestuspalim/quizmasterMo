@@ -916,6 +916,18 @@ export default function QuizzesPage() {
                                           </>
                                         )}
 
+                                        {/* Botón Cargar Parcial */}
+                                        {isAdmin && currentFolderId && currentSubjects.some(s => s.name.match(/^\d+\./)) && (
+                                          <Button 
+                                            variant="outline" 
+                                            className="border-green-500 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
+                                            onClick={() => setShowBulkUploader(true)}
+                                          >
+                                            <Upload className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                            <span className="hidden sm:inline">Cargar parcial</span>
+                                          </Button>
+                                        )}
+
                                         {/* Botón Nueva Carpeta */}
                                         <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
                                           <DialogTrigger asChild>
