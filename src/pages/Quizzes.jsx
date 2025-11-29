@@ -28,6 +28,7 @@ import SubjectCard from '../components/quiz/SubjectCard';
 import SubjectEditor from '../components/quiz/SubjectEditor';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import FolderCard from '../components/quiz/FolderCard';
+import AudioList from '../components/audio/AudioList';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
@@ -1351,16 +1352,19 @@ export default function QuizzesPage() {
                     </p>
                   </div>
                   <Button
-                    onClick={() => setShowUploader(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9 sm:h-10"
-                  >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                    Nuevo cuestionario
-                  </Button>
-                </div>
-              </div>
+                                        onClick={() => setShowUploader(true)}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9 sm:h-10"
+                                      >
+                                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+                                        Nuevo cuestionario
+                                      </Button>
+                                        </div>
+                                      </div>
 
-              {subjectQuizzes.length === 0 ? (
+                                      {/* Audio List */}
+                                      <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+
+                                      {subjectQuizzes.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="flex justify-center mb-6">
                     <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
