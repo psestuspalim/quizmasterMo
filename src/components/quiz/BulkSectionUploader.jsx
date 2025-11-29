@@ -187,77 +187,111 @@ export default function BulkSectionUploader({ subjects, onSuccess }) {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <Card
-        className={`border-2 border-dashed transition-all duration-200 ${
-          isDragging
-            ? 'border-indigo-500 bg-indigo-50/50'
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-      >
-        <div className="p-8 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
-              <FileJson className="w-8 h-8 text-indigo-600" />
+      <Tabs defaultValue="paste" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="paste">
+            <ClipboardPaste className="w-4 h-4 mr-2" />
+            Pegar JSON
+          </TabsTrigger>
+          <TabsTrigger value="file">
+            <FileJson className="w-4 h-4 mr-2" />
+            Subir archivo
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="paste">
+          <Card className="p-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Pega el JSON completo
+              </h3>
+              <p className="text-sm text-gray-500">
+                El sistema distribuirá automáticamente cada sección al subtema correspondiente
+              </p>
             </div>
-          </div>
-          
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Cargar JSON con secciones
-          </h3>
-          <p className="text-sm text-gray-500 mb-4">
-            El archivo debe tener el formato con "sections" que contiene cada subtema
-          </p>
 
-          <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left text-xs font-mono overflow-x-auto">
-            <pre>{`{
-  "sections": [
-    {
-      "sectionId": "1.1",
-      "title": "Características de la Célula",
-      "questions": [
-        {
-          "questionText": "...",
-          "options": [
-            {"text": "...", "isCorrect": true, "feedback": "..."}
-          ]
-        }
-      ]
-    }
-  ]
-}`}</pre>
-          </div>
+            <Textarea
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              placeholder='{"sections": [{"sectionId": "1.1", "title": "...", "questions": [...]}]}'
+              className="min-h-[300px] font-mono text-xs mb-4"
+            />
 
-          <Button
-            type="button"
-            disabled={isProcessing}
-            className="bg-indigo-600 hover:bg-indigo-700"
-            onClick={() => document.getElementById('bulk-file-upload').click()}
+            <Button
+              onClick={handlePasteSubmit}
+              disabled={isProcessing || !jsonText.trim()}
+              className="w-full bg-indigo-600 hover:bg-indigo-700"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Procesar y distribuir
+                </>
+              )}
+            </Button>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="file">
+          <Card
+            className={`border-2 border-dashed transition-all duration-200 ${
+              isDragging
+                ? 'border-indigo-500 bg-indigo-50/50'
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+            onDrop={handleDrop}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4 mr-2" />
-                Seleccionar archivo
-              </>
-            )}
-          </Button>
-          
-          <input
-            id="bulk-file-upload"
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={(e) => handleFile(e.target.files[0])}
-          />
-        </div>
-      </Card>
+            <div className="p-8 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <FileJson className="w-8 h-8 text-indigo-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Arrastra un archivo JSON
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                o haz clic para seleccionar
+              </p>
+
+              <Button
+                type="button"
+                disabled={isProcessing}
+                className="bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => document.getElementById('bulk-file-upload').click()}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Seleccionar archivo
+                  </>
+                )}
+              </Button>
+              
+              <input
+                id="bulk-file-upload"
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files[0])}
+              />
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {error && (
         <Alert variant="destructive" className="mt-4">
