@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import FileUploader from '../components/quiz/FileUploader';
+import BulkSectionUploader from '../components/quiz/BulkSectionUploader';
 import QuizCard from '../components/quiz/QuizCard';
 import QuizEditor from '../components/quiz/QuizEditor';
 import QuestionView from '../components/quiz/QuestionView';
@@ -56,6 +57,7 @@ export default function QuizzesPage() {
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [newFolder, setNewFolder] = useState({ name: '', description: '', color: '#f59e0b' });
   const [editingFolder, setEditingFolder] = useState(null);
+  const [showBulkUploader, setShowBulkUploader] = useState(false);
 
   const queryClient = useQueryClient();
 
