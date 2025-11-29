@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1050,22 +1050,140 @@ export default function QuizzesPage() {
                                         />
                                       ))}
 
-                                      {/* Materias después */}
-                                      {currentSubjects.map((subject) => (
-                                        <SubjectCard
-                                          key={subject.id}
-                                          subject={subject}
-                                          quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                                          stats={getSubjectStats(subject.id)}
-                                          isAdmin={isAdmin}
-                                          onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                                          onEdit={(subject) => setEditingSubject(subject)}
-                                          onClick={() => {
-                                            setSelectedSubject(subject);
-                                            setView('list');
-                                          }}
-                                        />
-                                      ))}
+                                      {/* Materias organizadas por secciones (Objetos) */}
+                                      {(() => {
+                                        // Separar materias principales (Obj) de subtemas
+                                        const mainSubjects = currentSubjects.filter(s => s.name.startsWith('Obj'));
+                                        const subTopics = currentSubjects.filter(s => !s.name.startsWith('Obj'));
+                                        
+                                        // Si no hay materias principales, mostrar grid normal
+                                        if (mainSubjects.length === 0) {
+                                          return currentSubjects.map((subject) => (
+                                            <SubjectCard
+                                              key={subject.id}
+                                              subject={subject}
+                                              quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                                              stats={getSubjectStats(subject.id)}
+                                              isAdmin={isAdmin}
+                                              onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                                              onEdit={(subject) => setEditingSubject(subject)}
+                                              onClick={() => {
+                                                setSelectedSubject(subject);
+                                                setView('list');
+                                              }}
+                                            />
+                                          ));
+                                        }
+                                        
+                                        // Organizar por secciones
+                                        return (
+                                          <div className="col-span-full space-y-6">
+                                            {mainSubjects.map((mainSubject) => {
+                                              // Obtener el número del objeto (ej: "1" de "Obj 1:")
+                                              const objNumber = mainSubject.name.match(/Obj\s*(\d+)/)?.[1] || '';
+                                              // Filtrar subtemas que pertenecen a este objeto
+                                              const relatedSubTopics = subTopics.filter(s => 
+                                                s.name.startsWith(`${objNumber}.`)
+                                              );
+                                              
+                                              return (
+                                                <div key={mainSubject.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                                                  {/* Header del Objeto */}
+                                                  <div 
+                                                    className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                                                    style={{ borderLeft: `4px solid ${mainSubject.color}` }}
+                                                    onClick={() => {
+                                                      setSelectedSubject(mainSubject);
+                                                      setView('list');
+                                                    }}
+                                                  >
+                                                    <div className="flex items-center justify-between">
+                                                      <div>
+                                                        <h3 className="font-semibold text-gray-900">{mainSubject.name}</h3>
+                                                        {mainSubject.description && (
+                                                          <p className="text-sm text-gray-500 mt-1">{mainSubject.description}</p>
+                                                        )}
+                                                      </div>
+                                                      <div className="flex items-center gap-2">
+                                                        {quizzes.filter(q => q.subject_id === mainSubject.id).length > 0 && (
+                                                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                                                            {quizzes.filter(q => q.subject_id === mainSubject.id).length} quiz
+                                                          </span>
+                                                        )}
+                                                        {isAdmin && (
+                                                          <div className="flex gap-1">
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              onClick={(e) => { e.stopPropagation(); setEditingSubject(mainSubject); }}
+                                                              className="h-8 w-8 text-gray-400 hover:text-indigo-600"
+                                                            >
+                                                              <Pencil className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              onClick={(e) => { e.stopPropagation(); deleteSubjectMutation.mutate(mainSubject.id); }}
+                                                              className="h-8 w-8 text-gray-400 hover:text-red-600"
+                                                            >
+                                                              <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  {/* Lista de subtemas */}
+                                                  {relatedSubTopics.length > 0 && (
+                                                    <div className="border-t divide-y">
+                                                      {relatedSubTopics.map((subTopic) => (
+                                                        <div
+                                                          key={subTopic.id}
+                                                          className="px-4 py-3 pl-8 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group"
+                                                          onClick={() => {
+                                                            setSelectedSubject(subTopic);
+                                                            setView('list');
+                                                          }}
+                                                        >
+                                                          <span className="text-sm text-gray-700">{subTopic.name}</span>
+                                                          <div className="flex items-center gap-2">
+                                                            {quizzes.filter(q => q.subject_id === subTopic.id).length > 0 && (
+                                                              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                                                {quizzes.filter(q => q.subject_id === subTopic.id).length} quiz
+                                                              </span>
+                                                            )}
+                                                            {isAdmin && (
+                                                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <Button
+                                                                  variant="ghost"
+                                                                  size="icon"
+                                                                  onClick={(e) => { e.stopPropagation(); setEditingSubject(subTopic); }}
+                                                                  className="h-6 w-6 text-gray-400 hover:text-indigo-600"
+                                                                >
+                                                                  <Pencil className="w-3 h-3" />
+                                                                </Button>
+                                                                <Button
+                                                                  variant="ghost"
+                                                                  size="icon"
+                                                                  onClick={(e) => { e.stopPropagation(); deleteSubjectMutation.mutate(subTopic.id); }}
+                                                                  className="h-6 w-6 text-gray-400 hover:text-red-600"
+                                                                >
+                                                                  <Trash2 className="w-3 h-3" />
+                                                                </Button>
+                                                              </div>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        );
+                                      })()}
                                     </div>
                                   )}
                                 </motion.div>
