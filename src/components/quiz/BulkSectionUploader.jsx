@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Upload, FileJson, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Upload, FileJson, AlertCircle, CheckCircle2, Loader2, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { base44 } from '@/api/base44Client';
 
 export default function BulkSectionUploader({ subjects, onSuccess }) {
@@ -11,22 +13,14 @@ export default function BulkSectionUploader({ subjects, onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [results, setResults] = useState([]);
+  const [jsonText, setJsonText] = useState('');
 
-  const handleFile = async (file) => {
-    if (!file) return;
-    
-    if (file.type !== 'application/json') {
-      setError('Por favor, selecciona un archivo JSON válido');
-      return;
-    }
-
+  const processJsonData = async (data) => {
     setIsProcessing(true);
     setError(null);
     setResults([]);
 
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
       
       // Esperamos un formato con secciones:
       // {
@@ -147,9 +141,40 @@ export default function BulkSectionUploader({ subjects, onSuccess }) {
       }
 
     } catch (err) {
-      setError(err.message || 'Error al procesar el archivo');
+      setError(err.message || 'Error al procesar los datos');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    
+    if (file.type !== 'application/json') {
+      setError('Por favor, selecciona un archivo JSON válido');
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      await processJsonData(data);
+    } catch (err) {
+      setError(err.message || 'Error al leer el archivo');
+    }
+  };
+
+  const handlePasteSubmit = async () => {
+    if (!jsonText.trim()) {
+      setError('Por favor, pega el JSON');
+      return;
+    }
+
+    try {
+      const data = JSON.parse(jsonText);
+      await processJsonData(data);
+    } catch (err) {
+      setError('JSON inválido: ' + err.message);
     }
   };
 
