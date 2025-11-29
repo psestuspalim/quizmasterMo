@@ -1203,6 +1203,42 @@ export default function QuizzesPage() {
                                 </motion.div>
                               )}
 
+                              {/* Bulk Section Uploader View */}
+                              {showBulkUploader && (
+                                <motion.div
+                                  key="bulk-uploader"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                                  <Button
+                                    onClick={() => setShowBulkUploader(false)}
+                                    variant="ghost"
+                                    className="mb-6"
+                                  >
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    Volver
+                                  </Button>
+
+                                  <div className="mb-8 text-center">
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                      Cargar JSON con secciones
+                                    </h2>
+                                    <p className="text-gray-600">
+                                      Sube un archivo JSON que contenga todas las secciones del parcial
+                                    </p>
+                                  </div>
+
+                                  <BulkSectionUploader 
+                                    subjects={currentSubjects}
+                                    onSuccess={() => {
+                                      queryClient.invalidateQueries(['quizzes']);
+                                      setShowBulkUploader(false);
+                                    }}
+                                  />
+                                </motion.div>
+                              )}
+
                               {/* Folder Editor View */}
                               {editingFolder && (
                                 <motion.div
