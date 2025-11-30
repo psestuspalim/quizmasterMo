@@ -30,6 +30,8 @@ export default function AdminTasksPage() {
     due_date: '',
     notes: ''
   });
+  const [quizSearch, setQuizSearch] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('all');
 
   const queryClient = useQueryClient();
 
@@ -175,24 +177,83 @@ export default function AdminTasksPage() {
                 <DialogTitle>Asignar nueva tarea</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
-                <div>
-                  <Label>Quiz</Label>
-                  <Select
-                    value={newTask.quiz_id}
-                    onValueChange={(value) => setNewTask({...newTask, quiz_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un quiz" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {quizzes.map((quiz) => (
-                        <SelectItem key={quiz.id} value={quiz.id}>
-                          {quiz.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="space-y-2">
+                                <Label>Quiz</Label>
+
+                                {/* Filtro por materia */}
+                                <Select
+                                  value={subjectFilter}
+                                  onValueChange={setSubjectFilter}
+                                >
+                                  <SelectTrigger className="mb-2">
+                                    <SelectValue placeholder="Filtrar por materia" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">Todas las materias</SelectItem>
+                                    {subjects.map((subject) => (
+                                      <SelectItem key={subject.id} value={subject.id}>
+                                        {subject.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+
+                                {/* Búsqueda */}
+                                <Input
+                                  placeholder="Buscar quiz..."
+                                  value={quizSearch}
+                                  onChange={(e) => setQuizSearch(e.target.value)}
+                                  className="mb-2"
+                                />
+
+                                {/* Lista de quizzes filtrada */}
+                                <div className="border rounded-lg max-h-48 overflow-y-auto">
+                                  {quizzes
+                                    .filter(quiz => {
+                                      const matchesSubject = subjectFilter === 'all' || quiz.subject_id === subjectFilter;
+                                      const matchesSearch = quiz.title.toLowerCase().includes(quizSearch.toLowerCase());
+                                      return matchesSubject && matchesSearch;
+                                    })
+                                    .map((quiz) => {
+                                      const subject = subjects.find(s => s.id === quiz.subject_id);
+                                      return (
+                                        <div
+                                          key={quiz.id}
+                                          className={`flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${
+                                            newTask.quiz_id === quiz.id ? 'bg-indigo-50 border-l-2 border-l-indigo-500' : ''
+                                          }`}
+                                          onClick={() => setNewTask({...newTask, quiz_id: quiz.id})}
+                                        >
+                                          <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-sm truncate">{quiz.title}</div>
+                                            <div className="text-xs text-gray-500 flex items-center gap-2">
+                                              <span>{subject?.name || 'Sin materia'}</span>
+                                              <span>•</span>
+                                              <span>{quiz.questions?.length || 0} preguntas</span>
+                                            </div>
+                                          </div>
+                                          {newTask.quiz_id === quiz.id && (
+                                            <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  {quizzes.filter(quiz => {
+                                    const matchesSubject = subjectFilter === 'all' || quiz.subject_id === subjectFilter;
+                                    const matchesSearch = quiz.title.toLowerCase().includes(quizSearch.toLowerCase());
+                                    return matchesSubject && matchesSearch;
+                                  }).length === 0 && (
+                                    <div className="p-4 text-center text-gray-500 text-sm">
+                                      No se encontraron quizzes
+                                    </div>
+                                  )}
+                                </div>
+                                {newTask.quiz_id && (
+                                  <div className="text-xs text-indigo-600">
+                                    ✓ Seleccionado: {quizzes.find(q => q.id === newTask.quiz_id)?.title}
+                                  </div>
+                                )}
+                              </div>
 
                 <div>
                   <Label>Meta de puntaje (%)</Label>
