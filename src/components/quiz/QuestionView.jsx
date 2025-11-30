@@ -203,10 +203,96 @@ Responde en español. Sé conciso pero informativo.`,
                     )}
                   </div>
                   <CardTitle className="text-base sm:text-xl font-semibold text-gray-900 leading-relaxed">
-                    <MathText text={question.question} />
-                  </CardTitle>
+                                            <MathText text={question.question} />
+                                          </CardTitle>
 
-                  {/* Imagen si existe */}
+                                          {/* Botones de ayuda */}
+                                          <div className="flex flex-wrap gap-2 mt-3">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={handleRephrase}
+                                              disabled={rephrasing || rephrasedQuestion}
+                                              className="text-xs h-7 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                            >
+                                              {rephrasing ? (
+                                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                              ) : (
+                                                <RefreshCw className="w-3 h-3 mr-1" />
+                                              )}
+                                              Reformular
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={handleEtymology}
+                                              disabled={loadingEtymology || etymology}
+                                              className="text-xs h-7 text-purple-600 border-purple-200 hover:bg-purple-50"
+                                            >
+                                              {loadingEtymology ? (
+                                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                              ) : (
+                                                <BookOpen className="w-3 h-3 mr-1" />
+                                              )}
+                                              Raíces etimológicas
+                                            </Button>
+                                          </div>
+
+                                          {/* Pregunta reformulada */}
+                                          <AnimatePresence>
+                                            {rephrasedQuestion && (
+                                              <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3"
+                                              >
+                                                <div className="flex gap-2">
+                                                  <RefreshCw className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                                                  <div>
+                                                    <p className="text-xs font-medium text-blue-800 mb-1">En otras palabras:</p>
+                                                    <p className="text-sm text-blue-900">{rephrasedQuestion}</p>
+                                                  </div>
+                                                </div>
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+
+                                          {/* Etimología */}
+                                          <AnimatePresence>
+                                            {etymology && etymology.length > 0 && (
+                                              <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-3"
+                                              >
+                                                <div className="flex gap-2">
+                                                  <BookOpen className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                                                  <div className="flex-1">
+                                                    <p className="text-xs font-medium text-purple-800 mb-2">Raíces etimológicas:</p>
+                                                    <div className="space-y-2">
+                                                      {etymology.map((term, idx) => (
+                                                        <div key={idx} className="bg-white/60 rounded p-2">
+                                                          <p className="text-sm font-semibold text-purple-900">{term.term}</p>
+                                                          <div className="flex flex-wrap gap-1 mt-1">
+                                                            {term.parts?.map((part, pidx) => (
+                                                              <span key={pidx} className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                                                <strong>{part.part}</strong> ({part.type}): {part.meaning}
+                                                              </span>
+                                                            ))}
+                                                          </div>
+                                                          <p className="text-xs text-purple-600 mt-1">→ {term.fullMeaning}</p>
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+
+                                          {/* Imagen si existe */}
                   {question.imageUrl && (
                     <div className="mt-3 sm:mt-4 rounded-lg overflow-hidden border">
                       <img 
