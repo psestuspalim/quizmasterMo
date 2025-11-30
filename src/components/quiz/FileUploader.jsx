@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Upload, FileJson, AlertCircle, Image, Microscope, ClipboardPaste } from 'lucide-react';
+import { Upload, FileJson, AlertCircle, Image, Microscope, ClipboardPaste, Wrench, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
