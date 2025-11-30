@@ -103,7 +103,8 @@ export default function TournamentLobby() {
     },
     onError: (error) => {
       console.error('Error creating tournament:', error);
-      toast.error(error.message || 'Error al crear el torneo');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      toast.error(error?.message || error?.toString() || 'Error al crear el torneo');
     }
   });
 
