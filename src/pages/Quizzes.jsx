@@ -443,7 +443,8 @@ export default function QuizzesPage() {
       });
       queryClient.invalidateQueries(['attempts']);
     }
-    setView('results');
+    setSelectedQuiz(null);
+    setView('list');
   };
 
   const handleHome = () => {
@@ -928,21 +929,21 @@ export default function QuizzesPage() {
           )}
 
           {/* Results View */}
-          {view === 'results' && selectedQuiz && (
-            <motion.div key="results" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-              <ResultsView
-                score={score}
-                totalQuestions={selectedQuiz.questions.length}
-                wrongAnswers={wrongAnswers}
-                correctAnswers={correctAnswers}
-                answeredQuestions={score + wrongAnswers.length}
-                isPartial={score + wrongAnswers.length < selectedQuiz.questions.length}
-                onRetry={handleRetry}
-                onRetryWrong={handleRetryWrongQuestions}
-                onHome={handleHome}
-              />
-            </motion.div>
-          )}
+                      {view === 'results' && selectedQuiz && (
+                        <motion.div key="results" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                          <ResultsView
+                            score={score}
+                            totalQuestions={selectedQuiz.questions.length}
+                            wrongAnswers={wrongAnswers}
+                            correctAnswers={correctAnswers}
+                            answeredQuestions={score + wrongAnswers.length}
+                            isPartial={score + wrongAnswers.length < selectedQuiz.questions.length}
+                            onRetry={handleRetry}
+                            onRetryWrong={handleRetryWrongQuestions}
+                            onHome={() => { setSelectedQuiz(null); setView('list'); }}
+                          />
+                        </motion.div>
+                      )}
         </AnimatePresence>
 
         <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
