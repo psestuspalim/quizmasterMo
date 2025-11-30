@@ -90,6 +90,10 @@ export default function TournamentLobby() {
     onSuccess: (tournament) => {
       setShowCreateDialog(false);
       window.location.href = createPageUrl(`TournamentPlay?code=${tournament.code}`);
+    },
+    onError: (error) => {
+      console.error('Error creating tournament:', error);
+      toast.error(error.message || 'Error al crear el torneo');
     }
   });
 
