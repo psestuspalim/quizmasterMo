@@ -1398,63 +1398,124 @@ export default function QuizzesPage() {
                                                             </TabsList>
 
                                                             <TabsContent value="quizzes">
-                                                                                                                                {subjectQuizzes.length === 0 ? (
-                                                                                                                                  <div className="text-center py-12">
-                                                                                                                                    <div className="flex justify-center mb-4">
-                                                                                                                                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                                                                                        <BookOpen className="w-8 h-8 text-gray-400" />
-                                                                                                                                      </div>
-                                                                                                                                    </div>
-                                                                                                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                                                                                                      No hay cuestionarios
-                                                                                                                                    </h3>
-                                                                                                                                    <p className="text-gray-500 mb-4 text-sm">
-                                                                                                                                      Comienza cargando tu primer cuestionario
-                                                                                                                                    </p>
-                                                                                                                                    <Button
-                                                                                                                                      onClick={() => setShowUploader(true)}
-                                                                                                                                      className="bg-indigo-600 hover:bg-indigo-700"
-                                                                                                                                    >
-                                                                                                                                      <Plus className="w-4 h-4 mr-2" />
-                                                                                                                                      Cargar cuestionario
-                                                                                                                                    </Button>
-                                                                                                                                  </div>
-                                                                                                                                ) : (
-                                                                                                                                  <div className="flex flex-wrap gap-2">
-                                                                                                                                    {subjectQuizzes.map((quiz) => {
-                                                                                                                                      const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
-                                                                                                                                      const hasAttempts = quizAttempts.length > 0;
-                                                                                                                                      const lastAttempt = quizAttempts[0];
-                                                                                                                                      const scorePercent = lastAttempt ? Math.round((lastAttempt.score / lastAttempt.total_questions) * 100) : 0;
+                                                                                                                                                                                                {subjectQuizzes.length === 0 ? (
+                                                                                                                                                                                                  <div className="text-center py-12">
+                                                                                                                                                                                                    <div className="flex justify-center mb-4">
+                                                                                                                                                                                                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                                                                                                                                                                                                        <BookOpen className="w-8 h-8 text-gray-400" />
+                                                                                                                                                                                                      </div>
+                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                                                                                                                                                                      No hay cuestionarios
+                                                                                                                                                                                                    </h3>
+                                                                                                                                                                                                    <p className="text-gray-500 mb-4 text-sm">
+                                                                                                                                                                                                      Comienza cargando tu primer cuestionario
+                                                                                                                                                                                                    </p>
+                                                                                                                                                                                                    <Button
+                                                                                                                                                                                                      onClick={() => setShowUploader(true)}
+                                                                                                                                                                                                      className="bg-indigo-600 hover:bg-indigo-700"
+                                                                                                                                                                                                    >
+                                                                                                                                                                                                      <Plus className="w-4 h-4 mr-2" />
+                                                                                                                                                                                                      Cargar cuestionario
+                                                                                                                                                                                                    </Button>
+                                                                                                                                                                                                  </div>
+                                                                                                                                                                                                ) : (
+                                                                                                                                                                                                  <div className="space-y-2">
+                                                                                                                                                                                                    {subjectQuizzes.map((quiz) => {
+                                                                                                                                                                                                      const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
+                                                                                                                                                                                                      const hasAttempts = quizAttempts.length > 0;
+                                                                                                                                                                                                      const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
 
-                                                                                                                                      return (
-                                                                                                                                        <Badge
-                                                                                                                                          key={quiz.id}
-                                                                                                                                          variant="outline"
-                                                                                                                                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-indigo-50 transition-all ${
-                                                                                                                                            hasAttempts 
-                                                                                                                                              ? scorePercent >= 80 
-                                                                                                                                                ? 'border-green-400 bg-green-50 text-green-700' 
-                                                                                                                                                : scorePercent >= 50 
-                                                                                                                                                  ? 'border-yellow-400 bg-yellow-50 text-yellow-700'
-                                                                                                                                                  : 'border-red-400 bg-red-50 text-red-700'
-                                                                                                                                              : 'border-gray-300 bg-white text-gray-700'
-                                                                                                                                          }`}
-                                                                                                                                          onClick={() => handleStartQuiz(quiz, quiz.total_questions || quiz.questions?.length || 10, 'all', quizAttempts)}
-                                                                                                                                        >
-                                                                                                                                          {quiz.title}
-                                                                                                                                          {hasAttempts && (
-                                                                                                                                            <span className="ml-2 text-xs opacity-75">
-                                                                                                                                              {scorePercent}%
-                                                                                                                                            </span>
-                                                                                                                                          )}
-                                                                                                                                          {quiz.is_hidden && <span className="ml-1 text-xs">🔒</span>}
-                                                                                                                                        </Badge>
-                                                                                                                                      );
-                                                                                                                                    })}
-                                                                                                                                  </div>
-                                                                                                                                )}
-                                                                                                                              </TabsContent>
+                                                                                                                                                                                                      // Calcular estadísticas acumuladas
+                                                                                                                                                                                                      const allAnswered = new Set();
+                                                                                                                                                                                                      const wrongSet = new Set();
+                                                                                                                                                                                                      let totalCorrect = 0;
+                                                                                                                                                                                                      let totalAnsweredCount = 0;
+
+                                                                                                                                                                                                      quizAttempts.forEach(attempt => {
+                                                                                                                                                                                                        totalCorrect += attempt.score || 0;
+                                                                                                                                                                                                        totalAnsweredCount += attempt.answered_questions || attempt.total_questions || 0;
+                                                                                                                                                                                                        attempt.wrong_questions?.forEach(wq => wrongSet.add(wq.question));
+                                                                                                                                                                                                      });
+
+                                                                                                                                                                                                      const uniqueWrong = wrongSet.size;
+                                                                                                                                                                                                      const avgScore = quizAttempts.length > 0 
+                                                                                                                                                                                                        ? Math.round(quizAttempts.reduce((sum, a) => sum + ((a.score / a.total_questions) * 100), 0) / quizAttempts.length)
+                                                                                                                                                                                                        : 0;
+                                                                                                                                                                                                      const progressPercent = totalQuestions > 0 ? Math.min(100, Math.round((totalAnsweredCount / totalQuestions) * 100)) : 0;
+
+                                                                                                                                                                                                      return (
+                                                                                                                                                                                                        <div
+                                                                                                                                                                                                          key={quiz.id}
+                                                                                                                                                                                                          onClick={() => handleStartQuiz(quiz, totalQuestions, 'all', quizAttempts)}
+                                                                                                                                                                                                          className={`flex flex-wrap items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                                                                                                                                                                                                            hasAttempts 
+                                                                                                                                                                                                              ? avgScore >= 80 
+                                                                                                                                                                                                                ? 'border-green-300 bg-green-50/50 hover:bg-green-50' 
+                                                                                                                                                                                                                : avgScore >= 50 
+                                                                                                                                                                                                                  ? 'border-yellow-300 bg-yellow-50/50 hover:bg-yellow-50'
+                                                                                                                                                                                                                  : 'border-red-300 bg-red-50/50 hover:bg-red-50'
+                                                                                                                                                                                                              : 'border-gray-200 bg-white hover:bg-gray-50'
+                                                                                                                                                                                                          }`}
+                                                                                                                                                                                                        >
+                                                                                                                                                                                                          {/* Título */}
+                                                                                                                                                                                                          <span className="font-medium text-gray-900 text-sm flex-shrink-0">
+                                                                                                                                                                                                            {quiz.title}
+                                                                                                                                                                                                            {quiz.is_hidden && <span className="ml-1">🔒</span>}
+                                                                                                                                                                                                          </span>
+
+                                                                                                                                                                                                          {/* Badges de estadísticas */}
+                                                                                                                                                                                                          <div className="flex flex-wrap items-center gap-1.5 ml-auto">
+                                                                                                                                                                                                            {/* Total preguntas */}
+                                                                                                                                                                                                            <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600 border-gray-300">
+                                                                                                                                                                                                              📝 {totalQuestions}
+                                                                                                                                                                                                            </Badge>
+
+                                                                                                                                                                                                            {hasAttempts && (
+                                                                                                                                                                                                              <>
+                                                                                                                                                                                                                {/* Contestadas */}
+                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-300">
+                                                                                                                                                                                                                  ✏️ {totalAnsweredCount}
+                                                                                                                                                                                                                </Badge>
+
+                                                                                                                                                                                                                {/* Correctas */}
+                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300">
+                                                                                                                                                                                                                  ✓ {totalCorrect}
+                                                                                                                                                                                                                </Badge>
+
+                                                                                                                                                                                                                {/* Incorrectas únicas */}
+                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-red-100 text-red-700 border-red-300">
+                                                                                                                                                                                                                  ✗ {uniqueWrong}
+                                                                                                                                                                                                                </Badge>
+
+                                                                                                                                                                                                                {/* Promedio */}
+                                                                                                                                                                                                                <Badge 
+                                                                                                                                                                                                                  variant="outline" 
+                                                                                                                                                                                                                  className={`text-xs font-semibold ${
+                                                                                                                                                                                                                    avgScore >= 80 
+                                                                                                                                                                                                                      ? 'bg-green-500 text-white border-green-500' 
+                                                                                                                                                                                                                      : avgScore >= 50 
+                                                                                                                                                                                                                        ? 'bg-yellow-500 text-white border-yellow-500'
+                                                                                                                                                                                                                        : 'bg-red-500 text-white border-red-500'
+                                                                                                                                                                                                                  }`}
+                                                                                                                                                                                                                >
+                                                                                                                                                                                                                  ⌀ {avgScore}%
+                                                                                                                                                                                                                </Badge>
+                                                                                                                                                                                                              </>
+                                                                                                                                                                                                            )}
+
+                                                                                                                                                                                                            {!hasAttempts && (
+                                                                                                                                                                                                              <Badge variant="outline" className="text-xs bg-indigo-100 text-indigo-600 border-indigo-300">
+                                                                                                                                                                                                                Nuevo
+                                                                                                                                                                                                              </Badge>
+                                                                                                                                                                                                            )}
+                                                                                                                                                                                                          </div>
+                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                      );
+                                                                                                                                                                                                    })}
+                                                                                                                                                                                                  </div>
+                                                                                                                                                                                                )}
+                                                                                                                                                                                              </TabsContent>
 
                                                             <TabsContent value="audios">
                                                               <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
