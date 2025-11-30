@@ -60,11 +60,15 @@ Responde en español con una explicación breve y clara.`,
     setLoadingEtymology(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analiza esta pregunta y encuentra todos los términos médicos/científicos. Para cada término, identifica sus prefijos, sufijos y raíces, dando su significado etimológico (griego/latín).
+        prompt: `Analiza esta pregunta y encuentra los términos médicos/científicos. Para CADA término, descompónlo en sus PARTES ETIMOLÓGICAS (prefijos, sufijos y raíces del griego o latín), NO des definiciones médicas.
+
+Ejemplo correcto:
+- "hipoglucemia" → hipo- (griego: debajo/bajo) + gluc- (griego: dulce/azúcar) + -emia (griego: sangre) = "azúcar baja en sangre"
+- "taquicardia" → taqui- (griego: rápido) + cardia (griego: corazón) = "corazón rápido"
 
 Pregunta: "${question.question}"
 
-Responde en español. Sé conciso pero informativo.`,
+Descompón cada término en sus raíces etimológicas griegas/latinas. NO expliques qué es la condición médicamente, solo la etimología de las palabras.`,
         response_json_schema: {
           type: "object",
           properties: {
