@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft, Bookmark, RefreshCw, BookOpen, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Lightbulb, ChevronRight, ChevronLeft, Bookmark, RefreshCw, BookOpen, Loader2, Workflow } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
