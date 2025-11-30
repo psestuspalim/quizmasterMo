@@ -28,6 +28,7 @@ import SubjectCard from '../components/quiz/SubjectCard';
 import SubjectEditor from '../components/quiz/SubjectEditor';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import FolderCard from '../components/quiz/FolderCard';
+import FolderEditor from '../components/quiz/FolderEditor';
 import AudioList from '../components/audio/AudioList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PointsDisplay from '../components/gamification/PointsDisplay';
@@ -737,30 +738,40 @@ export default function QuizzesPage() {
   const isAdmin = currentUser?.role === 'admin';
 
   // Filtrar materias según visibilidad
-      const visibleSubjects = subjects.filter(subject => {
-        if (isAdmin) return true;
-        if (subject.is_hidden) return false;
-        if (subject.visibility === 'specific') {
-          return subject.allowed_users?.includes(currentUser?.email);
-        }
-        return true;
-      });
+              const visibleSubjects = subjects.filter(subject => {
+                if (isAdmin) return true;
+                if (subject.is_hidden) return false;
+                if (subject.visibility === 'specific') {
+                  return subject.allowed_users?.includes(currentUser?.email);
+                }
+                return true;
+              });
+
+              // Filtrar carpetas según visibilidad
+              const visibleFolders = folders.filter(folder => {
+                if (isAdmin) return true;
+                if (folder.is_hidden) return false;
+                if (folder.visibility === 'specific') {
+                  return folder.allowed_users?.includes(currentUser?.email);
+                }
+                return true;
+              });
 
       // Filtrar carpetas y materias según la carpeta actual
-      const currentFolders = folders.filter(f => f.parent_id === currentFolderId);
-      const currentSubjects = visibleSubjects.filter(s => 
-        currentFolderId ? s.folder_id === currentFolderId : !s.folder_id
-      );
+                  const currentFolders = visibleFolders.filter(f => f.parent_id === currentFolderId);
+                  const currentSubjects = visibleSubjects.filter(s => 
+                    currentFolderId ? s.folder_id === currentFolderId : !s.folder_id
+                  );
 
       // Obtener la carpeta actual para mostrar breadcrumb
       const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
 
       // Función para contar elementos en una carpeta
-      const getFolderItemCount = (folderId) => {
-        const subFolders = folders.filter(f => f.parent_id === folderId).length;
-        const subSubjects = visibleSubjects.filter(s => s.folder_id === folderId).length;
-        return subFolders + subSubjects;
-      };
+                  const getFolderItemCount = (folderId) => {
+                    const subFolders = visibleFolders.filter(f => f.parent_id === folderId).length;
+                    const subSubjects = visibleSubjects.filter(s => s.folder_id === folderId).length;
+                    return subFolders + subSubjects;
+                  };
 
   const subjectQuizzes = selectedSubject 
     ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
