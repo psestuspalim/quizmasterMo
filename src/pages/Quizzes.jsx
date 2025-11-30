@@ -41,7 +41,7 @@ import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 
 export default function QuizzesPage() {
-  const [view, setView] = useState('courses');
+  const [view, setView] = useState('home');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
@@ -266,6 +266,8 @@ export default function QuizzesPage() {
 
   // Filtered data
   const visibleCourses = courses.filter(c => canUserAccess(c));
+  const unassignedSubjects = subjects.filter(s => !s.course_id && canUserAccess(s));
+  const unassignedFolders = folders.filter(f => !f.course_id && !f.parent_id && canUserAccess(f));
   const currentCourseSubjects = selectedCourse 
     ? subjects.filter(s => s.course_id === selectedCourse.id && canUserAccess(s, selectedCourse))
     : [];
@@ -449,7 +451,7 @@ export default function QuizzesPage() {
     setSelectedSubject(null);
     setSelectedCourse(null);
     setCurrentFolderId(null);
-    setView('courses');
+    setView('home');
     setShowUploader(false);
   };
 
@@ -577,8 +579,8 @@ export default function QuizzesPage() {
             </motion.div>
           )}
 
-          {/* Courses View */}
-          {view === 'courses' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
+          {/* Home View - Courses + Unassigned Subjects */}
+          {view === 'home' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
             <motion.div key="courses" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <ChallengeNotifications currentUser={currentUser} onStartChallenge={(c) => window.location.href = `/ChallengePlay?id=${c.id}`} />
               
@@ -653,25 +655,78 @@ export default function QuizzesPage() {
                 </div>
               </div>
 
-              {visibleCourses.length === 0 ? (
+              {/* Cursos */}
+              {visibleCourses.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5" /> Cursos
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {visibleCourses.map((course) => (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        subjectCount={subjects.filter(s => s.course_id === course.id).length}
+                        isAdmin={isAdmin}
+                        onEdit={setEditingCourse}
+                        onDelete={(id) => deleteCourseMutation.mutate(id)}
+                        onClick={() => { setSelectedCourse(course); setView('subjects'); }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Carpetas sin curso */}
+              {unassignedFolders.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Folder className="w-5 h-5" /> Carpetas
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unassignedFolders.map((folder) => (
+                      <FolderCard
+                        key={folder.id}
+                        folder={folder}
+                        itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                        isAdmin={isAdmin}
+                        onDelete={(id) => deleteFolderMutation.mutate(id)}
+                        onEdit={setEditingFolder}
+                        onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Materias sin curso */}
+              {unassignedSubjects.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" /> Materias
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unassignedSubjects.map((subject) => (
+                      <SubjectCard
+                        key={subject.id}
+                        subject={subject}
+                        quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                        stats={getSubjectStats(subject.id)}
+                        isAdmin={isAdmin}
+                        onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                        onEdit={setEditingSubject}
+                        onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {visibleCourses.length === 0 && unassignedFolders.length === 0 && unassignedSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay cursos</h3>
-                  <p className="text-gray-500">Comienza creando tu primer curso</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {visibleCourses.map((course) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      subjectCount={subjects.filter(s => s.course_id === course.id).length}
-                      isAdmin={isAdmin}
-                      onEdit={setEditingCourse}
-                      onDelete={(id) => deleteCourseMutation.mutate(id)}
-                      onClick={() => { setSelectedCourse(course); setView('subjects'); }}
-                    />
-                  ))}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay contenido</h3>
+                  <p className="text-gray-500">Comienza creando tu primer curso o materia</p>
                 </div>
               )}
             </motion.div>
