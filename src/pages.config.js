@@ -8,6 +8,8 @@ import GameLobby from './pages/GameLobby';
 import GamePlay from './pages/GamePlay';
 import MyTasks from './pages/MyTasks';
 import AdminTasks from './pages/AdminTasks';
+import TournamentLobby from './pages/TournamentLobby';
+import TournamentPlay from './pages/TournamentPlay';
 
 
 export const PAGES = {
@@ -21,6 +23,8 @@ export const PAGES = {
     "GamePlay": GamePlay,
     "MyTasks": MyTasks,
     "AdminTasks": AdminTasks,
+    "TournamentLobby": TournamentLobby,
+    "TournamentPlay": TournamentPlay,
 }
 
 export const pagesConfig = {
