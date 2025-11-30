@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy, Clock } from 'lucide-react';
+import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy, Clock, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -16,6 +16,7 @@ import Recommendations from '../components/progress/Recommendations';
 import AttemptHistory from '../components/progress/AttemptHistory';
 import QuizCompletionBadges from '../components/progress/QuizCompletionBadges';
 import TimeVsPerformance from '../components/progress/TimeVsPerformance';
+import SpeedAnalysis from '../components/progress/SpeedAnalysis';
 
 export default function ProgressPage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -240,6 +241,10 @@ export default function ProgressPage() {
               <Clock className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Tiempo vs Rendimiento</span>
             </TabsTrigger>
+            <TabsTrigger value="speed-optimal" className="text-xs sm:text-sm">
+              <Zap className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Velocidad Óptima</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -292,7 +297,11 @@ export default function ProgressPage() {
           <TabsContent value="time-analysis" className="space-y-6">
             <TimeVsPerformance attempts={attempts} />
           </TabsContent>
-        </Tabs>
+
+          <TabsContent value="speed-optimal" className="space-y-6">
+            <SpeedAnalysis attempts={attempts} />
+          </TabsContent>
+          </Tabs>
       </div>
     </div>
   );

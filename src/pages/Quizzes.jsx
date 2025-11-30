@@ -62,6 +62,8 @@ export default function QuizzesPage() {
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [showBulkUploader, setShowBulkUploader] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState('quizzes');
+    const [responseTimes, setResponseTimes] = useState([]);
+    const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   
   // Dialogs
   const [showCourseDialog, setShowCourseDialog] = useState(false);
@@ -330,16 +332,23 @@ export default function QuizzesPage() {
     setWrongAnswers([]);
     setCorrectAnswers([]);
     setMarkedQuestions([]);
+    setResponseTimes([]);
+    setQuestionStartTime(Date.now());
     setDeckType(selectedDeck);
     setView('quiz');
-  };
+    };
 
   const handleAnswer = async (isCorrect, selectedOption, question) => {
+    const responseTime = Math.round((Date.now() - questionStartTime) / 1000);
+    const newResponseTimes = [...responseTimes, responseTime];
+    setResponseTimes(newResponseTimes);
+
     const newScore = isCorrect ? score + 1 : score;
     const newWrongAnswers = !isCorrect ? [...wrongAnswers, {
       question: question.question,
       selected_answer: selectedOption.text,
       correct_answer: question.answerOptions.find(opt => opt.isCorrect)?.text,
+      response_time: responseTime,
       answerOptions: question.answerOptions,
       hint: question.hint
     }] : wrongAnswers;
@@ -360,6 +369,7 @@ export default function QuizzesPage() {
         score: newScore,
         answered_questions: answeredCount,
         wrong_questions: newWrongAnswers,
+        response_times: newResponseTimes,
         is_completed: isLastQuestion,
         completed_at: isLastQuestion ? new Date().toISOString() : undefined
       }
@@ -367,6 +377,7 @@ export default function QuizzesPage() {
 
     if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setQuestionStartTime(Date.now());
     } else {
       queryClient.invalidateQueries(['attempts']);
       setView('results');
