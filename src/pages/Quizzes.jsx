@@ -585,16 +585,41 @@ export default function QuizzesPage() {
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
     
     // Actualizar intento después de cada respuesta
-    await updateAttemptMutation.mutateAsync({
-      id: currentAttemptId,
-      data: {
-        score: newScore,
-        answered_questions: currentQuestionIndex + 1,
-        wrong_questions: updatedWrongQuestions,
-        is_completed: isLastQuestion,
-        completed_at: isLastQuestion ? new Date().toISOString() : undefined
-      }
-    });
+          // Calcular porcentaje basado en preguntas contestadas (no total)
+          const answeredCount = currentQuestionIndex + 1;
+          const scorePercentage = answeredCount > 0 ? Math.round((newScore / answeredCount) * 100) : 0;
+
+          await updateAttemptMutation.mutateAsync({
+            id: currentAttemptId,
+            data: {
+              score: newScore,
+              answered_questions: answeredCount,
+              wrong_questions: updatedWrongQuestions,
+              is_completed: isLastQuestion,
+              completed_at: isLastQuestion ? new Date().toISOString() : undefined,
+              score_percentage: scorePercentage
+            }
+          });
+
+          // Si es la última pregunta, actualizar tarea si existe
+          if (isLastQuestion) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const taskId = urlParams.get('taskId');
+            if (taskId) {
+              const tasks = await base44.entities.AssignedTask.filter({ id: taskId });
+              if (tasks.length > 0) {
+                const task = tasks[0];
+                const newBestScore = Math.max(task.best_score || 0, scorePercentage);
+                const isCompleted = newBestScore >= task.target_score;
+                await base44.entities.AssignedTask.update(taskId, {
+                  best_score: newBestScore,
+                  attempts: (task.attempts || 0) + 1,
+                  status: isCompleted ? 'completed' : 'in_progress',
+                  completed_at: isCompleted ? new Date().toISOString() : null
+                });
+              }
+            }
+          }
 
     if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);

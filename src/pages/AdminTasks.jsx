@@ -25,7 +25,7 @@ export default function AdminTasksPage() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [newTask, setNewTask] = useState({
-    quiz_id: '',
+    quiz_ids: [],
     target_score: 70,
     due_date: '',
     notes: ''
@@ -67,25 +67,31 @@ export default function AdminTasksPage() {
 
   const createTasksMutation = useMutation({
     mutationFn: async (taskData) => {
-      const quiz = quizzes.find(q => q.id === taskData.quiz_id);
-      const subject = subjects.find(s => s.id === quiz?.subject_id);
+      const promises = [];
       
-      const promises = selectedUsers.map(userEmail => {
-        const user = users.find(u => u.email === userEmail);
-        return base44.entities.AssignedTask.create({
-          user_email: userEmail,
-          user_username: user?.username || user?.full_name,
-          assigned_by: currentUser.email,
-          quiz_id: taskData.quiz_id,
-          quiz_title: quiz?.title,
-          subject_id: quiz?.subject_id,
-          subject_name: subject?.name,
-          target_score: taskData.target_score,
-          due_date: taskData.due_date || null,
-          notes: taskData.notes,
-          status: 'pending'
-        });
-      });
+      for (const quizId of taskData.quiz_ids) {
+        const quiz = quizzes.find(q => q.id === quizId);
+        const subject = subjects.find(s => s.id === quiz?.subject_id);
+        
+        for (const userEmail of selectedUsers) {
+          const user = users.find(u => u.email === userEmail);
+          promises.push(
+            base44.entities.AssignedTask.create({
+              user_email: userEmail,
+              user_username: user?.username || user?.full_name,
+              assigned_by: currentUser.email,
+              quiz_id: quizId,
+              quiz_title: quiz?.title,
+              subject_id: quiz?.subject_id,
+              subject_name: subject?.name,
+              target_score: taskData.target_score,
+              due_date: taskData.due_date || null,
+              notes: taskData.notes,
+              status: 'pending'
+            })
+          );
+        }
+      }
       
       return Promise.all(promises);
     },
@@ -93,7 +99,7 @@ export default function AdminTasksPage() {
       queryClient.invalidateQueries(['all-tasks']);
       setShowAssignDialog(false);
       setSelectedUsers([]);
-      setNewTask({ quiz_id: '', target_score: 70, due_date: '', notes: '' });
+      setNewTask({ quiz_ids: [], target_score: 70, due_date: '', notes: '' });
       toast.success('Tareas asignadas correctamente');
     }
   });
@@ -178,7 +184,7 @@ export default function AdminTasksPage() {
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                                <Label>Quiz</Label>
+                                <Label>Quizzes ({newTask.quiz_ids.length} seleccionados)</Label>
 
                                 {/* Filtro por materia */}
                                 <Select
@@ -206,6 +212,35 @@ export default function AdminTasksPage() {
                                   className="mb-2"
                                 />
 
+                                {/* Botones de selección rápida */}
+                                <div className="flex gap-2 mb-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    type="button"
+                                    onClick={() => {
+                                      const filtered = quizzes
+                                        .filter(quiz => {
+                                          const matchesSubject = subjectFilter === 'all' || quiz.subject_id === subjectFilter;
+                                          const matchesSearch = quiz.title.toLowerCase().includes(quizSearch.toLowerCase());
+                                          return matchesSubject && matchesSearch;
+                                        })
+                                        .map(q => q.id);
+                                      setNewTask({...newTask, quiz_ids: filtered});
+                                    }}
+                                  >
+                                    Seleccionar filtrados
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    type="button"
+                                    onClick={() => setNewTask({...newTask, quiz_ids: []})}
+                                  >
+                                    Limpiar
+                                  </Button>
+                                </div>
+
                                 {/* Lista de quizzes filtrada */}
                                 <div className="border rounded-lg max-h-48 overflow-y-auto">
                                   {quizzes
@@ -216,14 +251,26 @@ export default function AdminTasksPage() {
                                     })
                                     .map((quiz) => {
                                       const subject = subjects.find(s => s.id === quiz.subject_id);
+                                      const isSelected = newTask.quiz_ids.includes(quiz.id);
                                       return (
                                         <div
                                           key={quiz.id}
-                                          className={`flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${
-                                            newTask.quiz_id === quiz.id ? 'bg-indigo-50 border-l-2 border-l-indigo-500' : ''
+                                          className={`flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${
+                                            isSelected ? 'bg-indigo-50' : ''
                                           }`}
-                                          onClick={() => setNewTask({...newTask, quiz_id: quiz.id})}
+                                          onClick={() => {
+                                            if (isSelected) {
+                                              setNewTask({...newTask, quiz_ids: newTask.quiz_ids.filter(id => id !== quiz.id)});
+                                            } else {
+                                              setNewTask({...newTask, quiz_ids: [...newTask.quiz_ids, quiz.id]});
+                                            }
+                                          }}
                                         >
+                                          <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${
+                                            isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'
+                                          }`}>
+                                            {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                          </div>
                                           <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm truncate">{quiz.title}</div>
                                             <div className="text-xs text-gray-500 flex items-center gap-2">
@@ -232,9 +279,6 @@ export default function AdminTasksPage() {
                                               <span>{quiz.questions?.length || 0} preguntas</span>
                                             </div>
                                           </div>
-                                          {newTask.quiz_id === quiz.id && (
-                                            <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                                          )}
                                         </div>
                                       );
                                     })}
@@ -248,11 +292,6 @@ export default function AdminTasksPage() {
                                     </div>
                                   )}
                                 </div>
-                                {newTask.quiz_id && (
-                                  <div className="text-xs text-indigo-600">
-                                    ✓ Seleccionado: {quizzes.find(q => q.id === newTask.quiz_id)?.title}
-                                  </div>
-                                )}
                               </div>
 
                 <div>
@@ -330,10 +369,10 @@ export default function AdminTasksPage() {
 
                 <Button 
                   onClick={() => createTasksMutation.mutate(newTask)}
-                  disabled={!newTask.quiz_id || selectedUsers.length === 0 || createTasksMutation.isPending}
+                  disabled={newTask.quiz_ids.length === 0 || selectedUsers.length === 0 || createTasksMutation.isPending}
                   className="w-full bg-indigo-600 hover:bg-indigo-700"
                 >
-                  {createTasksMutation.isPending ? 'Asignando...' : `Asignar a ${selectedUsers.length} usuario(s)`}
+                  {createTasksMutation.isPending ? 'Asignando...' : `Asignar ${newTask.quiz_ids.length} quiz(zes) a ${selectedUsers.length} usuario(s)`}
                 </Button>
               </div>
             </DialogContent>
