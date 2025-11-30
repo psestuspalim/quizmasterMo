@@ -19,11 +19,8 @@ export default function FileUploader({ onUploadSuccess }) {
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
     let title = fileName.replace('.json', '');
-      
-      let questions = [];
-      let title = file.name.replace('.json', '');
-      
-      // Formato nuevo con quizMetadata y questions
+    
+    // Formato nuevo con quizMetadata y questions
                   if (data.questions && Array.isArray(data.questions)) {
                     title = data.quizMetadata?.title || title;
                     const totalQ = data.questions.length;
