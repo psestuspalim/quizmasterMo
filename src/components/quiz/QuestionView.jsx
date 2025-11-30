@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
 import ImageQuestionView from './ImageQuestionView';
+import ErrorAnalysis from './ErrorAnalysis';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export default function QuestionView({ 
@@ -17,7 +18,10 @@ export default function QuestionView({
   wrongAnswers = 0,
   onAnswer,
   onBack,
-  onMarkForReview
+  onMarkForReview,
+  previousAttempts = [],
+  quizId,
+  userEmail
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -31,6 +35,7 @@ export default function QuestionView({
   const [loadingSchema, setLoadingSchema] = useState(false);
   const [schema, setSchema] = useState(null);
   const [showNotes, setShowNotes] = useState(false);
+  const [answerStartTime, setAnswerStartTime] = useState(Date.now());
 
   const handleRephrase = async () => {
     setRephrasing(true);
@@ -148,6 +153,8 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
     setSelectedAnswer(index);
     setShowFeedback(true);
   };
+
+  const responseTime = showFeedback ? Math.round((Date.now() - answerStartTime) / 1000) : null;
 
   const handleNext = () => {
     const selectedOption = question.answerOptions[selectedAnswer];
@@ -394,6 +401,19 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                     </div>
                   </div>
                 </div>
+
+                {/* Análisis de error con IA */}
+                {!selectedOption.isCorrect && (
+                  <ErrorAnalysis
+                    question={question}
+                    selectedAnswer={selectedOption.text}
+                    correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
+                    responseTime={responseTime}
+                    userEmail={userEmail}
+                    quizId={quizId}
+                    previousAttempts={previousAttempts}
+                  />
+                )}
 
                 {/* Herramientas adicionales para incorrectas */}
                 {!selectedOption.isCorrect && (
