@@ -1408,7 +1408,7 @@ export default function QuizzesPage() {
                                         </div>
                                       </div>
 
-                                      <Tabs defaultValue="quizzes" className="w-full">
+                                      <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
                                                             <TabsList className="mb-4">
                                                               <TabsTrigger value="quizzes" className="flex items-center gap-2">
                                                                 <BookOpen className="w-4 h-4" />
