@@ -932,6 +932,9 @@ export default function QuizzesPage() {
                 correctAnswers={score}
                 wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
+                previousAttempts={attempts.filter(a => a.quiz_id === selectedQuiz.id)}
+                quizId={selectedQuiz.id}
+                userEmail={currentUser?.email}
               />
             </motion.div>
           )}
