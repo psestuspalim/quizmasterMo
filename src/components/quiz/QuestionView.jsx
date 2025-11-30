@@ -25,6 +25,78 @@ export default function QuestionView({
   const [userNote, setUserNote] = useState('');
   const [difficultyRating, setDifficultyRating] = useState(null);
   const [showDifficultySelector, setShowDifficultySelector] = useState(false);
+  const [rephrasing, setRephrasing] = useState(false);
+  const [rephrasedQuestion, setRephrasedQuestion] = useState(null);
+  const [loadingEtymology, setLoadingEtymology] = useState(false);
+  const [etymology, setEtymology] = useState(null);
+
+  const handleRephrase = async () => {
+    setRephrasing(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Reformula esta pregunta de forma más simple y clara para un estudiante que no la entiende. NO des la respuesta, solo explica qué se está preguntando de forma más accesible:
+
+Pregunta: "${question.question}"
+
+Responde en español con una explicación breve y clara.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            rephrased: { type: "string", description: "La pregunta reformulada de forma más simple" }
+          }
+        }
+      });
+      setRephrasedQuestion(result.rephrased);
+    } catch (error) {
+      console.error('Error rephrasing:', error);
+    } finally {
+      setRephrasing(false);
+    }
+  };
+
+  const handleEtymology = async () => {
+    setLoadingEtymology(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analiza esta pregunta y encuentra todos los términos médicos/científicos. Para cada término, identifica sus prefijos, sufijos y raíces, dando su significado etimológico (griego/latín).
+
+Pregunta: "${question.question}"
+
+Responde en español. Sé conciso pero informativo.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            terms: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  term: { type: "string" },
+                  parts: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        part: { type: "string", description: "El prefijo, sufijo o raíz" },
+                        type: { type: "string", description: "prefijo, sufijo o raíz" },
+                        meaning: { type: "string", description: "Significado" }
+                      }
+                    }
+                  },
+                  fullMeaning: { type: "string", description: "Significado completo del término" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setEtymology(result.terms);
+    } catch (error) {
+      console.error('Error getting etymology:', error);
+    } finally {
+      setLoadingEtymology(false);
+    }
+  };
 
   // Si es pregunta de imagen (sin answerOptions), usar el componente especializado
   if (question.type === 'image' && !question.answerOptions) {
