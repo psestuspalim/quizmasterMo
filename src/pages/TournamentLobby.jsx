@@ -55,8 +55,11 @@ export default function TournamentLobby() {
 
   const createTournamentMutation = useMutation({
     mutationFn: async (data) => {
+      if (!currentUser?.email) throw new Error('Usuario no autenticado');
+      
       const quiz = quizzes.find(q => q.id === data.quiz_id);
       if (!quiz) throw new Error('Quiz no encontrado');
+      if (!quiz.questions?.length) throw new Error('El quiz no tiene preguntas');
 
       const shuffledQuestions = [...quiz.questions]
         .sort(() => Math.random() - 0.5)
@@ -68,24 +71,28 @@ export default function TournamentLobby() {
 
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      return base44.entities.Tournament.create({
-        ...data,
+      const tournamentData = {
         code,
+        name: data.name || quiz.title,
         host_email: currentUser.email,
-        host_username: currentUser.username,
+        host_username: currentUser.username || 'Anónimo',
+        quiz_id: data.quiz_id,
         quiz_title: quiz.title,
         questions: shuffledQuestions,
         question_count: shuffledQuestions.length,
+        time_per_question: data.time_per_question || 30,
         players: [{
           email: currentUser.email,
-          username: currentUser.username,
+          username: currentUser.username || 'Anónimo',
           score: 0,
           current_answer: -1
         }],
         status: 'waiting',
         current_question: 0,
         results_per_question: []
-      });
+      };
+
+      return base44.entities.Tournament.create(tournamentData);
     },
     onSuccess: (tournament) => {
       setShowCreateDialog(false);
