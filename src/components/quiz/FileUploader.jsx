@@ -37,14 +37,14 @@ export default function FileUploader({ onUploadSuccess }) {
 
                       return {
                         type: q.type || 'text',
-                        question: q.questionText,
-                        hint: q.cinephileTip || '',
-                        feedback: q.analysis || '',
+                        question: q.questionText || q.question,
+                        hint: q.cinephileTip || q.hint || '',
+                        feedback: q.analysis || q.feedback || '',
                         difficulty: q.difficulty || difficulty,
-                        answerOptions: q.options.map(opt => ({
+                        answerOptions: (q.options || q.answerOptions || []).map(opt => ({
                           text: opt.text,
                           isCorrect: opt.isCorrect,
-                          rationale: opt.feedback || ''
+                          rationale: opt.feedback || opt.rationale || ''
                         }))
                       };
                     });
