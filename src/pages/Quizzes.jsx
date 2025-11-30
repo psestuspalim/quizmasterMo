@@ -1397,43 +1397,63 @@ export default function QuizzesPage() {
                                                             </TabsList>
 
                                                             <TabsContent value="quizzes">
-                                                              {subjectQuizzes.length === 0 ? (
-                                                                <div className="text-center py-12">
-                                                                  <div className="flex justify-center mb-4">
-                                                                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                      <BookOpen className="w-8 h-8 text-gray-400" />
-                                                                    </div>
-                                                                  </div>
-                                                                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                                    No hay cuestionarios
-                                                                  </h3>
-                                                                  <p className="text-gray-500 mb-4 text-sm">
-                                                                    Comienza cargando tu primer cuestionario
-                                                                  </p>
-                                                                  <Button
-                                                                    onClick={() => setShowUploader(true)}
-                                                                    className="bg-indigo-600 hover:bg-indigo-700"
-                                                                  >
-                                                                    <Plus className="w-4 h-4 mr-2" />
-                                                                    Cargar cuestionario
-                                                                  </Button>
-                                                                </div>
-                                                              ) : (
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                                                                  {subjectQuizzes.map((quiz) => (
-                                                                    <QuizCard
-                                                                      key={quiz.id}
-                                                                      quiz={quiz}
-                                                                      attempts={attempts}
-                                                                      onStart={handleStartQuiz}
-                                                                      onDelete={(id) => deleteQuizMutation.mutate(id)}
-                                                                      onEdit={(quiz) => setEditingQuiz(quiz)}
-                                                                      isAdmin={isAdmin}
-                                                                    />
-                                                                  ))}
-                                                                </div>
-                                                              )}
-                                                            </TabsContent>
+                                                                                                                                {subjectQuizzes.length === 0 ? (
+                                                                                                                                  <div className="text-center py-12">
+                                                                                                                                    <div className="flex justify-center mb-4">
+                                                                                                                                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                                                                                                                                        <BookOpen className="w-8 h-8 text-gray-400" />
+                                                                                                                                      </div>
+                                                                                                                                    </div>
+                                                                                                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                                                                                                      No hay cuestionarios
+                                                                                                                                    </h3>
+                                                                                                                                    <p className="text-gray-500 mb-4 text-sm">
+                                                                                                                                      Comienza cargando tu primer cuestionario
+                                                                                                                                    </p>
+                                                                                                                                    <Button
+                                                                                                                                      onClick={() => setShowUploader(true)}
+                                                                                                                                      className="bg-indigo-600 hover:bg-indigo-700"
+                                                                                                                                    >
+                                                                                                                                      <Plus className="w-4 h-4 mr-2" />
+                                                                                                                                      Cargar cuestionario
+                                                                                                                                    </Button>
+                                                                                                                                  </div>
+                                                                                                                                ) : (
+                                                                                                                                  <div className="flex flex-wrap gap-2">
+                                                                                                                                    {subjectQuizzes.map((quiz) => {
+                                                                                                                                      const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
+                                                                                                                                      const hasAttempts = quizAttempts.length > 0;
+                                                                                                                                      const lastAttempt = quizAttempts[0];
+                                                                                                                                      const scorePercent = lastAttempt ? Math.round((lastAttempt.score / lastAttempt.total_questions) * 100) : 0;
+
+                                                                                                                                      return (
+                                                                                                                                        <Badge
+                                                                                                                                          key={quiz.id}
+                                                                                                                                          variant="outline"
+                                                                                                                                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-indigo-50 transition-all ${
+                                                                                                                                            hasAttempts 
+                                                                                                                                              ? scorePercent >= 80 
+                                                                                                                                                ? 'border-green-400 bg-green-50 text-green-700' 
+                                                                                                                                                : scorePercent >= 50 
+                                                                                                                                                  ? 'border-yellow-400 bg-yellow-50 text-yellow-700'
+                                                                                                                                                  : 'border-red-400 bg-red-50 text-red-700'
+                                                                                                                                              : 'border-gray-300 bg-white text-gray-700'
+                                                                                                                                          }`}
+                                                                                                                                          onClick={() => handleStartQuiz(quiz, quiz.total_questions || quiz.questions?.length || 10, 'all', quizAttempts)}
+                                                                                                                                        >
+                                                                                                                                          {quiz.title}
+                                                                                                                                          {hasAttempts && (
+                                                                                                                                            <span className="ml-2 text-xs opacity-75">
+                                                                                                                                              {scorePercent}%
+                                                                                                                                            </span>
+                                                                                                                                          )}
+                                                                                                                                          {quiz.is_hidden && <span className="ml-1 text-xs">🔒</span>}
+                                                                                                                                        </Badge>
+                                                                                                                                      );
+                                                                                                                                    })}
+                                                                                                                                  </div>
+                                                                                                                                )}
+                                                                                                                              </TabsContent>
 
                                                             <TabsContent value="audios">
                                                               <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
