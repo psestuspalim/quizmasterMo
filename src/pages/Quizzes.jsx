@@ -273,6 +273,8 @@ export default function QuizzesPage() {
     : [];
   const currentCourseFolders = selectedCourse
     ? folders.filter(f => f.course_id === selectedCourse.id && f.parent_id === currentFolderId && canUserAccess(f, selectedCourse))
+    : currentFolderId 
+    ? folders.filter(f => f.parent_id === currentFolderId && canUserAccess(f))
     : [];
   const currentFolderSubjects = currentFolderId
     ? subjects.filter(s => s.folder_id === currentFolderId && canUserAccess(s))
@@ -733,17 +735,23 @@ export default function QuizzesPage() {
             </motion.div>
           )}
 
-          {/* Subjects View (inside a course) */}
-          {view === 'subjects' && selectedCourse && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && (
+          {/* Subjects View (inside a course or folder) */}
+          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && (
             <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Breadcrumb />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                    {selectedCourse.icon} {selectedCourse.name}
+                    {selectedCourse ? (
+                      <>{selectedCourse.icon} {selectedCourse.name}</>
+                    ) : currentFolderId ? (
+                      <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
+                    ) : null}
                   </h1>
-                  <p className="text-gray-600">{selectedCourse.description || 'Materias del curso'}</p>
+                  <p className="text-gray-600">
+                    {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
+                  </p>
                 </div>
                 {isAdmin && (
                   <div className="flex flex-wrap gap-2">
@@ -760,7 +768,7 @@ export default function QuizzesPage() {
                             <Label>Nombre</Label>
                             <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
                           </div>
-                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
+                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse?.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
                             Crear carpeta
                           </Button>
                         </div>
@@ -787,7 +795,7 @@ export default function QuizzesPage() {
                             <Label>Color</Label>
                             <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
                           </div>
-                          <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse.id, folder_id: currentFolderId })} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                          <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse?.id, folder_id: currentFolderId })} className="w-full bg-indigo-600 hover:bg-indigo-700">
                             Crear materia
                           </Button>
                         </div>
