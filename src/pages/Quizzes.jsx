@@ -587,6 +587,7 @@ export default function QuizzesPage() {
               </Button>
               <QuizEditor
                 quiz={editingQuiz}
+                subjects={subjects}
                 onSave={(data) => updateQuizMutation.mutate({ id: editingQuiz.id, data })}
                 onCancel={() => setEditingQuiz(null)}
               />
