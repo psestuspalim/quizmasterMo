@@ -188,51 +188,93 @@ export default function FileUploader({ onUploadSuccess }) {
                 </TabsList>
 
         <TabsContent value="json">
-          <Card
-            className={`border-2 border-dashed transition-all duration-200 ${
-              isDragging
-                ? 'border-indigo-500 bg-indigo-50/50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-          >
-            <div className="p-12 text-center">
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                  <FileJson className="w-10 h-10 text-gray-400" />
+          {!showPasteArea ? (
+            <Card
+              className={`border-2 border-dashed transition-all duration-200 ${
+                isDragging
+                  ? 'border-indigo-500 bg-indigo-50/50'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <div className="p-12 text-center">
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+                    <FileJson className="w-10 h-10 text-gray-400" />
+                  </div>
                 </div>
-              </div>
-              
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Cargar archivo de cuestionario
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                Arrastra un archivo JSON o haz clic para seleccionar
-              </p>
+                
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Cargar archivo de cuestionario
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Arrastra un archivo JSON o haz clic para seleccionar
+                </p>
 
-              <label htmlFor="file-upload">
-                <Button
-                  type="button"
-                  disabled={isProcessing}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => document.getElementById('file-upload').click()}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isProcessing ? 'Procesando...' : 'Seleccionar archivo'}
-                </Button>
-              </label>
-              
-              <input
-                id="file-upload"
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files[0])}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    type="button"
+                    disabled={isProcessing}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => document.getElementById('file-upload').click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isProcessing ? 'Procesando...' : 'Seleccionar archivo'}
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowPasteArea(true)}
+                  >
+                    <ClipboardPaste className="w-4 h-4 mr-2" />
+                    Pegar JSON
+                  </Button>
+                </div>
+                
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files[0])}
+                />
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Pegar JSON
+              </h3>
+              <Textarea
+                value={jsonText}
+                onChange={(e) => setJsonText(e.target.value)}
+                placeholder='{"quiz": [{"question": "...", "answerOptions": [...]}]}'
+                className="min-h-[200px] font-mono text-sm mb-4"
               />
-            </div>
-          </Card>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasteArea(false);
+                    setJsonText('');
+                    setError(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handlePasteSubmit}
+                  disabled={isProcessing || !jsonText.trim()}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
+                </Button>
+              </div>
+            </Card>
+          )}
 
           {error && (
             <Alert variant="destructive" className="mt-4">
