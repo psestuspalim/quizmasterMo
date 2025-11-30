@@ -109,25 +109,69 @@ export default function FileUploader({ onUploadSuccess }) {
   };
 
   const handlePasteSubmit = async () => {
-    if (!jsonText.trim()) {
-      setError('Por favor, pega el contenido JSON');
-      return;
-    }
+        if (!jsonText.trim()) {
+          setError('Por favor, pega el contenido JSON');
+          return;
+        }
 
-    setIsProcessing(true);
-    setError(null);
+        setIsProcessing(true);
+        setError(null);
 
-    try {
-      const data = JSON.parse(jsonText);
-      await processJsonData(data, data.quizMetadata?.title || 'Quiz pegado');
-      setJsonText('');
-      setShowPasteArea(false);
-    } catch (err) {
-      setError(err.message || 'Error al procesar el JSON. Verifica el formato.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+        try {
+          const data = JSON.parse(jsonText);
+          await processJsonData(data, data.quizMetadata?.title || 'Quiz pegado');
+          setJsonText('');
+          setShowPasteArea(false);
+        } catch (err) {
+          setError('JSON inválido. Usa "Reparar JSON" para intentar corregirlo automáticamente.');
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      const handleRepairJson = async () => {
+        if (!jsonText.trim()) {
+          setError('Por favor, pega el contenido JSON primero');
+          return;
+        }
+
+        setIsRepairing(true);
+        setError(null);
+
+        try {
+          const result = await base44.integrations.Core.InvokeLLM({
+            prompt: `Repara este JSON mal formateado. Corrige errores comunes como:
+  - Comillas faltantes o incorrectas
+  - Comas extras o faltantes
+  - Corchetes/llaves sin cerrar
+  - Caracteres especiales no escapados
+  - Formato incorrecto
+
+  JSON a reparar:
+  ${jsonText}
+
+  IMPORTANTE: Devuelve SOLO el JSON reparado, sin explicaciones. Mantén toda la estructura y datos originales.`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                repaired_json: { type: "string", description: "El JSON reparado como string" },
+                changes_made: { type: "array", items: { type: "string" }, description: "Lista de cambios realizados" }
+              }
+            }
+          });
+
+          if (result.repaired_json) {
+            // Intentar parsear para verificar que es válido
+            const parsed = JSON.parse(result.repaired_json);
+            setJsonText(JSON.stringify(parsed, null, 2));
+            setError(null);
+          }
+        } catch (err) {
+          setError('No se pudo reparar el JSON. Revisa manualmente el formato.');
+        } finally {
+          setIsRepairing(false);
+        }
+      };
 
   const handleImageQuizSave = async (questionData) => {
     // Si son múltiples preguntas
