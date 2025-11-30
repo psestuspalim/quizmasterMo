@@ -802,7 +802,7 @@ export default function QuizzesPage() {
                   <TabsTrigger value="audios" className="flex items-center gap-2">
                     <Music className="w-4 h-4" /> Audios
                   </TabsTrigger>
-                </Tabs>
+                </TabsList>
 
                 <TabsContent value="quizzes">
                   {subjectQuizzes.length === 0 ? (
