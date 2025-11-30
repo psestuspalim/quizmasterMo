@@ -1407,45 +1407,61 @@ export default function QuizzesPage() {
                                         </div>
                                       </div>
 
-                                      {/* Audio List */}
-                                      <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+                                      <Tabs defaultValue="quizzes" className="w-full">
+                                                            <TabsList className="mb-4">
+                                                              <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                                                                <BookOpen className="w-4 h-4" />
+                                                                Cuestionarios ({subjectQuizzes.length})
+                                                              </TabsTrigger>
+                                                              <TabsTrigger value="audios" className="flex items-center gap-2">
+                                                                <Music className="w-4 h-4" />
+                                                                Audios
+                                                              </TabsTrigger>
+                                                            </TabsList>
 
-                                      {subjectQuizzes.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="flex justify-center mb-6">
-                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
-                      <BookOpen className="w-12 h-12 text-gray-400" />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No hay cuestionarios
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Comienza cargando tu primer cuestionario
-                  </p>
-                  <Button
-                    onClick={() => setShowUploader(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Cargar cuestionario
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                  {subjectQuizzes.map((quiz) => (
-                    <QuizCard
-                                              key={quiz.id}
-                                              quiz={quiz}
-                                              attempts={attempts}
-                                              onStart={handleStartQuiz}
-                                              onDelete={(id) => deleteQuizMutation.mutate(id)}
-                                              onEdit={(quiz) => setEditingQuiz(quiz)}
-                                              isAdmin={isAdmin}
-                                            />
-                  ))}
-                </div>
-              )}
+                                                            <TabsContent value="quizzes">
+                                                              {subjectQuizzes.length === 0 ? (
+                                                                <div className="text-center py-12">
+                                                                  <div className="flex justify-center mb-4">
+                                                                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                                                                      <BookOpen className="w-8 h-8 text-gray-400" />
+                                                                    </div>
+                                                                  </div>
+                                                                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                                    No hay cuestionarios
+                                                                  </h3>
+                                                                  <p className="text-gray-500 mb-4 text-sm">
+                                                                    Comienza cargando tu primer cuestionario
+                                                                  </p>
+                                                                  <Button
+                                                                    onClick={() => setShowUploader(true)}
+                                                                    className="bg-indigo-600 hover:bg-indigo-700"
+                                                                  >
+                                                                    <Plus className="w-4 h-4 mr-2" />
+                                                                    Cargar cuestionario
+                                                                  </Button>
+                                                                </div>
+                                                              ) : (
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                                                                  {subjectQuizzes.map((quiz) => (
+                                                                    <QuizCard
+                                                                      key={quiz.id}
+                                                                      quiz={quiz}
+                                                                      attempts={attempts}
+                                                                      onStart={handleStartQuiz}
+                                                                      onDelete={(id) => deleteQuizMutation.mutate(id)}
+                                                                      onEdit={(quiz) => setEditingQuiz(quiz)}
+                                                                      isAdmin={isAdmin}
+                                                                    />
+                                                                  ))}
+                                                                </div>
+                                                              )}
+                                                            </TabsContent>
+
+                                                            <TabsContent value="audios">
+                                                              <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+                                                            </TabsContent>
+                                                          </Tabs>
             </motion.div>
           )}
 
