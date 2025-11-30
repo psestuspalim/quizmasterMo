@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy } from 'lucide-react';
+import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -15,6 +15,7 @@ import WeakPoints from '../components/progress/WeakPoints';
 import Recommendations from '../components/progress/Recommendations';
 import AttemptHistory from '../components/progress/AttemptHistory';
 import QuizCompletionBadges from '../components/progress/QuizCompletionBadges';
+import TimeVsPerformance from '../components/progress/TimeVsPerformance';
 
 export default function ProgressPage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -235,6 +236,10 @@ export default function ProgressPage() {
               <Target className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Recomendaciones</span>
             </TabsTrigger>
+            <TabsTrigger value="time-analysis" className="text-xs sm:text-sm">
+              <Clock className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tiempo vs Rendimiento</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -282,6 +287,10 @@ export default function ProgressPage() {
               quizzes={quizzes}
               subjects={subjects}
             />
+          </TabsContent>
+
+          <TabsContent value="time-analysis" className="space-y-6">
+            <TimeVsPerformance attempts={attempts} />
           </TabsContent>
         </Tabs>
       </div>
