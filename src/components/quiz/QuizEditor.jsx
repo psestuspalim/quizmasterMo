@@ -103,13 +103,30 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
                 <SelectValue placeholder="Selecciona una materia" />
               </SelectTrigger>
               <SelectContent>
-                {subjects.map(subject => (
-                  <SelectItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </SelectItem>
-                ))}
+                {subjects.map(subject => {
+                  const isCurrentSubject = subject.id === quiz.subject_id;
+                  return (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: subject.color || '#6366f1' }}
+                        />
+                        <span>{subject.name}</span>
+                        {isCurrentSubject && (
+                          <span className="text-xs text-gray-400">(actual)</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
+            {editedQuiz.subject_id !== quiz.subject_id && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ El quiz se moverá a otra materia al guardar
+              </p>
+            )}
           </div>
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
