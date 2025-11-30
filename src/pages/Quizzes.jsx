@@ -29,6 +29,7 @@ import SubjectEditor from '../components/quiz/SubjectEditor';
 import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import FolderCard from '../components/quiz/FolderCard';
 import AudioList from '../components/audio/AudioList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
