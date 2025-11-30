@@ -59,9 +59,9 @@ export default function ProgressPage() {
     // Estadísticas generales
     const totalAttempts = attempts.length;
     const completedAttempts = attempts.filter(a => a.is_completed);
-    const totalQuestions = attempts.reduce((sum, a) => sum + a.total_questions, 0);
-    const totalCorrect = attempts.reduce((sum, a) => sum + a.score, 0);
-    const averageScore = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+    const totalQuestions = attempts.reduce((sum, a) => sum + (a.answered_questions || a.total_questions), 0);
+    const totalCorrect = attempts.reduce((sum, a) => sum + (a.score || 0), 0);
+    const averageScore = totalQuestions > 0 ? Math.min((totalCorrect / totalQuestions) * 100, 100) : 0;
 
     // Progreso por materia
     const subjectStats = subjects.map(subject => {
@@ -86,13 +86,14 @@ export default function ProgressPage() {
     const quizStats = quizzes.map(quiz => {
       const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
       if (quizAttempts.length === 0) return null;
-      
-      const scores = quizAttempts.map(a => 
-        a.total_questions > 0 ? (a.score / a.total_questions) * 100 : 0
-      );
-      const bestScore = Math.max(...scores);
-      const avgScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
-      
+
+      const scores = quizAttempts.map(a => {
+        const answered = a.answered_questions || a.total_questions;
+        return answered > 0 ? Math.min((a.score / answered) * 100, 100) : 0;
+      });
+      const bestScore = Math.min(Math.max(...scores), 100);
+      const avgScore = Math.min(scores.reduce((sum, s) => sum + s, 0) / scores.length, 100);
+
       return {
         ...quiz,
         attempts: quizAttempts.length,

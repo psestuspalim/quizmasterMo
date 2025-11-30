@@ -66,7 +66,7 @@ export default function OverviewStats({ analytics }) {
               <div>
                 <p className="text-sm font-medium text-gray-500">Precisión Promedio</p>
                 <p className="text-3xl font-bold text-indigo-600 mt-2">
-                  {Math.round(analytics.averageScore)}%
+                  {Math.min(Math.round(analytics.averageScore), 100)}%
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -131,10 +131,10 @@ export default function OverviewStats({ analytics }) {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-indigo-600">
-                        {Math.round(quiz.bestScore)}%
+                        {Math.min(Math.round(quiz.bestScore), 100)}%
                       </p>
                       <p className="text-xs text-gray-500">
-                        Prom: {Math.round(quiz.avgScore)}%
+                        Prom: {Math.min(Math.round(quiz.avgScore), 100)}%
                       </p>
                     </div>
                   </div>
