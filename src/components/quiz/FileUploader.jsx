@@ -16,6 +16,7 @@ export default function FileUploader({ onUploadSuccess }) {
   const [activeTab, setActiveTab] = useState('json');
   const [jsonText, setJsonText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
 
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
