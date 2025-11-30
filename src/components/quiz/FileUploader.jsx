@@ -16,20 +16,9 @@ export default function FileUploader({ onUploadSuccess }) {
   const [jsonText, setJsonText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
 
-  const handleFile = async (file) => {
-    if (!file) return;
-    
-    if (file.type !== 'application/json') {
-      setError('Por favor, selecciona un archivo JSON válido');
-      return;
-    }
-
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
+  const processJsonData = async (data, fileName = 'Quiz') => {
+    let questions = [];
+    let title = fileName.replace('.json', '');
       
       let questions = [];
       let title = file.name.replace('.json', '');
