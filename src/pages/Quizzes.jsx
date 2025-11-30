@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -626,10 +626,15 @@ export default function QuizzesPage() {
                     </Button>
                   </Link>
                   <Link to={createPageUrl('GameLobby')}>
-                    <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
-                      <Swords className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Desafío</span>
-                    </Button>
-                  </Link>
+                      <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                        <Swords className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Desafío</span>
+                      </Button>
+                    </Link>
+                    <Link to={createPageUrl('TournamentLobby')}>
+                      <Button variant="outline" className="border-amber-600 text-amber-600 hover:bg-amber-50 text-xs sm:text-sm h-9">
+                        <Trophy className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Torneo</span>
+                      </Button>
+                    </Link>
                   {isAdmin && (
                     <>
                       <Link to={createPageUrl('AdminTasks')}>
