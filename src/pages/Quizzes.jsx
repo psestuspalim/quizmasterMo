@@ -1299,64 +1299,29 @@ export default function QuizzesPage() {
                               )}
 
                               {/* Folder Editor View */}
-                              {editingFolder && (
-                                <motion.div
-                                  key="folder-editor"
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                                  <Button
-                                    onClick={() => setEditingFolder(null)}
-                                    variant="ghost"
-                                    className="mb-6"
-                                  >
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    Volver
-                                  </Button>
-                                  <Card className="max-w-lg mx-auto">
-                                    <CardHeader>
-                                      <CardTitle>Editar carpeta</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                      <div>
-                                        <Label>Nombre</Label>
-                                        <Input
-                                          value={editingFolder.name}
-                                          onChange={(e) => setEditingFolder({...editingFolder, name: e.target.value})}
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label>Descripción</Label>
-                                        <Input
-                                          value={editingFolder.description || ''}
-                                          onChange={(e) => setEditingFolder({...editingFolder, description: e.target.value})}
-                                        />
-                                      </div>
-                                      <div>
-                                        <Label>Color</Label>
-                                        <input
-                                          type="color"
-                                          value={editingFolder.color || '#f59e0b'}
-                                          onChange={(e) => setEditingFolder({...editingFolder, color: e.target.value})}
-                                          className="w-full h-10 rounded-md border cursor-pointer"
-                                        />
-                                      </div>
-                                      <div className="flex gap-3">
-                                        <Button variant="outline" onClick={() => setEditingFolder(null)} className="flex-1">
-                                          Cancelar
-                                        </Button>
-                                        <Button 
-                                          onClick={() => updateFolderMutation.mutate({ id: editingFolder.id, data: editingFolder })}
-                                          className="flex-1 bg-amber-500 hover:bg-amber-600"
-                                        >
-                                          Guardar
-                                        </Button>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </motion.div>
-                              )}
+                                                                  {editingFolder && (
+                                                                    <motion.div
+                                                                      key="folder-editor"
+                                                                      initial={{ opacity: 0, y: 20 }}
+                                                                      animate={{ opacity: 1, y: 0 }}
+                                                                      exit={{ opacity: 0, y: -20 }}
+                                                                    >
+                                                                      <Button
+                                                                        onClick={() => setEditingFolder(null)}
+                                                                        variant="ghost"
+                                                                        className="mb-6"
+                                                                      >
+                                                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                                                        Volver
+                                                                      </Button>
+                                                                      <FolderEditor
+                                                                        folder={editingFolder}
+                                                                        users={allUsers}
+                                                                        onSave={(data) => updateFolderMutation.mutate({ id: editingFolder.id, data })}
+                                                                        onCancel={() => setEditingFolder(null)}
+                                                                      />
+                                                                    </motion.div>
+                                                                  )}
 
           {/* Quiz Editor View */}
                       {editingQuiz && (
