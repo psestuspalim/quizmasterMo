@@ -320,7 +320,11 @@ export default function QuizzesPage() {
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
 
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
-    let filteredQuestions = [...quiz.questions];
+        if (!quiz.questions || quiz.questions.length === 0) {
+          alert('Este quiz no tiene preguntas');
+          return;
+        }
+        let filteredQuestions = [...quiz.questions];
     
     // Si es modo repaso SRS, filtrar por preguntas que necesitan revisión
     if (selectedDeck === 'review') {
@@ -409,14 +413,14 @@ export default function QuizzesPage() {
       filteredQuestions = Array.from(markedQuestionsMap.values());
     }
     
-    const shuffledQuestions = [...filteredQuestions]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, Math.min(questionCount, filteredQuestions.length))
-      .map(q => ({
-        ...q,
-        difficulty: q.difficulty || 'moderado',
-        answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
-      }));
+    const shuffledQuestions = [...(filteredQuestions || [])]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, Math.min(questionCount, (filteredQuestions || []).length))
+            .map(q => ({
+              ...q,
+              difficulty: q.difficulty || 'moderado',
+              answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
+            }));
     
     const shuffledQuiz = {
       ...quiz,
