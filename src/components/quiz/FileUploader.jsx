@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Upload, FileJson, AlertCircle, Image, Microscope } from 'lucide-react';
+import { Upload, FileJson, AlertCircle, Image, Microscope, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
 
@@ -12,6 +13,8 @@ export default function FileUploader({ onUploadSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('json');
+  const [jsonText, setJsonText] = useState('');
+  const [showPasteArea, setShowPasteArea] = useState(false);
 
   const handleFile = async (file) => {
     if (!file) return;
