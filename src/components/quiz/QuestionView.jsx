@@ -65,15 +65,21 @@ Responde en español con una explicación breve y clara.`,
     setLoadingEtymology(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analiza esta pregunta y encuentra los términos médicos/científicos. Para CADA término, descompónlo en sus PARTES ETIMOLÓGICAS (prefijos, sufijos y raíces del griego o latín), NO des definiciones médicas.
+        prompt: `Extrae los términos médicos de esta pregunta y DESCOMPÓNLOS en prefijos, raíces y sufijos griegos/latinos.
 
-Ejemplo correcto:
-- "hipoglucemia" → hipo- (griego: debajo/bajo) + gluc- (griego: dulce/azúcar) + -emia (griego: sangre) = "azúcar baja en sangre"
-- "taquicardia" → taqui- (griego: rápido) + cardia (griego: corazón) = "corazón rápido"
+REGLAS ESTRICTAS:
+1. SOLO muestra la descomposición morfológica (prefijo + raíz + sufijo)
+2. NO des definiciones médicas ni explicaciones clínicas
+3. Cada parte debe mostrar: la partícula + su origen (griego/latín) + significado LITERAL
+
+FORMATO EXACTO:
+"hipoglucemia" → hipo- (gr. bajo) + gluc- (gr. dulce) + -emia (gr. sangre)
+"taquicardia" → taqui- (gr. rápido) + -cardia (gr. corazón)
+"hepatomegalia" → hepato- (gr. hígado) + -megalia (gr. agrandamiento)
 
 Pregunta: "${question.question}"
 
-Descompón cada término en sus raíces etimológicas griegas/latinas. NO expliques qué es la condición médicamente, solo la etimología de las palabras.`,
+Descompón SOLO la estructura morfológica. Nada de explicaciones médicas.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -82,19 +88,8 @@ Descompón cada término en sus raíces etimológicas griegas/latinas. NO expliq
               items: {
                 type: "object",
                 properties: {
-                  term: { type: "string" },
-                  parts: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        part: { type: "string", description: "El prefijo, sufijo o raíz" },
-                        type: { type: "string", description: "prefijo, sufijo o raíz" },
-                        meaning: { type: "string", description: "Significado" }
-                      }
-                    }
-                  },
-                  fullMeaning: { type: "string", description: "Significado completo del término" }
+                  term: { type: "string", description: "El término médico completo" },
+                  breakdown: { type: "string", description: "Descomposición en formato: parte1- (origen: significado) + parte2- (origen: significado)" }
                 }
               }
             }
@@ -295,13 +290,12 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   </div>
                 )}
                 {etymology && etymology.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-xs">
-                    <span className="font-medium text-purple-800">Raíces: </span>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-xs space-y-1">
+                    <span className="font-medium text-purple-800">Etimología: </span>
                     {etymology.map((term, idx) => (
-                      <span key={idx} className="text-purple-900">
-                        <strong>{term.term}</strong> → {term.fullMeaning}
-                        {idx < etymology.length - 1 && ' | '}
-                      </span>
+                      <div key={idx} className="text-purple-900">
+                        <strong>{term.term}</strong> → {term.breakdown}
+                      </div>
                     ))}
                   </div>
                 )}
