@@ -92,7 +92,10 @@ export default function TournamentLobby() {
         results_per_question: []
       };
 
-      return base44.entities.Tournament.create(tournamentData);
+      console.log('Creating tournament with data:', tournamentData);
+      const result = await base44.entities.Tournament.create(tournamentData);
+      console.log('Tournament created:', result);
+      return result;
     },
     onSuccess: (tournament) => {
       setShowCreateDialog(false);
