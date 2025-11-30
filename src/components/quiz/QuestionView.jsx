@@ -100,6 +100,33 @@ Responde en español. Sé conciso pero informativo.`,
     }
   };
 
+  const handleGenerateSchema = async () => {
+    setLoadingSchema(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Genera una representación gráfica esquemática usando emojis y texto del proceso o concepto al que se refiere esta pregunta. Usa flechas (→, ↓), viñetas, y emojis relevantes para crear un diagrama visual de texto que ayude al estudiante a entender el proceso.
+
+Pregunta: "${question.question}"
+Respuesta correcta: "${question.answerOptions?.find(opt => opt.isCorrect)?.text || ''}"
+
+Crea un esquema visual claro y educativo en español. Usa saltos de línea para organizar la información.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Título breve del proceso/concepto" },
+            schema: { type: "string", description: "El esquema visual con emojis y flechas" },
+            summary: { type: "string", description: "Resumen de una línea del concepto clave" }
+          }
+        }
+      });
+      setSchema(result);
+    } catch (error) {
+      console.error('Error generating schema:', error);
+    } finally {
+      setLoadingSchema(false);
+    }
+  };
+
   // Si es pregunta de imagen (sin answerOptions), usar el componente especializado
   if (question.type === 'image' && !question.answerOptions) {
     return (
