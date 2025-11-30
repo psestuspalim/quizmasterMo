@@ -62,6 +62,7 @@ export default function QuizzesPage() {
   const [newFolder, setNewFolder] = useState({ name: '', description: '', color: '#f59e0b' });
   const [editingFolder, setEditingFolder] = useState(null);
   const [showBulkUploader, setShowBulkUploader] = useState(false);
+  const [activeSubjectTab, setActiveSubjectTab] = useState('quizzes');
 
   const queryClient = useQueryClient();
 
