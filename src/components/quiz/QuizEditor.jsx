@@ -93,6 +93,24 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
               onChange={(e) => setEditedQuiz({ ...editedQuiz, description: e.target.value })}
             />
           </div>
+          <div>
+            <Label>Materia</Label>
+            <Select
+              value={editedQuiz.subject_id || ''}
+              onValueChange={(value) => setEditedQuiz({ ...editedQuiz, subject_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona una materia" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map(subject => (
+                  <SelectItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <Label>Ocultar cuestionario</Label>
