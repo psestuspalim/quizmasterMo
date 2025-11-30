@@ -404,15 +404,17 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
                 {/* Análisis de error con IA */}
                 {!selectedOption.isCorrect && (
-                  <ErrorAnalysis
-                    question={question}
-                    selectedAnswer={selectedOption.text}
-                    correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
-                    responseTime={responseTime}
-                    userEmail={userEmail}
-                    quizId={quizId}
-                    previousAttempts={previousAttempts}
-                  />
+                  <div className="pointer-events-none">
+                    <ErrorAnalysis
+                      question={question}
+                      selectedAnswer={selectedOption.text}
+                      correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
+                      responseTime={responseTime}
+                      userEmail={userEmail}
+                      quizId={quizId}
+                      previousAttempts={previousAttempts}
+                    />
+                  </div>
                 )}
 
                 {/* Herramientas adicionales para incorrectas */}
