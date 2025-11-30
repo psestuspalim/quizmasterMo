@@ -29,6 +29,8 @@ export default function QuestionView({
   const [rephrasedQuestion, setRephrasedQuestion] = useState(null);
   const [loadingEtymology, setLoadingEtymology] = useState(false);
   const [etymology, setEtymology] = useState(null);
+  const [loadingSchema, setLoadingSchema] = useState(false);
+  const [schema, setSchema] = useState(null);
 
   const handleRephrase = async () => {
     setRephrasing(true);
