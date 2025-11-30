@@ -317,7 +317,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
         </div>
 
         {/* Answer Options */}
-        <CardContent className="p-3 sm:p-4">
+        <CardContent className="p-3 sm:p-4 relative">
           <div className="grid grid-cols-1 gap-2">
             {question.answerOptions.map((option, index) => {
               const isSelected = selectedAnswer === index;
