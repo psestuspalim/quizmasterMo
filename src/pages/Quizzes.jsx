@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,14 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import FileUploader from '../components/quiz/FileUploader';
 import BulkSectionUploader from '../components/quiz/BulkSectionUploader';
-import QuizCard from '../components/quiz/QuizCard';
 import QuizEditor from '../components/quiz/QuizEditor';
 import QuestionView from '../components/quiz/QuestionView';
 import ResultsView from '../components/quiz/ResultsView';
@@ -31,17 +29,20 @@ import UsernamePrompt from '../components/quiz/UsernamePrompt';
 import FolderCard from '../components/quiz/FolderCard';
 import FolderEditor from '../components/quiz/FolderEditor';
 import AudioList from '../components/audio/AudioList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CourseCard from '../components/course/CourseCard';
+import CourseEditor from '../components/course/CourseEditor';
+import QuizListItem from '../components/quiz/QuizListItem';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
-import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../components/gamification/GamificationService';
+import { calculatePoints, calculateLevel, checkNewBadges } from '../components/gamification/GamificationService';
 import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
 import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
 import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 
 export default function QuizzesPage() {
-  const [view, setView] = useState('subjects'); // 'subjects', 'list', 'upload', 'quiz', 'results'
+  const [view, setView] = useState('courses');
+  const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -50,35 +51,31 @@ export default function QuizzesPage() {
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [showUploader, setShowUploader] = useState(false);
-  const [showSubjectDialog, setShowSubjectDialog] = useState(false);
-  const [newSubject, setNewSubject] = useState({ name: '', description: '', color: '#6366f1' });
-  const [selectedSubjectForUpload, setSelectedSubjectForUpload] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [deckType, setDeckType] = useState('all');
   const [userStats, setUserStats] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
   const [editingQuiz, setEditingQuiz] = useState(null);
   const [editingSubject, setEditingSubject] = useState(null);
-  const [currentFolderId, setCurrentFolderId] = useState(null);
-  const [showFolderDialog, setShowFolderDialog] = useState(false);
-  const [newFolder, setNewFolder] = useState({ name: '', description: '', color: '#f59e0b' });
   const [editingFolder, setEditingFolder] = useState(null);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState(null);
   const [showBulkUploader, setShowBulkUploader] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState('quizzes');
+  
+  // Dialogs
+  const [showCourseDialog, setShowCourseDialog] = useState(false);
+  const [showSubjectDialog, setShowSubjectDialog] = useState(false);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
 
-  // Cargar usuario actual
   useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
-        
-        // Si no tiene username, no hacer nada (UsernamePrompt se mostrará)
-        if (!user.username) {
-          return;
-        }
       } catch (error) {
         console.error('Error loading user:', error);
       }
@@ -86,14 +83,20 @@ export default function QuizzesPage() {
     loadUser();
   }, []);
 
+  // Queries
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => base44.entities.Course.list('order'),
+  });
+
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
-    queryFn: () => base44.entities.Subject.list('-created_date'),
+    queryFn: () => base44.entities.Subject.list('order'),
   });
 
   const { data: folders = [] } = useQuery({
     queryKey: ['folders'],
-    queryFn: () => base44.entities.Folder.list('-created_date'),
+    queryFn: () => base44.entities.Folder.list('order'),
   });
 
   const { data: quizzes = [] } = useQuery({
@@ -107,7 +110,6 @@ export default function QuizzesPage() {
     enabled: !!currentUser?.email,
   });
 
-  // Cargar estadísticas de gamificación
   const { data: userStatsData } = useQuery({
     queryKey: ['user-stats', currentUser?.email],
     queryFn: async () => {
@@ -117,48 +119,47 @@ export default function QuizzesPage() {
     enabled: !!currentUser?.email,
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: currentUser?.role === 'admin',
+  });
+
   useEffect(() => {
-    if (userStatsData) {
-      setUserStats(userStatsData);
-    }
+    if (userStatsData) setUserStats(userStatsData);
   }, [userStatsData]);
 
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Mutations
+  const createCourseMutation = useMutation({
+    mutationFn: (data) => base44.entities.Course.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['courses']);
+      setShowCourseDialog(false);
+      setNewItem({ name: '', description: '', color: '#6366f1' });
+    },
+  });
+
+  const updateCourseMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Course.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['courses']);
+      setEditingCourse(null);
+    },
+  });
+
+  const deleteCourseMutation = useMutation({
+    mutationFn: (id) => base44.entities.Course.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['courses']),
+  });
+
   const createSubjectMutation = useMutation({
-    mutationFn: (subjectData) => base44.entities.Subject.create(subjectData),
+    mutationFn: (data) => base44.entities.Subject.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['subjects']);
       setShowSubjectDialog(false);
-      setNewSubject({ name: '', description: '', color: '#6366f1' });
-    },
-  });
-
-  const createQuizMutation = useMutation({
-    mutationFn: (quizData) => base44.entities.Quiz.create(quizData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['quizzes']);
-      setShowUploader(false);
-    },
-  });
-
-  const deleteQuizMutation = useMutation({
-    mutationFn: (quizId) => base44.entities.Quiz.delete(quizId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['quizzes']);
-    },
-  });
-
-  const updateQuizMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Quiz.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['quizzes']);
-      setEditingQuiz(null);
-    },
-  });
-
-  const deleteSubjectMutation = useMutation({
-    mutationFn: (subjectId) => base44.entities.Subject.delete(subjectId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['subjects']);
+      setNewItem({ name: '', description: '', color: '#6366f1' });
     },
   });
 
@@ -170,19 +171,17 @@ export default function QuizzesPage() {
     },
   });
 
+  const deleteSubjectMutation = useMutation({
+    mutationFn: (id) => base44.entities.Subject.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['subjects']),
+  });
+
   const createFolderMutation = useMutation({
-    mutationFn: (folderData) => base44.entities.Folder.create(folderData),
+    mutationFn: (data) => base44.entities.Folder.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['folders']);
       setShowFolderDialog(false);
-      setNewFolder({ name: '', description: '', color: '#f59e0b' });
-    },
-  });
-
-  const deleteFolderMutation = useMutation({
-    mutationFn: (folderId) => base44.entities.Folder.delete(folderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['folders']);
+      setNewItem({ name: '', description: '', color: '#f59e0b' });
     },
   });
 
@@ -194,23 +193,34 @@ export default function QuizzesPage() {
     },
   });
 
-  const handleCreateFolder = async () => {
-    if (newFolder.name.trim()) {
-      await createFolderMutation.mutateAsync({
-        ...newFolder,
-        parent_id: currentFolderId
-      });
-    }
-  };
+  const deleteFolderMutation = useMutation({
+    mutationFn: (id) => base44.entities.Folder.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['folders']),
+  });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['all-users'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: currentUser?.role === 'admin',
+  const createQuizMutation = useMutation({
+    mutationFn: (data) => base44.entities.Quiz.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['quizzes']);
+      setShowUploader(false);
+    },
+  });
+
+  const updateQuizMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Quiz.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['quizzes']);
+      setEditingQuiz(null);
+    },
+  });
+
+  const deleteQuizMutation = useMutation({
+    mutationFn: (id) => base44.entities.Quiz.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['quizzes']),
   });
 
   const saveAttemptMutation = useMutation({
-    mutationFn: (attemptData) => base44.entities.QuizAttempt.create(attemptData),
+    mutationFn: (data) => base44.entities.QuizAttempt.create(data),
   });
 
   const updateAttemptMutation = useMutation({
@@ -233,205 +243,70 @@ export default function QuizzesPage() {
     }
   });
 
-  const updateGamificationStats = async (correctCount, totalCount, isPerfect) => {
-    const isFirstQuiz = !userStats;
-    const streakDays = userStats?.streak_days || 0;
-    const earnedPoints = calculatePoints(correctCount, totalCount, isPerfect, isFirstQuiz, 0);
-    
-    const newTotalPoints = (userStats?.total_points || 0) + earnedPoints;
-    const newLevel = calculateLevel(newTotalPoints);
-    const newTotalCorrect = (userStats?.total_correct || 0) + correctCount;
-    const newTotalQuestions = (userStats?.total_questions || 0) + totalCount;
-    const newPerfectScores = (userStats?.perfect_scores || 0) + (isPerfect ? 1 : 0);
-
-    // Calcular racha
-    let newStreakDays = streakDays;
-    const lastActivity = userStats?.last_activity ? new Date(userStats.last_activity) : null;
-    const today = new Date();
-    if (lastActivity) {
-      const diffDays = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        newStreakDays = streakDays + 1;
-      } else if (diffDays > 1) {
-        newStreakDays = 1;
-      }
-    } else {
-      newStreakDays = 1;
-    }
-
-    const updatedStats = {
-      total_points: newTotalPoints,
-      level: newLevel,
-      total_correct: newTotalCorrect,
-      total_questions: newTotalQuestions,
-      perfect_scores: newPerfectScores,
-      streak_days: newStreakDays,
-      last_activity: today.toISOString(),
-      badges: userStats?.badges || []
-    };
-
-    // Verificar nuevas insignias
-    const subjectsAttempted = [...new Set(attempts.map(a => a.subject_id))];
-    const newBadges = checkNewBadges(updatedStats, subjectsAttempted, subjects.length);
-    
-    if (newBadges.length > 0) {
-      const badgesWithDate = newBadges.map(b => ({
-        ...b,
-        earned_at: new Date().toISOString()
-      }));
-      updatedStats.badges = [...(userStats?.badges || []), ...badgesWithDate];
-      setNewBadge(badgesWithDate[0]);
-    }
-
-    if (userStats?.id) {
-      await updateUserStatsMutation.mutateAsync({ id: userStats.id, data: updatedStats });
-    } else {
-      await createUserStatsMutation.mutateAsync({
-        user_email: currentUser.email,
-        username: currentUser.username,
-        ...updatedStats
-      });
-    }
-  };
-
   const updateUsernameMutation = useMutation({
     mutationFn: (username) => base44.auth.updateMe({ username }),
-    onSuccess: (updatedUser) => {
-      setCurrentUser(updatedUser);
-    },
+    onSuccess: (updatedUser) => setCurrentUser(updatedUser),
   });
 
-  const handleUsernameSubmit = async (username) => {
-    await updateUsernameMutation.mutateAsync(username);
+  // Visibility helpers
+  const canUserAccess = (item, parentItem = null) => {
+    if (isAdmin) return true;
+    if (item.is_hidden) return false;
+    
+    if (item.visibility === 'inherit' && parentItem) {
+      return canUserAccess(parentItem);
+    }
+    
+    if (item.visibility === 'specific') {
+      return item.allowed_users?.includes(currentUser?.email);
+    }
+    
+    return true;
   };
 
-  const handleCreateSubject = async () => {
-        if (newSubject.name.trim()) {
-          await createSubjectMutation.mutateAsync({
-            ...newSubject,
-            folder_id: currentFolderId
-          });
-        }
-      };
+  // Filtered data
+  const visibleCourses = courses.filter(c => canUserAccess(c));
+  const currentCourseSubjects = selectedCourse 
+    ? subjects.filter(s => s.course_id === selectedCourse.id && canUserAccess(s, selectedCourse))
+    : [];
+  const currentCourseFolders = selectedCourse
+    ? folders.filter(f => f.course_id === selectedCourse.id && f.parent_id === currentFolderId && canUserAccess(f, selectedCourse))
+    : [];
+  const currentFolderSubjects = currentFolderId
+    ? subjects.filter(s => s.folder_id === currentFolderId && canUserAccess(s))
+    : currentCourseSubjects.filter(s => !s.folder_id);
 
-  const handleUploadSuccess = async (quizData) => {
-    await createQuizMutation.mutateAsync({
-      ...quizData,
-      subject_id: selectedSubject.id
-    });
-  };
+  const subjectQuizzes = selectedSubject
+    ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
+    : [];
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
 
+  // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
-        if (!quiz.questions || quiz.questions.length === 0) {
-          alert('Este quiz no tiene preguntas');
-          return;
-        }
-        let filteredQuestions = [...quiz.questions];
-    
-    // Si es modo repaso SRS, filtrar por preguntas que necesitan revisión
-    if (selectedDeck === 'review') {
-      try {
-        const difficulties = await base44.entities.QuestionDifficulty.filter({
-          user_email: currentUser.email,
-          quiz_id: quiz.id
-        });
-        
-        const now = new Date();
-        const dueQuestions = difficulties.filter(d => 
-          new Date(d.next_review) <= now
-        );
-        
-        if (dueQuestions.length > 0) {
-          // Ordenar por prioridad (más difíciles primero, luego por fecha)
-          dueQuestions.sort((a, b) => {
-            if (b.difficulty_rating !== a.difficulty_rating) {
-              return b.difficulty_rating - a.difficulty_rating;
-            }
-            return new Date(a.next_review) - new Date(b.next_review);
-          });
-          
-          const dueTexts = dueQuestions.map(d => d.question_text);
-          filteredQuestions = quiz.questions.filter(q => 
-            dueTexts.includes(q.question)
-          );
-        } else {
-          // Si no hay preguntas pendientes, mostrar las más difíciles
-          const hardQuestions = difficulties
-            .filter(d => d.difficulty_rating >= 4)
-            .map(d => d.question_text);
-          
-          if (hardQuestions.length > 0) {
-            filteredQuestions = quiz.questions.filter(q => 
-              hardQuestions.includes(q.question)
-            );
-          }
-        }
-      } catch (error) {
-        console.error('Error loading SRS data:', error);
-      }
+    if (!quiz.questions || quiz.questions.length === 0) {
+      alert('Este quiz no tiene preguntas');
+      return;
     }
+    
+    let filteredQuestions = [...quiz.questions];
     
     if (selectedDeck === 'wrong') {
-      // Solo preguntas incorrectas
       const wrongQuestionsMap = new Map();
       quizAttempts.forEach(attempt => {
-        attempt.wrong_questions?.forEach(wq => {
-          wrongQuestionsMap.set(wq.question, wq);
-        });
+        attempt.wrong_questions?.forEach(wq => wrongQuestionsMap.set(wq.question, wq));
       });
       filteredQuestions = Array.from(wrongQuestionsMap.values());
-    } else if (selectedDeck === 'remaining') {
-      // Solo preguntas que nunca se han contestado
-      const answeredQuestions = new Set();
-      quizAttempts.forEach(attempt => {
-        attempt.wrong_questions?.forEach(wq => {
-          answeredQuestions.add(wq.question);
-        });
-      });
-      filteredQuestions = quiz.questions.filter(q => !answeredQuestions.has(q.question));
-    } else if (selectedDeck === 'correct') {
-      // Preguntas contestadas correctamente
-      const wrongQuestionsSet = new Set();
-      quizAttempts.forEach(attempt => {
-        attempt.wrong_questions?.forEach(wq => {
-          wrongQuestionsSet.add(wq.question);
-        });
-      });
-      const answeredQuestions = new Set();
-      quizAttempts.forEach(attempt => {
-        attempt.wrong_questions?.forEach(wq => {
-          answeredQuestions.add(wq.question);
-        });
-      });
-      filteredQuestions = quiz.questions.filter(q => answeredQuestions.has(q.question) && !wrongQuestionsSet.has(q.question));
-    } else if (selectedDeck === 'marked') {
-      // Solo preguntas marcadas
-      const markedQuestionsMap = new Map();
-      quizAttempts.forEach(attempt => {
-        attempt.marked_questions?.forEach(mq => {
-          markedQuestionsMap.set(mq.question, mq);
-        });
-      });
-      filteredQuestions = Array.from(markedQuestionsMap.values());
     }
     
-    const shuffledQuestions = [...(filteredQuestions || [])]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, Math.min(questionCount, (filteredQuestions || []).length))
-            .map(q => ({
-              ...q,
-              difficulty: q.difficulty || 'moderado',
-              answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
-            }));
+    const shuffledQuestions = [...filteredQuestions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(questionCount, filteredQuestions.length))
+      .map(q => ({
+        ...q,
+        answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
+      }));
     
-    const shuffledQuiz = {
-      ...quiz,
-      questions: shuffledQuestions
-    };
-    
-    // Crear intento inicial
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: quiz.id,
       subject_id: quiz.subject_id,
@@ -445,7 +320,7 @@ export default function QuizzesPage() {
     });
     
     setCurrentAttemptId(attempt.id);
-    setSelectedQuiz(shuffledQuiz);
+    setSelectedQuiz({ ...quiz, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
@@ -454,190 +329,41 @@ export default function QuizzesPage() {
     setDeckType(selectedDeck);
     setView('quiz');
   };
-  
-  const handleMarkForReview = async (question, isMarked) => {
-    const newMarked = isMarked 
-      ? [...markedQuestions, question]
-      : markedQuestions.filter(q => q.question !== question.question);
-    
-    setMarkedQuestions(newMarked);
-    
-    await updateAttemptMutation.mutateAsync({
-      id: currentAttemptId,
-      data: {
-        marked_questions: newMarked
-      }
-    });
-  };
-
-  const saveDifficultyRating = async (question, difficultyRating, quizId) => {
-    if (!difficultyRating || !currentUser?.email) return;
-    
-    try {
-      const existing = await base44.entities.QuestionDifficulty.filter({
-        user_email: currentUser.email,
-        quiz_id: quizId,
-        question_text: question.question
-      });
-
-      // Calcular nuevo intervalo y ease factor usando SM-2
-      let easeFactor = 2.5;
-      let interval = 1;
-      let repetitions = 0;
-
-      if (existing.length > 0) {
-        easeFactor = existing[0].ease_factor || 2.5;
-        interval = existing[0].interval || 1;
-        repetitions = existing[0].repetitions || 0;
-      }
-
-      // Ajustar ease factor según la dificultad percibida (1-5)
-      // 1=muy fácil -> +0.15, 5=muy difícil -> -0.30
-      const adjustment = (3 - difficultyRating) * 0.15;
-      easeFactor = Math.max(1.3, easeFactor + adjustment);
-
-      // Calcular nuevo intervalo
-      if (difficultyRating <= 2) {
-        // Fácil: aumentar intervalo
-        repetitions++;
-        if (repetitions === 1) interval = 1;
-        else if (repetitions === 2) interval = 6;
-        else interval = Math.round(interval * easeFactor);
-      } else if (difficultyRating === 3) {
-        // Normal: mantener progreso
-        repetitions++;
-        interval = Math.round(interval * 1.2);
-      } else {
-        // Difícil: resetear o reducir intervalo
-        repetitions = 0;
-        interval = 1;
-      }
-
-      const nextReview = new Date();
-      nextReview.setDate(nextReview.getDate() + interval);
-
-      const data = {
-        user_email: currentUser.email,
-        quiz_id: quizId,
-        question_text: question.question,
-        difficulty_rating: difficultyRating,
-        ease_factor: easeFactor,
-        interval: interval,
-        repetitions: repetitions,
-        next_review: nextReview.toISOString(),
-        last_reviewed: new Date().toISOString()
-      };
-
-      if (existing.length > 0) {
-        await base44.entities.QuestionDifficulty.update(existing[0].id, data);
-      } else {
-        await base44.entities.QuestionDifficulty.create(data);
-      }
-    } catch (error) {
-      console.error('Error saving difficulty rating:', error);
-    }
-  };
 
   const handleAnswer = async (isCorrect, selectedOption, question) => {
-    // Guardar rating de dificultad para SRS
-    if (selectedOption.difficultyRating) {
-      await saveDifficultyRating(question, selectedOption.difficultyRating, selectedQuiz.id);
-    }
-    // Si estamos en el deck de incorrectas y se responde correctamente, removerla del deck de incorrectas
-    let updatedWrongQuestions = wrongAnswers;
-    if (deckType === 'wrong' && isCorrect) {
-      // Remover de todas las preguntas incorrectas en la base de datos
-      const allAttempts = await base44.entities.QuizAttempt.filter({ 
-        quiz_id: selectedQuiz.id,
-        user_email: currentUser.email 
-      });
-      
-      for (const attempt of allAttempts) {
-        const filteredWrong = (attempt.wrong_questions || []).filter(
-          wq => wq.question !== question.question
-        );
-        if (filteredWrong.length !== (attempt.wrong_questions || []).length) {
-          await base44.entities.QuizAttempt.update(attempt.id, {
-            wrong_questions: filteredWrong
-          });
-        }
-      }
-    }
-    
     const newScore = isCorrect ? score + 1 : score;
     const newWrongAnswers = !isCorrect ? [...wrongAnswers, {
       question: question.question,
       selected_answer: selectedOption.text,
-      correct_answer: question.answerOptions.find(opt => opt.isCorrect).text,
+      correct_answer: question.answerOptions.find(opt => opt.isCorrect)?.text,
       answerOptions: question.answerOptions,
-      hint: question.hint,
-      difficulty: question.difficulty
+      hint: question.hint
     }] : wrongAnswers;
-    
-    const newCorrectAnswers = isCorrect ? [...correctAnswers, {
-      question: question.question,
-      selected_answer: selectedOption.text,
-      answerOptions: question.answerOptions,
-      hint: question.hint,
-      difficulty: question.difficulty
-    }] : correctAnswers;
 
     if (isCorrect) {
       setScore(newScore);
-      setCorrectAnswers(newCorrectAnswers);
+      setCorrectAnswers([...correctAnswers, { question: question.question }]);
     } else {
       setWrongAnswers(newWrongAnswers);
-      updatedWrongQuestions = newWrongAnswers;
     }
 
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
-    
-    // Actualizar intento después de cada respuesta
-          // Calcular porcentaje basado en preguntas contestadas (no total)
-          const answeredCount = currentQuestionIndex + 1;
-          const scorePercentage = answeredCount > 0 ? Math.round((newScore / answeredCount) * 100) : 0;
+    const answeredCount = currentQuestionIndex + 1;
 
-          await updateAttemptMutation.mutateAsync({
-            id: currentAttemptId,
-            data: {
-              score: newScore,
-              answered_questions: answeredCount,
-              wrong_questions: updatedWrongQuestions,
-              is_completed: isLastQuestion,
-              completed_at: isLastQuestion ? new Date().toISOString() : undefined,
-              score_percentage: scorePercentage
-            }
-          });
-
-          // Si es la última pregunta, actualizar tarea si existe
-          if (isLastQuestion) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const taskId = urlParams.get('taskId');
-            if (taskId) {
-              const tasks = await base44.entities.AssignedTask.filter({ id: taskId });
-              if (tasks.length > 0) {
-                const task = tasks[0];
-                const newBestScore = Math.max(task.best_score || 0, scorePercentage);
-                const isCompleted = newBestScore >= task.target_score;
-                await base44.entities.AssignedTask.update(taskId, {
-                  best_score: newBestScore,
-                  attempts: (task.attempts || 0) + 1,
-                  status: isCompleted ? 'completed' : 'in_progress',
-                  completed_at: isCompleted ? new Date().toISOString() : null
-                });
-              }
-            }
-          }
+    await updateAttemptMutation.mutateAsync({
+      id: currentAttemptId,
+      data: {
+        score: newScore,
+        answered_questions: answeredCount,
+        wrong_questions: newWrongAnswers,
+        is_completed: isLastQuestion,
+        completed_at: isLastQuestion ? new Date().toISOString() : undefined
+      }
+    });
 
     if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Actualizar gamificación al completar
-      const finalScore = newScore;
-      const finalTotal = selectedQuiz.questions.length;
-      const isPerfect = finalScore === finalTotal;
-      await updateGamificationStats(finalScore, finalTotal, isPerfect);
-      
       queryClient.invalidateQueries(['attempts']);
       setView('results');
     }
@@ -652,7 +378,6 @@ export default function QuizzesPage() {
       }))
     };
     
-    // Crear nuevo intento
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: selectedQuiz.id,
       subject_id: selectedQuiz.subject_id,
@@ -687,7 +412,6 @@ export default function QuizzesPage() {
       }))
     };
     
-    // Crear nuevo intento
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: selectedQuiz.id,
       subject_id: selectedQuiz.subject_id,
@@ -710,13 +434,10 @@ export default function QuizzesPage() {
   };
 
   const handleExitQuiz = async () => {
-    // Marcar como parcial si no está completo
     if (currentAttemptId) {
       await updateAttemptMutation.mutateAsync({
         id: currentAttemptId,
-        data: {
-          is_completed: false
-        }
+        data: { is_completed: false }
       });
       queryClient.invalidateQueries(['attempts']);
     }
@@ -726,851 +447,419 @@ export default function QuizzesPage() {
   const handleHome = () => {
     setSelectedQuiz(null);
     setSelectedSubject(null);
-    setView('subjects');
+    setSelectedCourse(null);
+    setCurrentFolderId(null);
+    setView('courses');
     setShowUploader(false);
   };
-
-  const handleBackToSubjects = () => {
-    setSelectedSubject(null);
-    setView('subjects');
-    setShowUploader(false);
-  };
-
-  const isAdmin = currentUser?.role === 'admin';
-
-  // Filtrar materias según visibilidad
-              const visibleSubjects = subjects.filter(subject => {
-                if (isAdmin) return true;
-                if (subject.is_hidden) return false;
-                if (subject.visibility === 'specific') {
-                  return subject.allowed_users?.includes(currentUser?.email);
-                }
-                return true;
-              });
-
-              // Filtrar carpetas según visibilidad
-              const visibleFolders = folders.filter(folder => {
-                if (isAdmin) return true;
-                if (folder.is_hidden) return false;
-                if (folder.visibility === 'specific') {
-                  return folder.allowed_users?.includes(currentUser?.email);
-                }
-                return true;
-              });
-
-      // Filtrar carpetas y materias según la carpeta actual
-                  const currentFolders = visibleFolders.filter(f => f.parent_id === currentFolderId);
-                  const currentSubjects = visibleSubjects.filter(s => 
-                    currentFolderId ? s.folder_id === currentFolderId : !s.folder_id
-                  );
-
-      // Obtener la carpeta actual para mostrar breadcrumb
-      const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
-
-      // Función para contar elementos en una carpeta
-                  const getFolderItemCount = (folderId) => {
-                    const subFolders = visibleFolders.filter(f => f.parent_id === folderId).length;
-                    const subSubjects = visibleSubjects.filter(s => s.folder_id === folderId).length;
-                    return subFolders + subSubjects;
-                  };
-
-  const subjectQuizzes = selectedSubject 
-    ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
-    : [];
 
   const getSubjectStats = (subjectId) => {
     const subjectQuizzes = quizzes.filter(q => q.subject_id === subjectId);
     const subjectQuizIds = subjectQuizzes.map(q => q.id);
     const subjectAttempts = attempts.filter(a => subjectQuizIds.includes(a.quiz_id));
     
-    if (subjectAttempts.length === 0) {
-      return { totalCorrect: 0, totalWrong: 0, totalAnswered: 0 };
-    }
+    if (subjectAttempts.length === 0) return { totalCorrect: 0, totalWrong: 0, totalAnswered: 0 };
     
-    // Contar preguntas únicas correctas e incorrectas
     const wrongQuestions = new Set();
-    const correctQuestions = new Set();
-    
     subjectAttempts.forEach(attempt => {
-      attempt.wrong_questions?.forEach(wq => {
-        wrongQuestions.add(wq.question);
-      });
+      attempt.wrong_questions?.forEach(wq => wrongQuestions.add(wq.question));
     });
     
-    // Las correctas son preguntas que fueron contestadas pero no están en wrong
-    subjectQuizzes.forEach(quiz => {
-      quiz.questions?.forEach(q => {
-        if (!wrongQuestions.has(q.question)) {
-          // Verificar si fue contestada en algún intento
-          const wasAnswered = subjectAttempts.some(attempt => 
-            attempt.quiz_id === quiz.id && attempt.answered_questions > 0
-          );
-          if (wasAnswered) {
-            correctQuestions.add(q.question);
-          }
-        }
-      });
-    });
-    
-    const totalCorrect = correctQuestions.size;
     const totalWrong = wrongQuestions.size;
+    const totalCorrect = subjectAttempts.reduce((sum, a) => sum + a.score, 0);
     const totalAnswered = totalCorrect + totalWrong;
     
     return { totalCorrect, totalWrong, totalAnswered };
   };
 
-  // Mostrar prompt de username si no tiene
+  // Username prompt
   if (!currentUser || !currentUser.username) {
-    return <UsernamePrompt onSubmit={handleUsernameSubmit} />;
+    return <UsernamePrompt onSubmit={(username) => updateUsernameMutation.mutateAsync(username)} />;
   }
+
+  // Breadcrumb
+  const Breadcrumb = () => (
+    <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
+      <Button variant="ghost" size="sm" onClick={handleHome} className="text-gray-600 hover:text-gray-900 px-2">
+        <Home className="w-4 h-4 mr-1" />
+        Inicio
+      </Button>
+      {selectedCourse && (
+        <>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setSelectedSubject(null); setCurrentFolderId(null); setView('subjects'); }}
+            className={`px-2 ${!selectedSubject ? 'font-medium text-gray-900' : 'text-gray-600'}`}
+          >
+            {selectedCourse.icon} {selectedCourse.name}
+          </Button>
+        </>
+      )}
+      {currentFolderId && (
+        <>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <span className="font-medium text-gray-900">
+            {folders.find(f => f.id === currentFolderId)?.name}
+          </span>
+        </>
+      )}
+      {selectedSubject && (
+        <>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <span className="font-medium text-gray-900">{selectedSubject.name}</span>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <AnimatePresence mode="wait">
-          {/* Subject Editor View */}
-                      {editingSubject && (
-                        <motion.div
-                          key="subject-editor"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                        >
-                          <Button
-                            onClick={() => setEditingSubject(null)}
-                            variant="ghost"
-                            className="mb-6"
-                          >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Volver
-                          </Button>
-                          <SubjectEditor
-                            subject={editingSubject}
-                            users={allUsers}
-                            onSave={(data) => updateSubjectMutation.mutate({ id: editingSubject.id, data })}
-                            onCancel={() => setEditingSubject(null)}
-                          />
-                        </motion.div>
-                      )}
-
-                      {/* Subjects View */}
-                                      {view === 'subjects' && !editingSubject && !editingFolder && !showBulkUploader && (
-                                <motion.div
-                                  key="subjects"
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                                  {/* Challenge Notifications */}
-                                                  <ChallengeNotifications 
-                                                    currentUser={currentUser}
-                                                    onStartChallenge={(challenge) => {
-                                                      window.location.href = `/ChallengePlay?id=${challenge.id}`;
-                                                    }}
-                                                  />
-
-                                                  {/* Points Display and Online Users */}
-                                                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                                    {userStats && (
-                                                      <div className="flex-1 max-w-md">
-                                                        <PointsDisplay 
-                                                          points={userStats.total_points || 0} 
-                                                          level={userStats.level || 1} 
-                                                        />
-                                                      </div>
-                                                    )}
-                                                    <div className="w-full sm:w-64">
-                                                      <OnlineUsersPanel 
-                                                        currentUser={currentUser}
-                                                        quizzes={quizzes}
-                                                        subjects={subjects}
-                                                      />
-                                                    </div>
-                                                  </div>
-
-                                  <div className="mb-4 sm:mb-8">
-                                    {/* Breadcrumb */}
-                                    {currentFolderId && (
-                                      <div className="flex items-center gap-2 mb-4 text-sm flex-wrap">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => setCurrentFolderId(null)}
-                                          className="text-gray-600 hover:text-gray-900 px-2"
-                                        >
-                                          Inicio
-                                        </Button>
-                                        {(() => {
-                                          // Construir la ruta de carpetas
-                                          const path = [];
-                                          let folder = currentFolder;
-                                          while (folder) {
-                                            path.unshift(folder);
-                                            folder = folders.find(f => f.id === folder.parent_id);
-                                          }
-                                          return path.map((f, idx) => (
-                                            <React.Fragment key={f.id}>
-                                              <ChevronRight className="w-4 h-4 text-gray-400" />
-                                              {idx === path.length - 1 ? (
-                                                <span className="font-medium text-gray-900">{f.name}</span>
-                                              ) : (
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  onClick={() => setCurrentFolderId(f.id)}
-                                                  className="text-gray-600 hover:text-gray-900 px-2"
-                                                >
-                                                  {f.name}
-                                                </Button>
-                                              )}
-                                            </React.Fragment>
-                                          ));
-                                        })()}
-                                      </div>
-                                    )}
-
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
-                                      <div>
-                                        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
-                                          {currentFolder ? currentFolder.name : 'Materias'}
-                                        </h1>
-                                        <p className="text-sm sm:text-base text-gray-600">
-                                          {currentFolder ? currentFolder.description || 'Contenido de la carpeta' : 'Selecciona una materia para ver sus cuestionarios'}
-                                        </p>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2 sm:gap-3">
-                                        {!currentFolderId && (
-                                          <>
-                                            <Link to={createPageUrl('Leaderboard')}>
-                                              <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                <Crown className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                <span className="hidden sm:inline">Ranking</span>
-                                              </Button>
-                                            </Link>
-                                            <Link to={createPageUrl('Badges')}>
-                                              <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                <Award className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                <span className="hidden sm:inline">Insignias</span>
-                                              </Button>
-                                            </Link>
-                                            <Link to={createPageUrl('Progress')}>
-                                                                                <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                                                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                                                  <span className="hidden sm:inline">Progreso</span>
-                                                                                </Button>
-                                                                              </Link>
-                                                                              <Link to={createPageUrl('GameLobby')}>
-                                                                                                                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                                                                                    <Swords className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                                                                                    <span className="hidden sm:inline">Desafío</span>
-                                                                                                                  </Button>
-                                                                                                                </Link>
-                                                                                                                {isAdmin && (
-                                                                                                                  <Link to={createPageUrl('AdminTasks')}>
-                                                                                                                    <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                                                                                      <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                                                                                      <span className="hidden sm:inline">Tareas</span>
-                                                                                                                    </Button>
-                                                                                                                  </Link>
-                                                                                                                )}
-                                          </>
-                                        )}
-
-                                        {/* Botón Cargar Parcial */}
-                                        {isAdmin && currentFolderId && currentSubjects.some(s => s.name.match(/^\d+\./)) && (
-                                          <Button 
-                                            variant="outline" 
-                                            className="border-green-500 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
-                                            onClick={() => setShowBulkUploader(true)}
-                                          >
-                                            <Upload className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                            <span className="hidden sm:inline">Cargar parcial</span>
-                                          </Button>
-                                        )}
-
-                                        {/* Botón Nueva Carpeta */}
-                                        <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-                                          <DialogTrigger asChild>
-                                            <Button variant="outline" className="border-amber-500 text-amber-600 hover:bg-amber-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                              <Folder className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                              <span className="hidden sm:inline">Nueva carpeta</span>
-                                            </Button>
-                                          </DialogTrigger>
-                                          <DialogContent>
-                                            <DialogHeader>
-                                              <DialogTitle>Crear nueva carpeta</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4 mt-4">
-                                              <div>
-                                                <Label>Nombre</Label>
-                                                <Input
-                                                  value={newFolder.name}
-                                                  onChange={(e) => setNewFolder({...newFolder, name: e.target.value})}
-                                                  placeholder="Ej: Primer Semestre"
-                                                />
-                                              </div>
-                                              <div>
-                                                <Label>Descripción</Label>
-                                                <Input
-                                                  value={newFolder.description}
-                                                  onChange={(e) => setNewFolder({...newFolder, description: e.target.value})}
-                                                  placeholder="Descripción opcional"
-                                                />
-                                              </div>
-                                              <div>
-                                                <Label>Color</Label>
-                                                <input
-                                                  type="color"
-                                                  value={newFolder.color}
-                                                  onChange={(e) => setNewFolder({...newFolder, color: e.target.value})}
-                                                  className="w-full h-10 rounded-md border cursor-pointer"
-                                                />
-                                              </div>
-                                              <Button 
-                                                onClick={handleCreateFolder}
-                                                className="w-full bg-amber-500 hover:bg-amber-600"
-                                              >
-                                                Crear carpeta
-                                              </Button>
-                                            </div>
-                                          </DialogContent>
-                                        </Dialog>
-
-                                        <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
-                                        <DialogTrigger asChild>
-                                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                            <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                            <span className="hidden sm:inline">Nueva materia</span>
-                                          </Button>
-                                          </DialogTrigger>
-                                        <DialogContent>
-                                          <DialogHeader>
-                                            <DialogTitle>Crear nueva materia</DialogTitle>
-                                          </DialogHeader>
-                                          <div className="space-y-4 mt-4">
-                                            <div>
-                                              <Label>Nombre</Label>
-                                              <Input
-                                                value={newSubject.name}
-                                                onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
-                                                placeholder="Ej: Física"
-                                              />
-                                            </div>
-                                            <div>
-                                              <Label>Descripción</Label>
-                                              <Input
-                                                value={newSubject.description}
-                                                onChange={(e) => setNewSubject({...newSubject, description: e.target.value})}
-                                                placeholder="Descripción opcional"
-                                              />
-                                            </div>
-                                            <div>
-                                              <Label>Color</Label>
-                                              <input
-                                                type="color"
-                                                value={newSubject.color}
-                                                onChange={(e) => setNewSubject({...newSubject, color: e.target.value})}
-                                                className="w-full h-10 rounded-md border cursor-pointer"
-                                              />
-                                            </div>
-                                            <Button 
-                                              onClick={handleCreateSubject}
-                                              className="w-full bg-indigo-600 hover:bg-indigo-700"
-                                            >
-                                              Crear materia
-                                            </Button>
-                                          </div>
-                                          </DialogContent>
-                                        </Dialog>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {currentFolders.length === 0 && currentSubjects.length === 0 ? (
-                                    <div className="text-center py-16">
-                                      <div className="flex justify-center mb-6">
-                                        <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
-                                          <BookOpen className="w-12 h-12 text-gray-400" />
-                                        </div>
-                                      </div>
-                                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                        {currentFolderId ? 'Carpeta vacía' : 'No hay materias'}
-                                      </h3>
-                                      <p className="text-gray-500 mb-6">
-                                        {currentFolderId ? 'Agrega materias o subcarpetas aquí' : 'Comienza creando tu primera materia o carpeta'}
-                                      </p>
-                                      {currentFolderId && (
-                                        <Button
-                                          variant="outline"
-                                          onClick={() => setCurrentFolderId(null)}
-                                        >
-                                          <ArrowLeft className="w-4 h-4 mr-2" />
-                                          Volver
-                                        </Button>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                                      {/* Carpetas primero */}
-                                      {currentFolders.map((folder) => (
-                                        <FolderCard
-                                          key={folder.id}
-                                          folder={folder}
-                                          itemCount={getFolderItemCount(folder.id)}
-                                          isAdmin={isAdmin}
-                                          onDelete={(id) => deleteFolderMutation.mutate(id)}
-                                          onEdit={(folder) => setEditingFolder(folder)}
-                                          onClick={() => setCurrentFolderId(folder.id)}
-                                        />
-                                      ))}
-
-                                      {/* Materias organizadas por secciones (Objetos) */}
-                                      {(() => {
-                                        // Separar materias principales (Obj) de subtemas
-                                        const mainSubjects = currentSubjects.filter(s => s.name.startsWith('Obj'));
-                                        const subTopics = currentSubjects.filter(s => !s.name.startsWith('Obj'));
-                                        
-                                        // Si no hay materias principales, mostrar grid normal
-                                        if (mainSubjects.length === 0) {
-                                          return currentSubjects.map((subject) => (
-                                            <SubjectCard
-                                              key={subject.id}
-                                              subject={subject}
-                                              quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                                              stats={getSubjectStats(subject.id)}
-                                              isAdmin={isAdmin}
-                                              onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                                              onEdit={(subject) => setEditingSubject(subject)}
-                                              onClick={() => {
-                                                setSelectedSubject(subject);
-                                                setView('list');
-                                              }}
-                                            />
-                                          ));
-                                        }
-                                        
-                                        // Organizar por secciones
-                                        return (
-                                          <div className="col-span-full space-y-6">
-                                            {mainSubjects.map((mainSubject) => {
-                                              // Obtener el número del objeto (ej: "1" de "Obj 1:")
-                                              const objNumber = mainSubject.name.match(/Obj\s*(\d+)/)?.[1] || '';
-                                              // Filtrar subtemas que pertenecen a este objeto
-                                              const relatedSubTopics = subTopics.filter(s => 
-                                                s.name.startsWith(`${objNumber}.`)
-                                              );
-                                              
-                                              return (
-                                                <div key={mainSubject.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
-                                                  {/* Header del Objeto */}
-                                                  <div 
-                                                    className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                                                    style={{ borderLeft: `4px solid ${mainSubject.color}` }}
-                                                    onClick={() => {
-                                                      setSelectedSubject(mainSubject);
-                                                      setView('list');
-                                                    }}
-                                                  >
-                                                    <div className="flex items-center justify-between">
-                                                      <div>
-                                                        <h3 className="font-semibold text-gray-900">{mainSubject.name}</h3>
-                                                        {mainSubject.description && (
-                                                          <p className="text-sm text-gray-500 mt-1">{mainSubject.description}</p>
-                                                        )}
-                                                      </div>
-                                                      <div className="flex items-center gap-2">
-                                                        {quizzes.filter(q => q.subject_id === mainSubject.id).length > 0 && (
-                                                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
-                                                            {quizzes.filter(q => q.subject_id === mainSubject.id).length} quiz
-                                                          </span>
-                                                        )}
-                                                        {isAdmin && (
-                                                          <div className="flex gap-1">
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="icon"
-                                                              onClick={(e) => { e.stopPropagation(); setEditingSubject(mainSubject); }}
-                                                              className="h-8 w-8 text-gray-400 hover:text-indigo-600"
-                                                            >
-                                                              <Pencil className="w-4 h-4" />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="icon"
-                                                              onClick={(e) => { e.stopPropagation(); deleteSubjectMutation.mutate(mainSubject.id); }}
-                                                              className="h-8 w-8 text-gray-400 hover:text-red-600"
-                                                            >
-                                                              <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  {/* Lista de subtemas */}
-                                                  {relatedSubTopics.length > 0 && (
-                                                    <div className="border-t divide-y">
-                                                      {relatedSubTopics.map((subTopic) => (
-                                                        <div
-                                                          key={subTopic.id}
-                                                          className="px-4 py-3 pl-8 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group"
-                                                          onClick={() => {
-                                                            setSelectedSubject(subTopic);
-                                                            setView('list');
-                                                          }}
-                                                        >
-                                                          <span className="text-sm text-gray-700">{subTopic.name}</span>
-                                                          <div className="flex items-center gap-2">
-                                                            {quizzes.filter(q => q.subject_id === subTopic.id).length > 0 && (
-                                                              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                                                                {quizzes.filter(q => q.subject_id === subTopic.id).length} quiz
-                                                              </span>
-                                                            )}
-                                                            {isAdmin && (
-                                                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Button
-                                                                  variant="ghost"
-                                                                  size="icon"
-                                                                  onClick={(e) => { e.stopPropagation(); setEditingSubject(subTopic); }}
-                                                                  className="h-6 w-6 text-gray-400 hover:text-indigo-600"
-                                                                >
-                                                                  <Pencil className="w-3 h-3" />
-                                                                </Button>
-                                                                <Button
-                                                                  variant="ghost"
-                                                                  size="icon"
-                                                                  onClick={(e) => { e.stopPropagation(); deleteSubjectMutation.mutate(subTopic.id); }}
-                                                                  className="h-6 w-6 text-gray-400 hover:text-red-600"
-                                                                >
-                                                                  <Trash2 className="w-3 h-3" />
-                                                                </Button>
-                                                              </div>
-                                                            )}
-                                                          </div>
-                                                        </div>
-                                                      ))}
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              );
-                                            })}
-                                          </div>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-                                </motion.div>
-                              )}
-
-                              {/* Bulk Section Uploader View */}
-                              {showBulkUploader && (
-                                <motion.div
-                                  key="bulk-uploader"
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                                  <Button
-                                    onClick={() => setShowBulkUploader(false)}
-                                    variant="ghost"
-                                    className="mb-6"
-                                  >
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    Volver
-                                  </Button>
-
-                                  <div className="mb-8 text-center">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                      Cargar JSON con secciones
-                                    </h2>
-                                    <p className="text-gray-600">
-                                      Sube un archivo JSON que contenga todas las secciones del parcial
-                                    </p>
-                                  </div>
-
-                                  <BulkSectionUploader 
-                                    subjects={currentSubjects}
-                                    onSuccess={() => {
-                                      queryClient.invalidateQueries(['quizzes']);
-                                      setShowBulkUploader(false);
-                                    }}
-                                  />
-                                </motion.div>
-                              )}
-
-                              {/* Folder Editor View */}
-                                                                  {editingFolder && (
-                                                                    <motion.div
-                                                                      key="folder-editor"
-                                                                      initial={{ opacity: 0, y: 20 }}
-                                                                      animate={{ opacity: 1, y: 0 }}
-                                                                      exit={{ opacity: 0, y: -20 }}
-                                                                    >
-                                                                      <Button
-                                                                        onClick={() => setEditingFolder(null)}
-                                                                        variant="ghost"
-                                                                        className="mb-6"
-                                                                      >
-                                                                        <ArrowLeft className="w-4 h-4 mr-2" />
-                                                                        Volver
-                                                                      </Button>
-                                                                      <FolderEditor
-                                                                        folder={editingFolder}
-                                                                        users={allUsers}
-                                                                        onSave={(data) => updateFolderMutation.mutate({ id: editingFolder.id, data })}
-                                                                        onCancel={() => setEditingFolder(null)}
-                                                                      />
-                                                                    </motion.div>
-                                                                  )}
-
-          {/* Quiz Editor View */}
-                      {editingQuiz && (
-                        <motion.div
-                          key="editor"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                        >
-                          <Button
-                            onClick={() => setEditingQuiz(null)}
-                            variant="ghost"
-                            className="mb-6"
-                          >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Volver
-                          </Button>
-                          <QuizEditor
-                            quiz={editingQuiz}
-                            onSave={(updatedQuiz) => updateQuizMutation.mutate({ id: editingQuiz.id, data: updatedQuiz })}
-                            onCancel={() => setEditingQuiz(null)}
-                          />
-                        </motion.div>
-                      )}
-
-                      {/* List View */}
-                      {view === 'list' && !showUploader && !editingQuiz && selectedSubject && (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Button
-                onClick={handleBackToSubjects}
-                variant="ghost"
-                className="mb-6"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver a materias
+          {/* Course Editor */}
+          {editingCourse && (
+            <motion.div key="course-editor" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={() => setEditingCourse(null)} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Volver
               </Button>
+              <CourseEditor
+                course={editingCourse}
+                users={allUsers}
+                onSave={(data) => updateCourseMutation.mutate({ id: editingCourse.id, data })}
+                onCancel={() => setEditingCourse(null)}
+              />
+            </motion.div>
+          )}
 
-              <div className="mb-4 sm:mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                  <div>
-                    <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
-                      {selectedSubject.name}
-                    </h1>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      {selectedSubject.description || 'Cuestionarios de esta materia'}
-                    </p>
+          {/* Subject Editor */}
+          {editingSubject && !editingCourse && (
+            <motion.div key="subject-editor" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={() => setEditingSubject(null)} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Volver
+              </Button>
+              <SubjectEditor
+                subject={editingSubject}
+                users={allUsers}
+                onSave={(data) => updateSubjectMutation.mutate({ id: editingSubject.id, data })}
+                onCancel={() => setEditingSubject(null)}
+              />
+            </motion.div>
+          )}
+
+          {/* Folder Editor */}
+          {editingFolder && !editingSubject && !editingCourse && (
+            <motion.div key="folder-editor" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={() => setEditingFolder(null)} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Volver
+              </Button>
+              <FolderEditor
+                folder={editingFolder}
+                users={allUsers}
+                onSave={(data) => updateFolderMutation.mutate({ id: editingFolder.id, data })}
+                onCancel={() => setEditingFolder(null)}
+              />
+            </motion.div>
+          )}
+
+          {/* Quiz Editor */}
+          {editingQuiz && !editingFolder && !editingSubject && !editingCourse && (
+            <motion.div key="quiz-editor" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={() => setEditingQuiz(null)} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Volver
+              </Button>
+              <QuizEditor
+                quiz={editingQuiz}
+                onSave={(data) => updateQuizMutation.mutate({ id: editingQuiz.id, data })}
+                onCancel={() => setEditingQuiz(null)}
+              />
+            </motion.div>
+          )}
+
+          {/* Courses View */}
+          {view === 'courses' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
+            <motion.div key="courses" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <ChallengeNotifications currentUser={currentUser} onStartChallenge={(c) => window.location.href = `/ChallengePlay?id=${c.id}`} />
+              
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                {userStats && (
+                  <div className="flex-1 max-w-md">
+                    <PointsDisplay points={userStats.total_points || 0} level={userStats.level || 1} />
                   </div>
-                  <Button
-                                        onClick={() => setShowUploader(true)}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9 sm:h-10"
-                                      >
-                                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                                        Nuevo cuestionario
-                                      </Button>
-                                        </div>
-                                      </div>
+                )}
+                <div className="w-full sm:w-64">
+                  <OnlineUsersPanel currentUser={currentUser} quizzes={quizzes} subjects={subjects} />
+                </div>
+              </div>
 
-                                      <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
-                                                            <TabsList className="mb-4">
-                                                              <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                                                                <BookOpen className="w-4 h-4" />
-                                                                Cuestionarios ({subjectQuizzes.length})
-                                                              </TabsTrigger>
-                                                              <TabsTrigger value="audios" className="flex items-center gap-2">
-                                                                <Music className="w-4 h-4" />
-                                                                Audios
-                                                              </TabsTrigger>
-                                                            </TabsList>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">Mis Cursos</h1>
+                  <p className="text-gray-600">Selecciona un curso para ver sus materias</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link to={createPageUrl('Leaderboard')}>
+                    <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-9">
+                      <Crown className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Ranking</span>
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl('Progress')}>
+                    <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-9">
+                      <TrendingUp className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Progreso</span>
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl('GameLobby')}>
+                    <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                      <Swords className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Desafío</span>
+                    </Button>
+                  </Link>
+                  {isAdmin && (
+                    <>
+                      <Link to={createPageUrl('AdminTasks')}>
+                        <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-9">
+                          <ClipboardList className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Tareas</span>
+                        </Button>
+                      </Link>
+                      <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
+                        <DialogTrigger asChild>
+                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                            <Plus className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Nuevo curso</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader><DialogTitle>Crear nuevo curso</DialogTitle></DialogHeader>
+                          <div className="space-y-4 mt-4">
+                            <div>
+                              <Label>Nombre</Label>
+                              <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Semestre Selectivo" />
+                            </div>
+                            <div>
+                              <Label>Descripción</Label>
+                              <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} placeholder="Descripción opcional" />
+                            </div>
+                            <div>
+                              <Label>Color</Label>
+                              <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                            </div>
+                            <Button onClick={() => createCourseMutation.mutate(newItem)} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                              Crear curso
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  )}
+                </div>
+              </div>
 
-                                                            <TabsContent value="quizzes">
-                                                                                                                                                                                                {subjectQuizzes.length === 0 ? (
-                                                                                                                                                                                                  <div className="text-center py-12">
-                                                                                                                                                                                                    <div className="flex justify-center mb-4">
-                                                                                                                                                                                                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                                                                                                                                                                                        <BookOpen className="w-8 h-8 text-gray-400" />
-                                                                                                                                                                                                      </div>
-                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                                                                                                                                                                      No hay cuestionarios
-                                                                                                                                                                                                    </h3>
-                                                                                                                                                                                                    <p className="text-gray-500 mb-4 text-sm">
-                                                                                                                                                                                                      Comienza cargando tu primer cuestionario
-                                                                                                                                                                                                    </p>
-                                                                                                                                                                                                    <Button
-                                                                                                                                                                                                      onClick={() => setShowUploader(true)}
-                                                                                                                                                                                                      className="bg-indigo-600 hover:bg-indigo-700"
-                                                                                                                                                                                                    >
-                                                                                                                                                                                                      <Plus className="w-4 h-4 mr-2" />
-                                                                                                                                                                                                      Cargar cuestionario
-                                                                                                                                                                                                    </Button>
-                                                                                                                                                                                                  </div>
-                                                                                                                                                                                                ) : (
-                                                                                                                                                                                                  <div className="space-y-2">
-                                                                                                                                                                                                    {subjectQuizzes.map((quiz) => {
-                                                                                                                                                                                                      const quizAttempts = attempts.filter(a => a.quiz_id === quiz.id);
-                                                                                                                                                                                                      const hasAttempts = quizAttempts.length > 0;
-                                                                                                                                                                                                      const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
+              {visibleCourses.length === 0 ? (
+                <div className="text-center py-16">
+                  <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay cursos</h3>
+                  <p className="text-gray-500">Comienza creando tu primer curso</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {visibleCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      subjectCount={subjects.filter(s => s.course_id === course.id).length}
+                      isAdmin={isAdmin}
+                      onEdit={setEditingCourse}
+                      onDelete={(id) => deleteCourseMutation.mutate(id)}
+                      onClick={() => { setSelectedCourse(course); setView('subjects'); }}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
 
-                                                                                                                                                                                                      // Calcular estadísticas acumuladas
-                                                                                                                                                                                                      const allAnswered = new Set();
-                                                                                                                                                                                                      const wrongSet = new Set();
-                                                                                                                                                                                                      let totalCorrect = 0;
-                                                                                                                                                                                                      let totalAnsweredCount = 0;
+          {/* Subjects View (inside a course) */}
+          {view === 'subjects' && selectedCourse && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && (
+            <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Breadcrumb />
 
-                                                                                                                                                                                                      quizAttempts.forEach(attempt => {
-                                                                                                                                                                                                        totalCorrect += attempt.score || 0;
-                                                                                                                                                                                                        totalAnsweredCount += attempt.answered_questions || attempt.total_questions || 0;
-                                                                                                                                                                                                        attempt.wrong_questions?.forEach(wq => wrongSet.add(wq.question));
-                                                                                                                                                                                                      });
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                    {selectedCourse.icon} {selectedCourse.name}
+                  </h1>
+                  <p className="text-gray-600">{selectedCourse.description || 'Materias del curso'}</p>
+                </div>
+                {isAdmin && (
+                  <div className="flex flex-wrap gap-2">
+                    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="text-xs sm:text-sm h-9">
+                          <Folder className="w-4 h-4 mr-2" /> Nueva carpeta
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Crear carpeta (parcial)</DialogTitle></DialogHeader>
+                        <div className="space-y-4 mt-4">
+                          <div>
+                            <Label>Nombre</Label>
+                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
+                          </div>
+                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
+                            Crear carpeta
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                          <Plus className="w-4 h-4 mr-2" /> Nueva materia
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
+                        <div className="space-y-4 mt-4">
+                          <div>
+                            <Label>Nombre</Label>
+                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Anatomía" />
+                          </div>
+                          <div>
+                            <Label>Descripción</Label>
+                            <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} />
+                          </div>
+                          <div>
+                            <Label>Color</Label>
+                            <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                          </div>
+                          <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse.id, folder_id: currentFolderId })} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                            Crear materia
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+              </div>
 
-                                                                                                                                                                                                      const uniqueWrong = wrongSet.size;
-                                                                                                                                                                                                      const avgScore = quizAttempts.length > 0 
-                                                                                                                                                                                                        ? Math.round(quizAttempts.reduce((sum, a) => sum + ((a.score / a.total_questions) * 100), 0) / quizAttempts.length)
-                                                                                                                                                                                                        : 0;
-                                                                                                                                                                                                      const progressPercent = totalQuestions > 0 ? Math.min(100, Math.round((totalAnsweredCount / totalQuestions) * 100)) : 0;
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {currentCourseFolders.map((folder) => (
+                  <FolderCard
+                    key={folder.id}
+                    folder={folder}
+                    itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                    isAdmin={isAdmin}
+                    onDelete={(id) => deleteFolderMutation.mutate(id)}
+                    onEdit={setEditingFolder}
+                    onClick={() => setCurrentFolderId(folder.id)}
+                  />
+                ))}
+                {currentFolderSubjects.map((subject) => (
+                  <SubjectCard
+                    key={subject.id}
+                    subject={subject}
+                    quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                    stats={getSubjectStats(subject.id)}
+                    isAdmin={isAdmin}
+                    onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                    onEdit={setEditingSubject}
+                    onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                  />
+                ))}
+              </div>
 
-                                                                                                                                                                                                      return (
-                                                                                                                                                                                                        <div
-                                                                                                                                                                                                          key={quiz.id}
-                                                                                                                                                                                                          onClick={() => handleStartQuiz(quiz, totalQuestions, 'all', quizAttempts)}
-                                                                                                                                                                                                          className={`flex flex-wrap items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                                                                                                                                                                                                            hasAttempts 
-                                                                                                                                                                                                              ? avgScore >= 80 
-                                                                                                                                                                                                                ? 'border-green-300 bg-green-50/50 hover:bg-green-50' 
-                                                                                                                                                                                                                : avgScore >= 50 
-                                                                                                                                                                                                                  ? 'border-yellow-300 bg-yellow-50/50 hover:bg-yellow-50'
-                                                                                                                                                                                                                  : 'border-red-300 bg-red-50/50 hover:bg-red-50'
-                                                                                                                                                                                                              : 'border-gray-200 bg-white hover:bg-gray-50'
-                                                                                                                                                                                                          }`}
-                                                                                                                                                                                                        >
-                                                                                                                                                                                                          {/* Título */}
-                                                                                                                                                                                                          <span className="font-medium text-gray-900 text-sm flex-shrink-0">
-                                                                                                                                                                                                            {quiz.title}
-                                                                                                                                                                                                            {quiz.is_hidden && <span className="ml-1">🔒</span>}
-                                                                                                                                                                                                          </span>
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
+                <div className="text-center py-16">
+                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Curso vacío</h3>
+                  <p className="text-gray-500">Agrega carpetas o materias</p>
+                </div>
+              )}
+            </motion.div>
+          )}
 
-                                                                                                                                                                                                          {/* Badges de estadísticas */}
-                                                                                                                                                                                                          <div className="flex flex-wrap items-center gap-1.5 ml-auto">
-                                                                                                                                                                                                            {/* Total preguntas */}
-                                                                                                                                                                                                            <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600 border-gray-300">
-                                                                                                                                                                                                              📝 {totalQuestions}
-                                                                                                                                                                                                            </Badge>
+          {/* Quiz List View */}
+          {view === 'list' && selectedSubject && !showUploader && !editingQuiz && (
+            <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Breadcrumb />
 
-                                                                                                                                                                                                            {hasAttempts && (
-                                                                                                                                                                                                              <>
-                                                                                                                                                                                                                {/* Contestadas */}
-                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-300">
-                                                                                                                                                                                                                  ✏️ {totalAnsweredCount}
-                                                                                                                                                                                                                </Badge>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900">{selectedSubject.name}</h1>
+                  <p className="text-gray-600">{selectedSubject.description || 'Cuestionarios de esta materia'}</p>
+                </div>
+                {isAdmin && (
+                  <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                    <Plus className="w-4 h-4 mr-2" /> Nuevo cuestionario
+                  </Button>
+                )}
+              </div>
 
-                                                                                                                                                                                                                {/* Correctas */}
-                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300">
-                                                                                                                                                                                                                  ✓ {totalCorrect}
-                                                                                                                                                                                                                </Badge>
+              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="audios" className="flex items-center gap-2">
+                    <Music className="w-4 h-4" /> Audios
+                  </TabsTrigger>
+                </Tabs>
 
-                                                                                                                                                                                                                {/* Incorrectas únicas */}
-                                                                                                                                                                                                                <Badge variant="outline" className="text-xs bg-red-100 text-red-700 border-red-300">
-                                                                                                                                                                                                                  ✗ {uniqueWrong}
-                                                                                                                                                                                                                </Badge>
+                <TabsContent value="quizzes">
+                  {subjectQuizzes.length === 0 ? (
+                    <div className="text-center py-12">
+                      <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
+                      <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
+                      {isAdmin && (
+                        <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                          <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {subjectQuizzes.map((quiz) => (
+                        <QuizListItem
+                          key={quiz.id}
+                          quiz={quiz}
+                          attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                          isAdmin={isAdmin}
+                          onStart={handleStartQuiz}
+                          onEdit={setEditingQuiz}
+                          onDelete={(id) => deleteQuizMutation.mutate(id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
 
-                                                                                                                                                                                                                {/* Promedio */}
-                                                                                                                                                                                                                <Badge 
-                                                                                                                                                                                                                  variant="outline" 
-                                                                                                                                                                                                                  className={`text-xs font-semibold ${
-                                                                                                                                                                                                                    avgScore >= 80 
-                                                                                                                                                                                                                      ? 'bg-green-500 text-white border-green-500' 
-                                                                                                                                                                                                                      : avgScore >= 50 
-                                                                                                                                                                                                                        ? 'bg-yellow-500 text-white border-yellow-500'
-                                                                                                                                                                                                                        : 'bg-red-500 text-white border-red-500'
-                                                                                                                                                                                                                  }`}
-                                                                                                                                                                                                                >
-                                                                                                                                                                                                                  ⌀ {avgScore}%
-                                                                                                                                                                                                                </Badge>
-                                                                                                                                                                                                              </>
-                                                                                                                                                                                                            )}
-
-                                                                                                                                                                                                            {!hasAttempts && (
-                                                                                                                                                                                                              <Badge variant="outline" className="text-xs bg-indigo-100 text-indigo-600 border-indigo-300">
-                                                                                                                                                                                                                Nuevo
-                                                                                                                                                                                                              </Badge>
-                                                                                                                                                                                                            )}
-                                                                                                                                                                                                          </div>
-                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                      );
-                                                                                                                                                                                                    })}
-                                                                                                                                                                                                  </div>
-                                                                                                                                                                                                )}
-                                                                                                                                                                                              </TabsContent>
-
-                                                            <TabsContent value="audios">
-                                                              <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
-                                                            </TabsContent>
-                                                          </Tabs>
+                <TabsContent value="audios">
+                  <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+                </TabsContent>
+              </Tabs>
             </motion.div>
           )}
 
           {/* Upload View */}
           {view === 'list' && showUploader && (
-            <motion.div
-              key="upload"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Button
-                onClick={() => setShowUploader(false)}
-                variant="ghost"
-                className="mb-6"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver
+            <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={() => setShowUploader(false)} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Volver
               </Button>
-
               <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  Cargar nuevo cuestionario
-                </h2>
-                <p className="text-gray-600">
-                  Sube un archivo JSON con el formato de preguntas
-                </p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Cargar nuevo cuestionario</h2>
+                <p className="text-gray-600">Sube un archivo JSON con el formato de preguntas</p>
               </div>
-
-              <FileUploader onUploadSuccess={handleUploadSuccess} />
+              <FileUploader onUploadSuccess={(data) => createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id })} />
             </motion.div>
           )}
 
           {/* Quiz View */}
           {view === 'quiz' && selectedQuiz && (
-            <motion.div
-              key="quiz"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Button
-                onClick={handleExitQuiz}
-                variant="ghost"
-                className="mb-6"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Salir del cuestionario
+            <motion.div key="quiz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Button onClick={handleExitQuiz} variant="ghost" className="mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Salir del cuestionario
               </Button>
-
               <QuestionView
                 key={currentQuestionIndex}
                 question={selectedQuiz.questions[currentQuestionIndex]}
@@ -1579,20 +868,13 @@ export default function QuizzesPage() {
                 correctAnswers={score}
                 wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
-                onBack={currentQuestionIndex > 0 ? () => setCurrentQuestionIndex(currentQuestionIndex - 1) : null}
-                onMarkForReview={handleMarkForReview}
               />
             </motion.div>
           )}
 
           {/* Results View */}
           {view === 'results' && selectedQuiz && (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
+            <motion.div key="results" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
               <ResultsView
                 score={score}
                 totalQuestions={selectedQuiz.questions.length}
@@ -1608,19 +890,10 @@ export default function QuizzesPage() {
           )}
         </AnimatePresence>
 
-        {/* Badge Unlock Modal */}
-                  <BadgeUnlockModal 
-                    badge={newBadge} 
-                    open={!!newBadge} 
-                    onClose={() => setNewBadge(null)} 
-                  />
-
-                  {/* Session Timer */}
-                            <SessionTimer />
-
-                            {/* Task Progress Float */}
-                            <TaskProgressFloat />
-                          </div>
-                        </div>
-                      );
+        <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
+        <SessionTimer />
+        <TaskProgressFloat />
+      </div>
+    </div>
+  );
 }
