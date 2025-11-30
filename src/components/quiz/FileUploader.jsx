@@ -300,25 +300,38 @@ export default function FileUploader({ onUploadSuccess }) {
                 placeholder='{"quiz": [{"question": "...", "answerOptions": [...]}]}'
                 className="min-h-[200px] font-mono text-sm mb-4"
               />
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowPasteArea(false);
-                    setJsonText('');
-                    setError(null);
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handlePasteSubmit}
-                  disabled={isProcessing || !jsonText.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
-                </Button>
-              </div>
+              <div className="flex flex-wrap gap-3">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setShowPasteArea(false);
+                                        setJsonText('');
+                                        setError(null);
+                                      }}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={handleRepairJson}
+                                      disabled={isRepairing || !jsonText.trim()}
+                                      className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                                    >
+                                      {isRepairing ? (
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      ) : (
+                                        <Wrench className="w-4 h-4 mr-2" />
+                                      )}
+                                      Reparar JSON
+                                    </Button>
+                                    <Button
+                                      onClick={handlePasteSubmit}
+                                      disabled={isProcessing || !jsonText.trim()}
+                                      className="bg-indigo-600 hover:bg-indigo-700"
+                                    >
+                                      {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
+                                    </Button>
+                                  </div>
             </Card>
           )}
 
