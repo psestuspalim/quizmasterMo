@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, RotateCcw, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +35,7 @@ import { calculatePoints, calculateLevel, checkNewBadges, POINTS } from '../comp
 import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
 import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
 import SessionTimer from '../components/ui/SessionTimer';
+import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('subjects'); // 'subjects', 'list', 'upload', 'quiz', 'results'
@@ -910,11 +911,17 @@ export default function QuizzesPage() {
                                               </Button>
                                             </Link>
                                             <Link to={createPageUrl('Progress')}>
-                                              <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                <span className="hidden sm:inline">Progreso</span>
-                                              </Button>
-                                            </Link>
+                                                                                <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                                                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                                                  <span className="hidden sm:inline">Progreso</span>
+                                                                                </Button>
+                                                                              </Link>
+                                                                              <Link to={createPageUrl('GameLobby')}>
+                                                                                <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                                                  <Swords className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                                                  <span className="hidden sm:inline">Desafío</span>
+                                                                                </Button>
+                                                                              </Link>
                                           </>
                                         )}
 
@@ -1496,8 +1503,11 @@ export default function QuizzesPage() {
                   />
 
                   {/* Session Timer */}
-                  <SessionTimer />
-                </div>
-              </div>
-            );
+                            <SessionTimer />
+
+                            {/* Task Progress Float */}
+                            <TaskProgressFloat />
+                          </div>
+                        </div>
+                      );
 }
