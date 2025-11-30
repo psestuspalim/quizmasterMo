@@ -917,11 +917,19 @@ export default function QuizzesPage() {
                                                                                 </Button>
                                                                               </Link>
                                                                               <Link to={createPageUrl('GameLobby')}>
-                                                                                <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
-                                                                                  <Swords className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
-                                                                                  <span className="hidden sm:inline">Desafío</span>
-                                                                                </Button>
-                                                                              </Link>
+                                                                                                                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                                                                                    <Swords className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                                                                                    <span className="hidden sm:inline">Desafío</span>
+                                                                                                                  </Button>
+                                                                                                                </Link>
+                                                                                                                {isAdmin && (
+                                                                                                                  <Link to={createPageUrl('AdminTasks')}>
+                                                                                                                    <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4">
+                                                                                                                      <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                                                                                                                      <span className="hidden sm:inline">Tareas</span>
+                                                                                                                    </Button>
+                                                                                                                  </Link>
+                                                                                                                )}
                                           </>
                                         )}
 
