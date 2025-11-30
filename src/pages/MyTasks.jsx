@@ -132,7 +132,7 @@ export default function MyTasksPage() {
           </TabsList>
 
           <TabsContent value="pending">
-            <div className="grid gap-4">
+            <div className="space-y-6">
               {pendingTasks.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
@@ -141,7 +141,22 @@ export default function MyTasksPage() {
                   </CardContent>
                 </Card>
               ) : (
-                pendingTasks.map((task, idx) => (
+                Object.entries(
+                  pendingTasks.reduce((acc, task) => {
+                    const subjectName = task.subject_name || 'Sin materia';
+                    if (!acc[subjectName]) acc[subjectName] = [];
+                    acc[subjectName].push(task);
+                    return acc;
+                  }, {})
+                ).map(([subjectName, subjectTasks]) => (
+                  <div key={subjectName}>
+                    <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-indigo-600" />
+                      {subjectName}
+                      <Badge variant="outline">{subjectTasks.length}</Badge>
+                    </h3>
+                    <div className="grid gap-3">
+                      {subjectTasks.map((task, idx) => (
                   <motion.div
                     key={task.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -207,13 +222,16 @@ export default function MyTasksPage() {
                       </CardContent>
                     </Card>
                   </motion.div>
+                      ))}
+                    </div>
+                  </div>
                 ))
               )}
             </div>
           </TabsContent>
 
           <TabsContent value="completed">
-            <div className="grid gap-4">
+            <div className="space-y-6">
               {completedTasks.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
@@ -222,27 +240,44 @@ export default function MyTasksPage() {
                   </CardContent>
                 </Card>
               ) : (
-                completedTasks.map((task) => (
-                  <Card key={task.id} className="border-green-200 bg-green-50/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">{task.quiz_title}</h3>
-                          <p className="text-sm text-gray-500">{task.subject_name}</p>
-                          <div className="flex gap-2 mt-2">
-                            <Badge className="bg-green-100 text-green-700">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              {task.best_score}%
-                            </Badge>
-                            <Badge variant="outline">
-                              {task.attempts} intentos
-                            </Badge>
-                          </div>
-                        </div>
-                        <Trophy className="w-8 h-8 text-green-500" />
-                      </div>
-                    </CardContent>
-                  </Card>
+                Object.entries(
+                  completedTasks.reduce((acc, task) => {
+                    const subjectName = task.subject_name || 'Sin materia';
+                    if (!acc[subjectName]) acc[subjectName] = [];
+                    acc[subjectName].push(task);
+                    return acc;
+                  }, {})
+                ).map(([subjectName, subjectTasks]) => (
+                  <div key={subjectName}>
+                    <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-green-600" />
+                      {subjectName}
+                      <Badge className="bg-green-100 text-green-700">{subjectTasks.length}</Badge>
+                    </h3>
+                    <div className="grid gap-3">
+                      {subjectTasks.map((task) => (
+                        <Card key={task.id} className="border-green-200 bg-green-50/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold">{task.quiz_title}</h3>
+                                <div className="flex gap-2 mt-2">
+                                  <Badge className="bg-green-100 text-green-700">
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                    {task.best_score}%
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {task.attempts} intentos
+                                  </Badge>
+                                </div>
+                              </div>
+                              <Trophy className="w-8 h-8 text-green-500" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 ))
               )}
             </div>
