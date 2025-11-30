@@ -75,16 +75,53 @@ export default function FileUploader({ onUploadSuccess }) {
       }
 
       await onUploadSuccess({
-                title,
-                description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
-                questions,
-                total_questions: questions.length,
-                file_name: file.name,
-                is_hidden: false
-              });
+      title,
+      description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
+      questions,
+      total_questions: questions.length,
+      file_name: fileName,
+      is_hidden: false
+    });
+  };
 
+  const handleFile = async (file) => {
+    if (!file) return;
+    
+    if (file.type !== 'application/json') {
+      setError('Por favor, selecciona un archivo JSON válido');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      await processJsonData(data, file.name);
     } catch (err) {
       setError(err.message || 'Error al procesar el archivo');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePasteSubmit = async () => {
+    if (!jsonText.trim()) {
+      setError('Por favor, pega el contenido JSON');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const data = JSON.parse(jsonText);
+      await processJsonData(data, data.quizMetadata?.title || 'Quiz pegado');
+      setJsonText('');
+      setShowPasteArea(false);
+    } catch (err) {
+      setError(err.message || 'Error al procesar el JSON. Verifica el formato.');
     } finally {
       setIsProcessing(false);
     }
