@@ -442,23 +442,64 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
           {/* Campo de notas para respuestas incorrectas - ARRIBA del feedback */}
                       <AnimatePresence>
                         {showFeedback && selectedOption && !selectedOption.isCorrect && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-lg p-3 sm:p-4 bg-amber-50 border border-amber-200"
-                          >
-                            <label className="text-xs sm:text-sm text-amber-800 font-medium mb-2 block">
-                              📝 Escribe tus dudas o notas para repasar:
-                            </label>
-                            <textarea
-                              value={userNote}
-                              onChange={(e) => setUserNote(e.target.value)}
-                              placeholder="Anota aquí lo que no entendiste..."
-                              className="w-full p-2 sm:p-3 text-xs sm:text-sm border border-amber-200 rounded-md bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 resize-none"
-                              rows={2}
-                            />
-                          </motion.div>
-                        )}
+                                                        <motion.div
+                                                          initial={{ opacity: 0, y: -10 }}
+                                                          animate={{ opacity: 1, y: 0 }}
+                                                          className="space-y-3"
+                                                        >
+                                                          {/* Botón para generar esquema */}
+                                                          {!schema && (
+                                                            <Button
+                                                              variant="outline"
+                                                              size="sm"
+                                                              onClick={handleGenerateSchema}
+                                                              disabled={loadingSchema}
+                                                              className="w-full text-xs h-8 text-teal-600 border-teal-200 hover:bg-teal-50"
+                                                            >
+                                                              {loadingSchema ? (
+                                                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                              ) : (
+                                                                <Workflow className="w-3 h-3 mr-1" />
+                                                              )}
+                                                              Ver esquema gráfico del proceso
+                                                            </Button>
+                                                          )}
+
+                                                          {/* Esquema generado */}
+                                                          {schema && (
+                                                            <motion.div
+                                                              initial={{ opacity: 0, height: 0 }}
+                                                              animate={{ opacity: 1, height: 'auto' }}
+                                                              className="bg-teal-50 border border-teal-200 rounded-lg p-3"
+                                                            >
+                                                              <div className="flex gap-2">
+                                                                <Workflow className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" />
+                                                                <div className="flex-1">
+                                                                  <p className="text-xs font-semibold text-teal-800 mb-2">{schema.title}</p>
+                                                                  <pre className="text-xs text-teal-900 whitespace-pre-wrap font-sans bg-white/60 rounded p-2">
+                                                                    {schema.schema}
+                                                                  </pre>
+                                                                  <p className="text-xs text-teal-600 mt-2 italic">💡 {schema.summary}</p>
+                                                                </div>
+                                                              </div>
+                                                            </motion.div>
+                                                          )}
+
+                                                          {/* Campo de notas */}
+                                                          <div className="rounded-lg p-3 sm:p-4 bg-amber-50 border border-amber-200">
+                                                            <label className="text-xs sm:text-sm text-amber-800 font-medium mb-2 block">
+                                                              📝 Escribe tus dudas o notas para repasar:
+                                                            </label>
+                                                            <textarea
+                                                              value={userNote}
+                                                              onChange={(e) => setUserNote(e.target.value)}
+                                                              placeholder="Anota aquí lo que no entendiste..."
+                                                              className="w-full p-2 sm:p-3 text-xs sm:text-sm border border-amber-200 rounded-md bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 resize-none"
+                                                              rows={2}
+                                                            />
+                                                          </div>
+                                                        </motion.div>
+                                                      )}
                       </AnimatePresence>
 
                       {/* Feedback */}
