@@ -149,6 +149,17 @@ export default function TournamentLobby() {
 
   const selectedQuiz = quizzes.find(q => q.id === newTournament.quiz_id);
 
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
       <div className="max-w-2xl mx-auto">
