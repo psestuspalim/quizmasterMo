@@ -63,13 +63,22 @@ export default function TournamentPlay() {
         setShowingResults(false);
       }
 
-      if (tournamentData.status === 'countdown') {
-        const startTime = new Date(tournamentData.question_started_at).getTime();
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        setCountdown(Math.max(3 - elapsed, 0));
-      }
     }
   }, [tournamentData, currentUser]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!tournament || tournament.status !== 'countdown' || !tournament.question_started_at) return;
+
+    const interval = setInterval(() => {
+      const startTime = new Date(tournament.question_started_at).getTime();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = Math.max(3 - elapsed, 0);
+      setCountdown(remaining);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [tournament]);
 
   // Timer de pregunta
   useEffect(() => {
