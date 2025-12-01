@@ -94,19 +94,26 @@ export default function TournamentPlay() {
 
   const startTournamentMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.Tournament.update(tournament.id, {
+      const tournamentId = tournament.id;
+      const players = tournament.players;
+      
+      await base44.entities.Tournament.update(tournamentId, {
         status: 'countdown',
         question_started_at: new Date().toISOString()
       });
 
       // Después de 3 segundos, empezar
       setTimeout(async () => {
-        await base44.entities.Tournament.update(tournament.id, {
-          status: 'in_progress',
-          current_question: 0,
-          question_started_at: new Date().toISOString(),
-          players: tournament.players.map(p => ({ ...p, current_answer: -1, answer_time: null }))
-        });
+        try {
+          await base44.entities.Tournament.update(tournamentId, {
+            status: 'in_progress',
+            current_question: 0,
+            question_started_at: new Date().toISOString(),
+            players: players.map(p => ({ ...p, current_answer: -1, answer_time: null }))
+          });
+        } catch (err) {
+          console.error('Error starting tournament:', err);
+        }
       }, 3000);
     }
   });
