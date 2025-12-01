@@ -27,6 +27,7 @@ import {
 
 export default function TournamentLobby() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [joinCode, setJoinCode] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newTournament, setNewTournament] = useState({
@@ -39,7 +40,10 @@ export default function TournamentLobby() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(console.error);
+    base44.auth.me()
+      .then(setCurrentUser)
+      .catch(console.error)
+      .finally(() => setUserLoading(false));
   }, []);
 
   const { data: quizzes = [] } = useQuery({
