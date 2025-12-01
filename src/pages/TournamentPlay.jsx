@@ -300,15 +300,18 @@ export default function TournamentPlay() {
   if (tournament.status === 'countdown') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
-        <motion.div
-          key={countdown}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 1.5, opacity: 0 }}
-          className="text-9xl font-bold text-white"
-        >
-          {countdown > 0 ? countdown : '¡YA!'}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={countdown}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.5, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-9xl font-bold text-white"
+          >
+            {countdown > 0 ? countdown : '¡YA!'}
+          </motion.div>
+        </AnimatePresence>
       </div>
     );
   }
