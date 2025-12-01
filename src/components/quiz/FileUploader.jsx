@@ -291,9 +291,36 @@ export default function FileUploader({ onUploadSuccess }) {
             </Card>
           ) : (
             <Card className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Pegar JSON
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Pegar JSON
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const exampleJson = `{
+  "quizMetadata": {
+    "title": "Nombre del Quiz"
+  },
+  "questions": [
+    {
+      "questionText": "¿Tu pregunta aquí?",
+      "options": [
+        { "text": "Opción correcta", "isCorrect": true, "feedback": "Explicación" },
+        { "text": "Opción incorrecta", "isCorrect": false, "feedback": "Por qué no" }
+      ],
+      "cinephileTip": "Pista opcional"
+    }
+  ]
+}`;
+                    setJsonText(exampleJson);
+                  }}
+                  className="text-indigo-600 hover:text-indigo-700 text-xs"
+                >
+                  📋 Copiar estructura base
+                </Button>
+              </div>
               <Textarea
                 value={jsonText}
                 onChange={(e) => setJsonText(e.target.value)}
