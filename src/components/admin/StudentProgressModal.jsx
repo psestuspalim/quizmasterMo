@@ -11,10 +11,10 @@ import { X } from 'lucide-react';
 
 import OverviewStats from '../progress/OverviewStats';
 import SubjectProgress from '../progress/SubjectProgress';
-import TrendAnalysis from '../progress/TrendAnalysis';
 import WeakPoints from '../progress/WeakPoints';
-import AttemptHistory from '../progress/AttemptHistory';
 import SpeedAnalysis from '../progress/SpeedAnalysis';
+import StudentTrendChart from './StudentTrendChart';
+import StudentWeakPointsList from './StudentWeakPointsList';
 
 export default function StudentProgressModal({ 
   open, 
@@ -146,15 +146,15 @@ export default function StudentProgressModal({
             </TabsContent>
 
             <TabsContent value="trend" className="mt-4">
-              <TrendAnalysis analytics={analytics} />
+              <StudentTrendChart trendData={analytics.trendData} />
             </TabsContent>
 
             <TabsContent value="weak" className="mt-4">
-              <WeakPoints analytics={analytics} />
+              <StudentWeakPointsList weakPoints={analytics.topWeakPoints} />
             </TabsContent>
 
             <TabsContent value="speed" className="mt-4">
-              <SpeedAnalysis analytics={analytics} />
+              <SpeedAnalysis attempts={analytics.attempts} />
             </TabsContent>
           </Tabs>
         ) : (
