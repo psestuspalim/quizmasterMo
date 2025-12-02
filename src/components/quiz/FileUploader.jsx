@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileJson, AlertCircle, Image, Microscope, ClipboardPaste, Wrench, Loader2 } from 'lucide-react';
+import { Upload, FileJson, AlertCircle, Image, Microscope, ClipboardPaste, Wrench, Loader2, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
+import TextQuizCreator from './TextQuizCreator';
 
 export default function FileUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
@@ -218,7 +219,11 @@ export default function FileUploader({ onUploadSuccess }) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
+                  <TabsTrigger value="text">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Texto
+                  </TabsTrigger>
                   <TabsTrigger value="json">
                     <FileJson className="w-4 h-4 mr-2" />
                     JSON
@@ -370,10 +375,17 @@ export default function FileUploader({ onUploadSuccess }) {
           )}
         </TabsContent>
 
+        <TabsContent value="text">
+          <TextQuizCreator 
+            onSave={onUploadSuccess}
+            onCancel={() => setActiveTab('json')}
+          />
+        </TabsContent>
+
         <TabsContent value="image">
                     <ImageQuizCreator 
                       onSave={handleImageQuizSave}
-                      onCancel={() => setActiveTab('json')}
+                      onCancel={() => setActiveTab('text')}
                     />
                   </TabsContent>
 
