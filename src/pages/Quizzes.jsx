@@ -445,7 +445,8 @@ export default function QuizzesPage() {
       correct_answer: question.answerOptions.find(opt => opt.isCorrect)?.text,
       response_time: responseTime,
       answerOptions: question.answerOptions,
-      hint: question.hint
+      hint: question.hint,
+      difficulty: question.difficulty
     }] : wrongAnswers;
 
     if (isCorrect) {
