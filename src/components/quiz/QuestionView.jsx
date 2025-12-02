@@ -400,21 +400,47 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   </div>
                 </div>
 
-                {/* Botón siguiente - PRIMERO para que siempre sea accesible */}
-                <div className="pointer-events-auto">
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleNext();
-                    }}
-                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-indigo-200 relative z-50"
-                  >
-                    Siguiente pregunta
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
+                {/* Campo de reflexión obligatorio para respuestas incorrectas */}
+                  {!selectedOption.isCorrect && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      <label className="block text-sm font-medium text-amber-800 mb-2">
+                        ✍️ ¿Por qué crees que te equivocaste? <span className="text-amber-600">(obligatorio)</span>
+                      </label>
+                      <textarea
+                        value={reflectionText}
+                        onChange={(e) => setReflectionText(e.target.value)}
+                        placeholder="Escribe tu reflexión sobre el error (mínimo 10 caracteres)..."
+                        className="w-full p-2.5 text-sm border border-amber-300 rounded-lg bg-white focus:ring-2 focus:ring-amber-400 focus:border-amber-400 resize-none"
+                        rows={2}
+                      />
+                      {reflectionText.length > 0 && reflectionText.length < 10 && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          {10 - reflectionText.length} caracteres más...
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Botón siguiente */}
+                  <div className="pointer-events-auto">
+                    <Button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleNext();
+                      }}
+                      disabled={!canProceed}
+                      className={`w-full h-11 text-white font-medium shadow-lg relative z-50 ${
+                        canProceed 
+                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-200'
+                          : 'bg-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {canProceed ? 'Siguiente pregunta' : 'Completa tu reflexión'}
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
 
                 {/* Análisis de error con IA */}
                 {!selectedOption.isCorrect && (
