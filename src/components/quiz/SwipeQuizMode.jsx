@@ -300,22 +300,28 @@ function SwipeCard({ card, onSwipe, feedback }) {
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`absolute inset-0 flex items-center justify-center rounded-xl ${
-              feedback.isCorrect ? 'bg-green-500/90' : 'bg-red-500/90'
+            className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl p-4 overflow-y-auto ${
+              feedback.isCorrect ? 'bg-green-500/95' : 'bg-red-500/95'
             }`}
           >
-            <div className="text-center text-white">
+            <div className="text-center text-white max-w-full">
               {feedback.isCorrect ? (
-                <CheckCircle2 className="w-16 h-16 mx-auto mb-2" />
+                <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
               ) : (
-                <XCircle className="w-16 h-16 mx-auto mb-2" />
+                <XCircle className="w-12 h-12 mx-auto mb-2" />
               )}
-              <p className="text-xl font-bold">
+              <p className="text-lg font-bold">
                 {feedback.isCorrect ? '¡Correcto!' : 'Incorrecto'}
               </p>
               <p className="text-sm opacity-90 mt-1">
                 La respuesta es: {feedback.card.isTrue ? 'Verdadero' : 'Falso'}
               </p>
+              {!feedback.isCorrect && feedback.card.rationale && (
+                <div className="mt-3 p-2 bg-white/20 rounded-lg text-xs text-left max-h-[150px] overflow-y-auto">
+                  <p className="font-semibold mb-1">💡 Explicación:</p>
+                  <MathText text={feedback.card.rationale} />
+                </div>
+              )}
             </div>
           </motion.div>
         )}
