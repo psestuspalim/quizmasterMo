@@ -75,7 +75,8 @@ export default function FileUploader({ onUploadSuccess }) {
         difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
         bloomLevel: q.bloomLevel || '',
         answerOptions: (q.options || q.answerOptions || []).map(opt => ({
-          text: opt.text,
+          // Soportar formato con label (A, B, C, D)
+          text: opt.label ? `${opt.label}. ${opt.text}` : opt.text,
           isCorrect: opt.isCorrect,
           rationale: opt.feedback || opt.rationale || ''
         }))
