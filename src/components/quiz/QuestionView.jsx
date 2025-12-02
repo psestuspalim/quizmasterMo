@@ -152,8 +152,9 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
   const responseTime = showFeedback ? Math.round((Date.now() - answerStartTime) / 1000) : null;
 
+  const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
+
   const handleNext = () => {
-    const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
     onAnswer(isCorrect, { ...selectedOption, userNote, reflection: reflectionText }, question);
     setUserNote('');
@@ -161,8 +162,6 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   };
 
   const canProceed = selectedOption?.isCorrect || reflectionText.trim().length >= 10;
-
-  const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
   const answeredQuestions = correctAnswers + wrongAnswers;
   const progressPercent = (questionNumber / totalQuestions) * 100;
 
