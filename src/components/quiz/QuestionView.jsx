@@ -21,8 +21,16 @@ export default function QuestionView({
   onMarkForReview,
   previousAttempts = [],
   quizId,
-  userEmail
+  userEmail,
+  settings = {}
 }) {
+  // Configuraciones con valores por defecto
+  const showFeedbackSetting = settings.show_feedback !== false;
+  const showReflection = settings.show_reflection !== false;
+  const showErrorAnalysis = settings.show_error_analysis !== false;
+  const showSchema = settings.show_schema !== false;
+  const showNotes = settings.show_notes !== false;
+  const showHintSetting = settings.show_hint !== false;
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -35,7 +43,7 @@ export default function QuestionView({
   const [etymology, setEtymology] = useState(null);
   const [loadingSchema, setLoadingSchema] = useState(false);
   const [schema, setSchema] = useState(null);
-  const [showNotes, setShowNotes] = useState(false);
+  const [showNotesField, setShowNotesField] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState(Date.now());
 
   const handleRephrase = async () => {
@@ -161,7 +169,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
     setReflectionText('');
   };
 
-  const canProceed = selectedOption?.isCorrect || reflectionText.trim().length >= 10;
+  const canProceed = selectedOption?.isCorrect || !showReflection || reflectionText.trim().length >= 10;
   const answeredQuestions = correctAnswers + wrongAnswers;
   const progressPercent = (questionNumber / totalQuestions) * 100;
 
@@ -264,7 +272,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
               {loadingEtymology ? <Loader2 className="w-3 h-3 animate-spin" /> : <BookOpen className="w-3 h-3" />}
               <span className="ml-1 hidden sm:inline">Etimología</span>
             </Button>
-            {question.hint && !showFeedback && (
+            {question.hint && !showFeedback && showHintSetting && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -400,7 +408,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 </div>
 
                 {/* Campo de reflexión obligatorio para respuestas incorrectas */}
-                  {!selectedOption.isCorrect && (
+                  {!selectedOption.isCorrect && showReflection && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                       <label className="block text-sm font-medium text-amber-800 mb-2">
                         ✍️ ¿Por qué crees que te equivocaste? <span className="text-amber-600">(obligatorio)</span>
@@ -442,7 +450,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   </div>
 
                 {/* Análisis de error con IA */}
-                {!selectedOption.isCorrect && (
+                {!selectedOption.isCorrect && showErrorAnalysis && (
                   <ErrorAnalysis
                     question={question}
                     selectedAnswer={selectedOption.text}
@@ -455,9 +463,9 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 )}
 
                 {/* Herramientas adicionales para incorrectas */}
-                {!selectedOption.isCorrect && (
+                {!selectedOption.isCorrect && (showSchema || showNotes) && (
                   <div className="flex flex-wrap gap-2">
-                    {!schema && (
+                    {!schema && showSchema && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -469,15 +477,17 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                         Ver esquema
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowNotes(!showNotes)}
-                      className={`h-8 text-xs ${showNotes ? 'bg-amber-50 border-amber-300' : 'border-amber-200'} text-amber-600 hover:bg-amber-50`}
-                    >
-                      <MessageSquare className="w-3 h-3 mr-1" />
-                      {showNotes ? 'Ocultar notas' : 'Agregar nota'}
-                    </Button>
+                    {showNotes && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowNotesField(!showNotesField)}
+                        className={`h-8 text-xs ${showNotesField ? 'bg-amber-50 border-amber-300' : 'border-amber-200'} text-amber-600 hover:bg-amber-50`}
+                      >
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        {showNotesField ? 'Ocultar notas' : 'Agregar nota'}
+                      </Button>
+                    )}
                   </div>
                 )}
 
@@ -498,7 +508,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
                 {/* Campo de notas - Colapsable */}
                 <AnimatePresence>
-                  {showNotes && !selectedOption.isCorrect && (
+                  {showNotesField && showNotes && !selectedOption.isCorrect && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -516,7 +526,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 </AnimatePresence>
 
                 {/* Tip Cinéfilo */}
-                {question.hint && (
+                {question.hint && showHintSetting && (
                   <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
                     <div className="flex items-start gap-2">
                       <span className="text-lg">🎬</span>
