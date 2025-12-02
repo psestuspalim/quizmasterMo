@@ -224,6 +224,59 @@ export default function QuizzesPage() {
     onSuccess: () => queryClient.invalidateQueries(['quizzes']),
   });
 
+  // Drag and drop handler
+  const handleDragEnd = async (result) => {
+    const { draggableId, destination, source, type } = result;
+    
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    const destParts = destination.droppableId.split('-');
+    const destType = destParts[0]; // 'course', 'folder', 'root'
+    const destId = destParts[1] || null;
+
+    if (type === 'COURSE') {
+      const course = courses.find(c => c.id === draggableId);
+      if (course) {
+        await updateCourseMutation.mutateAsync({ id: course.id, data: { order: destination.index } });
+      }
+    } else if (type === 'FOLDER') {
+      const folder = folders.find(f => f.id === draggableId);
+      if (folder) {
+        const newData = { order: destination.index };
+        if (destType === 'course') {
+          newData.course_id = destId;
+          newData.parent_id = null;
+        } else if (destType === 'folder') {
+          newData.parent_id = destId;
+        } else if (destType === 'root') {
+          newData.course_id = null;
+          newData.parent_id = null;
+        }
+        await updateFolderMutation.mutateAsync({ id: folder.id, data: newData });
+      }
+    } else if (type === 'SUBJECT') {
+      const subject = subjects.find(s => s.id === draggableId);
+      if (subject) {
+        const newData = { order: destination.index };
+        if (destType === 'course') {
+          newData.course_id = destId;
+          newData.folder_id = null;
+        } else if (destType === 'folder') {
+          newData.folder_id = destId;
+        } else if (destType === 'root') {
+          newData.course_id = null;
+          newData.folder_id = null;
+        }
+        await updateSubjectMutation.mutateAsync({ id: subject.id, data: newData });
+      }
+    }
+
+    queryClient.invalidateQueries(['courses']);
+    queryClient.invalidateQueries(['folders']);
+    queryClient.invalidateQueries(['subjects']);
+  };
+
   const saveAttemptMutation = useMutation({
     mutationFn: (data) => base44.entities.QuizAttempt.create(data),
   });
