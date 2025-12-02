@@ -23,63 +23,45 @@ export default function FileUploader({ onUploadSuccess }) {
     let questions = [];
     let title = fileName.replace('.json', '');
     
-    // Formato nuevo con quizMetadata y questions
-                  if (data.questions && Array.isArray(data.questions)) {
-                    title = data.quizMetadata?.title || title;
-                    const totalQ = data.questions.length;
-                    const easyCount = Math.ceil(totalQ * 0.2);
-                    const hardCount = Math.ceil(totalQ * 0.2);
+    // Formato con quizMetadata y questions
+    if (data.questions && Array.isArray(data.questions)) {
+      title = data.quizMetadata?.title || title;
 
-                    questions = data.questions.map((q, idx) => {
-                      let difficulty = 'moderado';
-                      if (idx < easyCount) {
-                        difficulty = 'fácil';
-                      } else if (idx >= totalQ - hardCount) {
-                        difficulty = 'difícil';
-                      }
+      questions = data.questions.map((q) => ({
+        type: q.type || 'text',
+        question: q.questionText || q.question,
+        hint: q.cinephileTip || q.hint || '',
+        feedback: q.analysis || q.feedback || '',
+        difficulty: q.difficulty || 'moderado',
+        bloomLevel: q.bloomLevel || '',
+        answerOptions: (q.options || q.answerOptions || []).map(opt => ({
+          text: opt.text,
+          isCorrect: opt.isCorrect,
+          rationale: opt.feedback || opt.rationale || ''
+        }))
+      }));
+    }
+    // Formato original con array "quiz"
+    else if (data.quiz && Array.isArray(data.quiz)) {
+      questions = data.quiz.map((q) => ({
+        ...q,
+        type: q.type || 'text',
+        question: q.questionText || q.question,
+        difficulty: q.difficulty || 'moderado',
+        answerOptions: (q.answerOptions || []).map(opt => ({
+          text: opt.text,
+          isCorrect: opt.isCorrect,
+          rationale: opt.feedback || opt.rationale || ''
+        }))
+      }));
+    }
+    else {
+      throw new Error('Formato de archivo inválido. Debe contener "quiz" o "questions"');
+    }
 
-                      return {
-                        type: q.type || 'text',
-                        question: q.questionText || q.question,
-                        hint: q.cinephileTip || q.hint || '',
-                        feedback: q.analysis || q.feedback || '',
-                        difficulty: q.difficulty || difficulty,
-                        answerOptions: (q.options || q.answerOptions || []).map(opt => ({
-                          text: opt.text,
-                          isCorrect: opt.isCorrect,
-                          rationale: opt.feedback || opt.rationale || ''
-                        }))
-                      };
-                    });
-                  }
-      // Formato original con array "quiz"
-                  else if (data.quiz && Array.isArray(data.quiz)) {
-                    const totalQ = data.quiz.length;
-                    const easyCount = Math.ceil(totalQ * 0.2);
-                    const hardCount = Math.ceil(totalQ * 0.2);
-
-                    questions = data.quiz.map((q, idx) => {
-                      let difficulty = 'moderado';
-                      if (idx < easyCount) {
-                        difficulty = 'fácil';
-                      } else if (idx >= totalQ - hardCount) {
-                        difficulty = 'difícil';
-                      }
-
-                      return {
-                        ...q,
-                        type: q.type || 'text',
-                        difficulty: q.difficulty || difficulty
-                      };
-                    });
-                  }
-      else {
-        throw new Error('Formato de archivo inválido. Debe contener "quiz" o "questions"');
-      }
-
-      await onUploadSuccess({
+    await onUploadSuccess({
       title,
-      description: data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
+      description: data.quizMetadata?.focus || data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
       questions,
       total_questions: questions.length,
       file_name: fileName,
