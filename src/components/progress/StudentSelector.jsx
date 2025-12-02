@@ -104,100 +104,135 @@ export default function StudentSelector({
     );
   };
 
+  const selectedName = selectedStudent 
+    ? (selectedStudent.username || selectedStudent.full_name || selectedStudent.email)
+    : 'Mi Progreso';
+
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Users className="w-5 h-5 text-indigo-600" />
-          Seleccionar Estudiante
-        </CardTitle>
-        <div className="relative mt-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Buscar estudiante..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="max-h-[400px] overflow-y-auto space-y-3">
-        {/* Mi progreso */}
-        <button
-          onClick={() => onSelectStudent(null)}
-          className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-            !selectedStudent
-              ? 'border-indigo-500 bg-indigo-50'
-              : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-indigo-600" />
-            <span className="font-semibold text-indigo-600">Mi Progreso</span>
+    <div className="mb-6">
+      {/* Botón compacto que muestra el estudiante seleccionado */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 bg-white border rounded-xl shadow-sm hover:shadow-md transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            selectedStudent ? 'bg-indigo-100' : 'bg-green-100'
+          }`}>
+            <UserCircle className={`w-6 h-6 ${selectedStudent ? 'text-indigo-600' : 'text-green-600'}`} />
           </div>
-        </button>
+          <div className="text-left">
+            <p className="text-xs text-gray-500">Viendo progreso de:</p>
+            <p className="font-semibold text-gray-900">{selectedName}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            <Users className="w-3 h-3 mr-1" />
+            Cambiar
+          </Badge>
+          {isOpen ? (
+            <ChevronUp className="w-5 h-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          )}
+        </div>
+      </button>
 
-        {/* Cursos con estudiantes */}
-        {groupedByCourse.map(course => (
-          <Collapsible 
-            key={course.id} 
-            open={expandedCourses[course.id]}
-            onOpenChange={() => toggleCourse(course.id)}
-          >
-            <CollapsibleTrigger asChild>
-              <button className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+      {/* Panel expandible */}
+      {isOpen && (
+        <Card className="mt-2 border-2 border-indigo-100">
+          <CardContent className="p-4">
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Buscar estudiante..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="max-h-[300px] overflow-y-auto space-y-2">
+              {/* Mi progreso */}
+              <button
+                onClick={() => { onSelectStudent(null); setIsOpen(false); }}
+                className={`w-full text-left p-2.5 rounded-lg border transition-all ${
+                  !selectedStudent
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">{course.icon} {course.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {course.students.length}
-                  </Badge>
+                  <User className="w-4 h-4 text-indigo-600" />
+                  <span className="font-medium text-indigo-600 text-sm">Mi Progreso</span>
                 </div>
-                {expandedCourses[course.id] ? (
-                  <ChevronUp className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                )}
               </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2 space-y-2 pl-2">
-              {course.students.map(user => (
-                <StudentItem key={user.email} user={user} />
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
 
-        {/* Estudiantes sin curso */}
-        {unassignedUsers.length > 0 && (
-          <Collapsible 
-            open={expandedCourses['unassigned']}
-            onOpenChange={() => toggleCourse('unassigned')}
-          >
-            <CollapsibleTrigger asChild>
-              <button className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">Todos los estudiantes</span>
-                  <Badge variant="outline" className="text-xs">
-                    {unassignedUsers.length}
-                  </Badge>
-                </div>
-                {expandedCourses['unassigned'] ? (
-                  <ChevronUp className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2 space-y-2 pl-2">
-              {unassignedUsers.map(user => (
-                <StudentItem key={user.email} user={user} />
+              {/* Cursos con estudiantes */}
+              {groupedByCourse.map(course => (
+                <Collapsible 
+                  key={course.id} 
+                  open={expandedCourses[course.id]}
+                  onOpenChange={() => toggleCourse(course.id)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium text-gray-800 text-sm">{course.icon} {course.name}</span>
+                        <Badge variant="outline" className="text-xs h-5">
+                          {course.students.length}
+                        </Badge>
+                      </div>
+                      {expandedCourses[course.id] ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5 space-y-1.5 pl-2">
+                    {course.students.map(user => (
+                      <StudentItem key={user.email} user={user} />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-      </CardContent>
-    </Card>
+
+              {/* Estudiantes sin curso */}
+              {unassignedUsers.length > 0 && (
+                <Collapsible 
+                  open={expandedCourses['unassigned']}
+                  onOpenChange={() => toggleCourse('unassigned')}
+                >
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium text-gray-800 text-sm">Todos los estudiantes</span>
+                        <Badge variant="outline" className="text-xs h-5">
+                          {unassignedUsers.length}
+                        </Badge>
+                      </div>
+                      {expandedCourses['unassigned'] ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5 space-y-1.5 pl-2">
+                    {unassignedUsers.map(user => (
+                      <StudentItem key={user.email} user={user} />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
