@@ -1049,8 +1049,8 @@ export default function QuizzesPage() {
         <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
         <SessionTimer />
         <TaskProgressFloat />
-        </div>
-        </div>
-        </DragDropContext>
-        );
-        }
+      </div>
+    </div>
+    </DragDropContext>
+  );
+}
