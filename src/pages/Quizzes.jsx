@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home, Trophy } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home, Trophy, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,6 +42,7 @@ import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
 import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
 import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
+import ContentManager from '../components/admin/ContentManager';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -72,6 +73,7 @@ export default function QuizzesPage() {
   const [showCourseDialog, setShowCourseDialog] = useState(false);
   const [showSubjectDialog, setShowSubjectDialog] = useState(false);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [showContentManager, setShowContentManager] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
@@ -223,6 +225,43 @@ export default function QuizzesPage() {
     mutationFn: (id) => base44.entities.Quiz.delete(id),
     onSuccess: () => queryClient.invalidateQueries(['quizzes']),
   });
+
+  // Bulk delete handlers
+  const handleBulkDeleteCourses = async (ids) => {
+    for (const id of ids) {
+      await base44.entities.Course.delete(id);
+    }
+    queryClient.invalidateQueries(['courses']);
+  };
+
+  const handleBulkDeleteFolders = async (ids) => {
+    for (const id of ids) {
+      await base44.entities.Folder.delete(id);
+    }
+    queryClient.invalidateQueries(['folders']);
+  };
+
+  const handleBulkDeleteSubjects = async (ids) => {
+    for (const id of ids) {
+      await base44.entities.Subject.delete(id);
+    }
+    queryClient.invalidateQueries(['subjects']);
+  };
+
+  const handleUpdateCourse = async (id, data) => {
+    await base44.entities.Course.update(id, data);
+    queryClient.invalidateQueries(['courses']);
+  };
+
+  const handleUpdateFolder = async (id, data) => {
+    await base44.entities.Folder.update(id, data);
+    queryClient.invalidateQueries(['folders']);
+  };
+
+  const handleUpdateSubject = async (id, data) => {
+    await base44.entities.Subject.update(id, data);
+    queryClient.invalidateQueries(['subjects']);
+  };
 
   // Drag and drop handler
   const handleDragEnd = async (result) => {
@@ -700,6 +739,13 @@ export default function QuizzesPage() {
                           <ClipboardList className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Tareas</span>
                         </Button>
                       </Link>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowContentManager(true)}
+                        className="border-gray-400 text-gray-600 hover:bg-gray-50 text-xs sm:text-sm h-9"
+                      >
+                        <Trash2 className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Gestionar</span>
+                      </Button>
                       <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
                         <DialogTrigger asChild>
                           <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
@@ -1049,6 +1095,27 @@ export default function QuizzesPage() {
         <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
         <SessionTimer />
         <TaskProgressFloat />
+
+        {/* Content Manager Modal */}
+        {showContentManager && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-3xl">
+              <ContentManager
+                courses={courses}
+                folders={folders}
+                subjects={subjects}
+                quizzes={quizzes}
+                onDeleteCourses={handleBulkDeleteCourses}
+                onDeleteFolders={handleBulkDeleteFolders}
+                onDeleteSubjects={handleBulkDeleteSubjects}
+                onUpdateCourse={handleUpdateCourse}
+                onUpdateFolder={handleUpdateFolder}
+                onUpdateSubject={handleUpdateSubject}
+                onClose={() => setShowContentManager(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
     </DragDropContext>
