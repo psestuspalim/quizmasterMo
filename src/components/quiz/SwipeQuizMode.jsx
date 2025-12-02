@@ -283,14 +283,14 @@ function SwipeCard({ card, onSwipe, feedback }) {
         </motion.div>
 
         {/* Context */}
-        <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-50 rounded-lg line-clamp-3">
+        <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-50 rounded-lg max-h-[120px] overflow-y-auto">
           <span className="font-medium">Contexto:</span>{' '}
           <MathText text={card.questionContext} />
         </div>
 
         {/* Statement */}
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-lg font-medium text-center text-gray-900 leading-relaxed">
+        <div className="flex-1 flex items-center justify-center overflow-y-auto py-2">
+          <p className="text-base sm:text-lg font-medium text-center text-gray-900 leading-relaxed">
             <MathText text={card.statement} />
           </p>
         </div>
