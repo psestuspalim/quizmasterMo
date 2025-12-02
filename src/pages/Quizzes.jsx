@@ -738,19 +738,20 @@ export default function QuizzesPage() {
                   <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <GraduationCap className="w-5 h-5" /> Cursos
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {visibleCourses.map((course) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        subjectCount={subjects.filter(s => s.course_id === course.id).length}
-                        isAdmin={isAdmin}
-                        onEdit={setEditingCourse}
-                        onDelete={(id) => deleteCourseMutation.mutate(id)}
-                        onClick={() => { setSelectedCourse(course); setView('subjects'); }}
-                      />
+                  <DroppableArea droppableId="root-courses" type="COURSE" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {visibleCourses.map((course, index) => (
+                      <DraggableItem key={course.id} id={course.id} index={index} isAdmin={isAdmin}>
+                        <CourseCard
+                          course={course}
+                          subjectCount={subjects.filter(s => s.course_id === course.id).length}
+                          isAdmin={isAdmin}
+                          onEdit={setEditingCourse}
+                          onDelete={(id) => deleteCourseMutation.mutate(id)}
+                          onClick={() => { setSelectedCourse(course); setView('subjects'); }}
+                        />
+                      </DraggableItem>
                     ))}
-                  </div>
+                  </DroppableArea>
                 </div>
               )}
 
