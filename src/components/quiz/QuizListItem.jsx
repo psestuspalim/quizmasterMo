@@ -1,7 +1,13 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Play, ChevronRight, CheckCircle2, XCircle, HelpCircle, BarChart3 } from 'lucide-react';
+import { Pencil, Trash2, Play, ChevronRight, CheckCircle2, XCircle, HelpCircle, BarChart3, Smartphone } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
 
 export default function QuizListItem({ 
@@ -10,7 +16,8 @@ export default function QuizListItem({
   isAdmin, 
   onStart, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onStartSwipe
 }) {
   const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
   const hasAttempts = attempts.length > 0;
@@ -156,6 +163,17 @@ export default function QuizListItem({
 
       {/* Acciones */}
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {/* Botón de modo swipe */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onStartSwipe && onStartSwipe(quiz)}
+          className="h-8 w-8 text-purple-500 hover:text-purple-700 hover:bg-purple-50"
+          title="Modo V/F (deslizar)"
+        >
+          <Smartphone className="w-4 h-4" />
+        </Button>
+        
         {isAdmin && (
           <>
             <Button
