@@ -70,7 +70,7 @@ export default function FileUploader({ onUploadSuccess }) {
       questions = data.questions.map((q) => ({
         type: q.type || 'text',
         question: q.questionText || q.question,
-        hint: q.cinephileTip || q.hint || '',
+        hint: q.cinephileTip || q.hint || q.analysis || '',
         feedback: q.analysis || q.feedback || '',
         difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
         bloomLevel: q.bloomLevel || '',
@@ -78,7 +78,7 @@ export default function FileUploader({ onUploadSuccess }) {
           // Soportar formato con label (A, B, C, D)
           text: opt.label ? `${opt.label}. ${opt.text}` : opt.text,
           isCorrect: opt.isCorrect,
-          rationale: opt.feedback || opt.rationale || ''
+          rationale: opt.feedback || opt.rationale || q.analysis || ''
         }))
       }));
     }
