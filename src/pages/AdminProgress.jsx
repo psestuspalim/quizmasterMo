@@ -403,9 +403,9 @@ export default function AdminProgress() {
                     <CardTitle className="text-lg">Historial de Intentos ({selectedStudent.attempts.length})</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 max-h-[500px] sm:max-h-[600px] overflow-y-auto p-3 sm:p-6">
-                    {[...(selectedStudent.attempts || [])].sort((a, b) => 
+                    {(selectedStudent.attempts && Array.isArray(selectedStudent.attempts) ? [...selectedStudent.attempts].sort((a, b) => 
                       new Date(b.completed_at || b.created_date) - new Date(a.completed_at || a.created_date)
-                    ).map((attempt) => {
+                    ) : []).map((attempt) => {
                       const percentage = Math.round((attempt.score / attempt.total_questions) * 100);
                       const isPartial = !attempt.is_completed;
                       const isExpanded = expandedAttempts[attempt.id];
