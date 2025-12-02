@@ -587,6 +587,7 @@ export default function QuizzesPage() {
   );
 
   return (
+    <DragDropContext onDragEnd={handleDragEnd}>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <AnimatePresence mode="wait">
