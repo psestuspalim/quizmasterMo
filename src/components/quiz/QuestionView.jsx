@@ -396,19 +396,33 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   </div>
                 </div>
 
+                {/* Botón siguiente - PRIMERO para que siempre sea accesible */}
+                <div className="pointer-events-auto">
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleNext();
+                    }}
+                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-indigo-200 relative z-50"
+                  >
+                    Siguiente pregunta
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+
                 {/* Análisis de error con IA */}
                 {!selectedOption.isCorrect && (
-                  <div>
-                    <ErrorAnalysis
-                      question={question}
-                      selectedAnswer={selectedOption.text}
-                      correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
-                      responseTime={responseTime}
-                      userEmail={userEmail}
-                      quizId={quizId}
-                      previousAttempts={previousAttempts}
-                    />
-                  </div>
+                  <ErrorAnalysis
+                    question={question}
+                    selectedAnswer={selectedOption.text}
+                    correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
+                    responseTime={responseTime}
+                    userEmail={userEmail}
+                    quizId={quizId}
+                    previousAttempts={previousAttempts}
+                  />
                 )}
 
                 {/* Herramientas adicionales para incorrectas */}
