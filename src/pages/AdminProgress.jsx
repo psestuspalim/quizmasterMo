@@ -1,22 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, AlertCircle, FileText, Calendar } from 'lucide-react';
+import { Search, TrendingUp, AlertCircle, Calendar, Trash2, Eye, RefreshCw, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import MathText from '../components/quiz/MathText';
+import AttemptDetailModal from '../components/admin/AttemptDetailModal';
 
 export default function AdminProgress() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedAttempt, setSelectedAttempt] = useState(null);
+  const [isPurging, setIsPurging] = useState(false);
+  const [expandedAttempts, setExpandedAttempts] = useState({});
 
-  const { data: attempts = [] } = useQuery({
+  const queryClient = useQueryClient();
+
+  const { data: attempts = [], isLoading: attemptsLoading } = useQuery({
     queryKey: ['quiz-attempts'],
-    queryFn: () => base44.entities.QuizAttempt.list('-created_date', 1000),
+    queryFn: () => base44.entities.QuizAttempt.list('-created_date', 2000),
   });
+
+  // Filter out incomplete attempts (0 score with 0 answered)
+  const validAttempts = attempts.filter(a => 
+    a.answered_questions > 0 || a.score > 0 || a.is_completed
+  );
+
+  const deleteAttemptMutation = useMutation({
+    mutationFn: (id) => base44.entities.QuizAttempt.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['quiz-attempts']);
+      toast.success('Intento eliminado');
+      setSelectedAttempt(null);
+    },
+    onError: () => toast.error('Error al eliminar')
+  });
+
+  const purgeFailedAttempts = async () => {
+    const failedAttempts = attempts.filter(a => 
+      (a.answered_questions === 0 || !a.answered_questions) && 
+      a.score === 0 && 
+      !a.is_completed
+    );
+    
+    if (failedAttempts.length === 0) {
+      toast.info('No hay intentos fallidos para eliminar');
+      return;
+    }
+
+    setIsPurging(true);
+    try {
+      for (const attempt of failedAttempts) {
+        await base44.entities.QuizAttempt.delete(attempt.id);
+      }
+      queryClient.invalidateQueries(['quiz-attempts']);
+      toast.success(`${failedAttempts.length} intentos fallidos eliminados`);
+    } catch (error) {
+      toast.error('Error al purgar intentos');
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   const { data: quizzes = [] } = useQuery({
     queryKey: ['quizzes'],
@@ -46,8 +94,8 @@ export default function AdminProgress() {
     return acc;
   }, {});
 
-  // Agregar intentos a los usuarios
-  attempts.forEach(attempt => {
+  // Agregar intentos válidos a los usuarios
+  validAttempts.forEach(attempt => {
     if (studentStats[attempt.user_email]) {
       studentStats[attempt.user_email].attempts.push(attempt);
       studentStats[attempt.user_email].totalQuizzes += 1;
@@ -55,6 +103,15 @@ export default function AdminProgress() {
       studentStats[attempt.user_email].totalQuestions += attempt.total_questions;
     }
   });
+
+  const failedAttemptsCount = attempts.length - validAttempts.length;
+
+  const toggleAttemptExpand = (attemptId) => {
+    setExpandedAttempts(prev => ({
+      ...prev,
+      [attemptId]: !prev[attemptId]
+    }));
+  };
 
   const students = Object.values(studentStats).filter(student =>
     student.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,12 +187,36 @@ export default function AdminProgress() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Progreso de Estudiantes
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Panel administrativo para seguimiento de rendimiento
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
+                Progreso de Estudiantes
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Panel administrativo para seguimiento de rendimiento
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {failedAttemptsCount > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={purgeFailedAttempts}
+                  disabled={isPurging}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  {isPurging ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4 mr-2" />
+                  )}
+                  Purgar {failedAttemptsCount} fallidos
+                </Button>
+              )}
+              <Badge variant="outline" className="text-sm py-1 px-3">
+                {validAttempts.length} intentos válidos
+              </Badge>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -307,79 +388,128 @@ export default function AdminProgress() {
 
                 {/* Historial de intentos */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Historial de Intentos</CardTitle>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-lg">Historial de Intentos ({selectedStudent.attempts.length})</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 max-h-[400px] sm:max-h-[500px] overflow-y-auto p-3 sm:p-6">
+                  <CardContent className="space-y-3 max-h-[500px] sm:max-h-[600px] overflow-y-auto p-3 sm:p-6">
                     {selectedStudent.attempts.map((attempt) => {
                       const percentage = Math.round((attempt.score / attempt.total_questions) * 100);
                       const isPartial = !attempt.is_completed;
+                      const isExpanded = expandedAttempts[attempt.id];
+                      const quizTitle = getQuizTitle(attempt.quiz_id);
                       
                       return (
-                        <div key={attempt.id} className="border rounded-lg p-3 sm:p-4">
-                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base break-words">
-                                  {getQuizTitle(attempt.quiz_id)}
-                                </h4>
-                                {isPartial && (
-                                  <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                                    Parcial
-                                  </Badge>
-                                )}
+                        <div key={attempt.id} className="border rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                          {/* Header - Always visible */}
+                          <div className="p-4 bg-white">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <h4 className="font-semibold text-gray-900 text-sm truncate max-w-[200px]" title={quizTitle}>
+                                    {quizTitle}
+                                  </h4>
+                                  {isPartial && (
+                                    <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                      Parcial
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    {format(new Date(attempt.completed_at || attempt.created_date), 'dd/MM/yy HH:mm')}
+                                  </span>
+                                  {attempt.wrong_questions?.length > 0 && (
+                                    <span className="text-red-500">
+                                      {attempt.wrong_questions.length} errores
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mt-1">
-                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                                {format(new Date(attempt.completed_at || attempt.created_date), 'dd/MM/yyyy HH:mm')}
-                              </div>
-                            </div>
-                            <div className="text-left sm:text-right flex-shrink-0">
-                              <Badge
-                                className={`text-xs ${
+                              <div className="flex items-center gap-2">
+                                <Badge className={`text-xs ${
                                   percentage >= 70 ? 'bg-green-100 text-green-800' :
                                   percentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-red-100 text-red-800'
-                                }`}
-                              >
-                                {attempt.score}/{attempt.total_questions} ({percentage}%)
-                              </Badge>
-                              {isPartial && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  {attempt.answered_questions || 0} de {attempt.total_questions} respondidas
-                                </div>
-                              )}
+                                }`}>
+                                  {attempt.score}/{attempt.total_questions} ({percentage}%)
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setSelectedAttempt({ attempt, quizTitle })}
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteAttemptMutation.mutate(attempt.id)}
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                                {attempt.wrong_questions?.length > 0 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleAttemptExpand(attempt.id)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
 
-                          {attempt.wrong_questions?.length > 0 && (
-                            <div className="mt-3 sm:mt-4 border-t pt-3 sm:pt-4">
-                              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-red-600 mb-2 sm:mb-3">
-                                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                                Preguntas incorrectas ({attempt.wrong_questions.length})
+                          {/* Expanded wrong questions */}
+                          {isExpanded && attempt.wrong_questions?.length > 0 && (
+                            <div className="border-t bg-gray-50 p-4">
+                              <div className="flex items-center gap-2 text-sm font-medium text-red-600 mb-3">
+                                <AlertCircle className="w-4 h-4" />
+                                Preguntas incorrectas
                               </div>
-                              <div className="space-y-2 sm:space-y-3">
-                                {attempt.wrong_questions.map((wq, idx) => (
-                                  <div key={idx} className="bg-red-50 rounded-lg p-2 sm:p-3 text-xs sm:text-sm">
-                                    <p className="font-medium text-gray-900 mb-2 break-words">
+                              <div className="space-y-3">
+                                {attempt.wrong_questions.slice(0, 5).map((wq, idx) => (
+                                  <div key={idx} className="bg-white rounded-lg p-3 border text-sm">
+                                    <p className="font-medium text-gray-900 mb-2">
                                       <MathText text={wq.question} />
                                     </p>
-                                    <div className="space-y-1">
-                                      <p className="text-red-700 break-words">
-                                        ❌ Respondió: <MathText text={wq.selected_answer} />
-                                      </p>
-                                      <p className="text-green-700 break-words">
-                                        ✓ Correcta: <MathText text={wq.correct_answer} />
-                                      </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <div className="flex items-start gap-2 text-red-700 bg-red-50 rounded p-2">
+                                        <span className="shrink-0">❌</span>
+                                        <MathText text={wq.selected_answer} />
+                                      </div>
+                                      <div className="flex items-start gap-2 text-green-700 bg-green-50 rounded p-2">
+                                        <span className="shrink-0">✓</span>
+                                        <MathText text={wq.correct_answer} />
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
+                                {attempt.wrong_questions.length > 5 && (
+                                  <Button
+                                    variant="link"
+                                    onClick={() => setSelectedAttempt({ attempt, quizTitle })}
+                                    className="text-blue-600 p-0 h-auto"
+                                  >
+                                    Ver todas las {attempt.wrong_questions.length} preguntas incorrectas →
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           )}
                         </div>
                       );
                     })}
+
+                    {selectedStudent.attempts.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        Este estudiante no tiene intentos registrados
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -395,6 +525,15 @@ export default function AdminProgress() {
             )}
           </div>
         </div>
+
+        {/* Attempt Detail Modal */}
+        <AttemptDetailModal
+          attempt={selectedAttempt?.attempt}
+          quizTitle={selectedAttempt?.quizTitle}
+          open={!!selectedAttempt}
+          onClose={() => setSelectedAttempt(null)}
+          onDelete={(id) => deleteAttemptMutation.mutate(id)}
+        />
       </div>
     </div>
   );
