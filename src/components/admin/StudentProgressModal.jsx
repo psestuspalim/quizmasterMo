@@ -138,11 +138,46 @@ export default function StudentProgressModal({
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
-              <OverviewStats analytics={analytics} />
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white border rounded-xl p-4 text-center">
+                  <p className="text-3xl font-bold text-indigo-600">{analytics.totalAttempts}</p>
+                  <p className="text-sm text-gray-500">Intentos</p>
+                </div>
+                <div className="bg-white border rounded-xl p-4 text-center">
+                  <p className="text-3xl font-bold text-blue-600">{analytics.totalQuestions}</p>
+                  <p className="text-sm text-gray-500">Preguntas</p>
+                </div>
+                <div className="bg-white border rounded-xl p-4 text-center">
+                  <p className="text-3xl font-bold text-green-600">{analytics.totalCorrect}</p>
+                  <p className="text-sm text-gray-500">Correctas</p>
+                </div>
+                <div className="bg-white border rounded-xl p-4 text-center">
+                  <p className="text-3xl font-bold text-purple-600">{Math.round(analytics.overallAccuracy)}%</p>
+                  <p className="text-sm text-gray-500">Precisión</p>
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="subjects" className="mt-4">
-              <SubjectProgress analytics={analytics} />
+              <div className="space-y-3">
+                {analytics.subjectProgress.map((subject) => {
+                  const accuracy = subject.total > 0 ? (subject.correct / subject.total) * 100 : 0;
+                  return (
+                    <div key={subject.subjectId} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{subject.subjectName}</span>
+                        <span className="text-sm font-semibold text-indigo-600">{Math.round(accuracy)}%</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        {subject.correct}/{subject.total} correctas • {subject.attempts.length} intentos
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${accuracy}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </TabsContent>
 
             <TabsContent value="trend" className="mt-4">
