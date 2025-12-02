@@ -23,6 +23,14 @@ export default function FileUploader({ onUploadSuccess }) {
     let questions = [];
     let title = fileName.replace('.json', '');
     
+    // Mapeo de dificultad inglés a español
+    const difficultyMap = {
+      'easy': 'fácil',
+      'medium': 'moderado',
+      'hard': 'difícil',
+      'moderate': 'moderado'
+    };
+
     // Formato con quizMetadata y questions
     if (data.questions && Array.isArray(data.questions)) {
       title = data.quizMetadata?.title || title;
@@ -32,7 +40,7 @@ export default function FileUploader({ onUploadSuccess }) {
         question: q.questionText || q.question,
         hint: q.cinephileTip || q.hint || '',
         feedback: q.analysis || q.feedback || '',
-        difficulty: q.difficulty || 'moderado',
+        difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
         bloomLevel: q.bloomLevel || '',
         answerOptions: (q.options || q.answerOptions || []).map(opt => ({
           text: opt.text,
