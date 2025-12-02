@@ -450,7 +450,11 @@ export default function QuizzesPage() {
 
     if (isCorrect) {
       setScore(newScore);
-      setCorrectAnswers([...correctAnswers, { question: question.question }]);
+      setCorrectAnswers([...correctAnswers, { 
+        question: question.question,
+        difficulty: question.difficulty,
+        selected_answer: selectedOption.text
+      }]);
     } else {
       setWrongAnswers(newWrongAnswers);
     }
