@@ -24,7 +24,7 @@ export default function StudentProgressModal({
   quizzes 
 }) {
   const analytics = useMemo(() => {
-    if (!student || !student.attempts.length) return null;
+    if (!student || !student.attempts || student.attempts.length === 0) return null;
 
     const attempts = student.attempts;
 
