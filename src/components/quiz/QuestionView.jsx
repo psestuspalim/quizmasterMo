@@ -486,18 +486,20 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 )}
 
                 {/* Botón siguiente */}
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleNext();
-                  }}
-                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-indigo-200 relative z-20"
-                >
-                  Siguiente pregunta
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                <div className="pointer-events-auto">
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleNext();
+                    }}
+                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-indigo-200 relative z-50"
+                  >
+                    Siguiente pregunta
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
