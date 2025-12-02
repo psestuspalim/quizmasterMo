@@ -398,7 +398,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
                 {/* Análisis de error con IA */}
                 {!selectedOption.isCorrect && (
-                  <div className="pointer-events-none">
+                  <div>
                     <ErrorAnalysis
                       question={question}
                       selectedAnswer={selectedOption.text}
