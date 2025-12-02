@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, AlertCircle, Calendar, Trash2, Eye, RefreshCw, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, TrendingUp, AlertCircle, Calendar, Trash2, Eye, RefreshCw, Loader2, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import MathText from '../components/quiz/MathText';
@@ -128,6 +128,120 @@ export default function AdminProgress() {
   const getSubjectName = (subjectId) => {
     const subject = subjects.find(s => s.id === subjectId);
     return subject?.name || 'Sin materia';
+  };
+
+  // Generar PDF de errores
+  const generateErrorsPDF = (student) => {
+    // Recopilar todas las preguntas incorrectas únicas
+    const wrongQuestionsMap = new Map();
+    student.attempts.forEach(attempt => {
+      attempt.wrong_questions?.forEach(wq => {
+        const key = wq.question;
+        if (!wrongQuestionsMap.has(key)) {
+          wrongQuestionsMap.set(key, {
+            question: wq.question,
+            selectedAnswer: wq.selected_answer,
+            correctAnswer: wq.correct_answer,
+            quizTitle: getQuizTitle(attempt.quiz_id),
+            count: 1
+          });
+        } else {
+          wrongQuestionsMap.get(key).count++;
+        }
+      });
+    });
+
+    const wrongQuestions = Array.from(wrongQuestionsMap.values())
+      .sort((a, b) => b.count - a.count);
+
+    if (wrongQuestions.length === 0) {
+      toast.info('Este estudiante no tiene preguntas incorrectas');
+      return;
+    }
+
+    // Crear contenido HTML para el PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reporte de Errores - ${student.username}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #1f2937; border-bottom: 2px solid #6366f1; padding-bottom: 10px; }
+          h2 { color: #374151; margin-top: 30px; }
+          .header-info { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          .header-info p { margin: 5px 0; color: #4b5563; }
+          .question-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+          .question-title { font-weight: bold; color: #1f2937; margin-bottom: 10px; }
+          .quiz-source { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+          .answer-row { display: flex; gap: 10px; margin-top: 10px; }
+          .answer-box { flex: 1; padding: 10px; border-radius: 6px; font-size: 14px; }
+          .wrong { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+          .correct { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+          .count-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+          .stats { display: flex; gap: 20px; margin-top: 10px; }
+          .stat { text-align: center; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
+          .stat-label { font-size: 12px; color: #6b7280; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>📋 Reporte de Preguntas Incorrectas</h1>
+        <div class="header-info">
+          <p><strong>Estudiante:</strong> ${student.username || 'Sin nombre'}</p>
+          <p><strong>Email:</strong> ${student.email}</p>
+          <p><strong>Fecha:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">${student.totalQuizzes}</div>
+              <div class="stat-label">Intentos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${wrongQuestions.length}</div>
+              <div class="stat-label">Errores únicos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${student.totalQuestions > 0 ? Math.round((student.totalCorrect / student.totalQuestions) * 100) : 0}%</div>
+              <div class="stat-label">Promedio</div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Preguntas a Repasar (${wrongQuestions.length})</h2>
+        ${wrongQuestions.map((wq, idx) => `
+          <div class="question-card">
+            <div class="quiz-source">📚 ${wq.quizTitle}</div>
+            <div class="question-title">
+              ${idx + 1}. ${wq.question}
+              ${wq.count > 1 ? `<span class="count-badge">Fallada ${wq.count}x</span>` : ''}
+            </div>
+            <div class="answer-row">
+              <div class="answer-box wrong">
+                <strong>❌ Respondió:</strong><br>${wq.selectedAnswer}
+              </div>
+              <div class="answer-box correct">
+                <strong>✓ Correcta:</strong><br>${wq.correctAnswer}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+
+        <div style="margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px;">
+          Generado automáticamente • ${format(new Date(), 'dd/MM/yyyy')}
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Abrir ventana para imprimir/guardar como PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
   };
 
   // Calcular estadísticas por quiz para el estudiante seleccionado
@@ -298,13 +412,23 @@ export default function AdminProgress() {
                       </CardTitle>
                       <p className="text-sm text-gray-500">{selectedStudent.email}</p>
                     </div>
-                    <Button
-                      onClick={() => setShowProgressModal(true)}
-                      className="bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Ver análisis completo
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => generateErrorsPDF(selectedStudent)}
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        <FileDown className="w-4 h-4 mr-2" />
+                        PDF Errores
+                      </Button>
+                      <Button
+                        onClick={() => setShowProgressModal(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                        Ver análisis
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
                     <div className="grid grid-cols-3 gap-2 sm:gap-4">
