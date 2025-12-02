@@ -70,8 +70,8 @@ export default function StudentSelector({
     
     return (
       <button
-        onClick={() => onSelectStudent(user)}
-        className={`w-full text-left p-3 rounded-lg border transition-all ${
+        onClick={() => { onSelectStudent(user); setIsOpen(false); }}
+        className={`w-full text-left p-2 rounded-lg border transition-all ${
           isSelected
             ? 'border-indigo-500 bg-indigo-50'
             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -79,18 +79,16 @@ export default function StudentSelector({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <User className="w-4 h-4 text-gray-400 shrink-0" />
             <div className="min-w-0">
               <div className="font-medium text-gray-900 text-sm truncate">
                 {user.username || user.full_name || 'Sin nombre'}
                 {isCurrentUser && <span className="text-indigo-600 ml-1">(Tú)</span>}
               </div>
-              <div className="text-xs text-gray-500 truncate">{user.email}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-gray-500">{stats.attempts} int.</span>
-            <Badge className={`text-xs ${
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs text-gray-400">{stats.attempts}</span>
+            <Badge className={`text-xs h-5 ${
               stats.avgScore >= 70 ? 'bg-green-100 text-green-800' :
               stats.avgScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
               stats.avgScore > 0 ? 'bg-red-100 text-red-800' :
