@@ -24,9 +24,9 @@ export default function StudentProgressModal({
   quizzes 
 }) {
   const analytics = useMemo(() => {
-    if (!student || !student.attempts || student.attempts.length === 0) return null;
+    if (!student || !student.attempts || !Array.isArray(student.attempts) || student.attempts.length === 0) return null;
 
-    const attempts = student.attempts;
+    const attempts = [...student.attempts];
 
     // Calcular estadísticas generales
     const totalAttempts = attempts.length;
