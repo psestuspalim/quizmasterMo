@@ -43,6 +43,7 @@ import ChallengeNotifications from '../components/challenge/ChallengeNotificatio
 import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 import ContentManager from '../components/admin/ContentManager';
+import useQuizSettings from '../components/quiz/useQuizSettings';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -77,6 +78,14 @@ export default function QuizzesPage() {
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
+
+  // Quiz settings hook
+  const { settings: quizSettings } = useQuizSettings(
+    selectedQuiz?.id,
+    selectedSubject?.id,
+    currentFolderId,
+    selectedCourse?.id
+  );
 
   useEffect(() => {
     const loadUser = async () => {
@@ -1075,6 +1084,7 @@ export default function QuizzesPage() {
                 previousAttempts={attempts.filter(a => a.quiz_id === selectedQuiz.id)}
                 quizId={selectedQuiz.id}
                 userEmail={currentUser?.email}
+                settings={quizSettings}
               />
             </motion.div>
           )}
