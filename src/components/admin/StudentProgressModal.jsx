@@ -130,8 +130,9 @@ export default function StudentProgressModal({
 
         {analytics ? (
           <Tabs defaultValue="overview" className="mt-4">
-            <TabsList className="grid grid-cols-5 w-full">
+            <TabsList className="grid grid-cols-6 w-full">
               <TabsTrigger value="overview" className="text-xs">General</TabsTrigger>
+              <TabsTrigger value="attempts" className="text-xs">Intentos</TabsTrigger>
               <TabsTrigger value="subjects" className="text-xs">Materias</TabsTrigger>
               <TabsTrigger value="trend" className="text-xs">Tendencia</TabsTrigger>
               <TabsTrigger value="weak" className="text-xs">Débiles</TabsTrigger>
