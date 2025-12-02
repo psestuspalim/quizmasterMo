@@ -882,31 +882,43 @@ export default function QuizzesPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {currentCourseFolders.map((folder) => (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    itemCount={subjects.filter(s => s.folder_id === folder.id).length}
-                    isAdmin={isAdmin}
-                    onDelete={(id) => deleteFolderMutation.mutate(id)}
-                    onEdit={setEditingFolder}
-                    onClick={() => setCurrentFolderId(folder.id)}
-                  />
+              <DroppableArea 
+                droppableId={currentFolderId ? `folder-${currentFolderId}` : `course-${selectedCourse?.id}`} 
+                type="FOLDER" 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"
+              >
+                {currentCourseFolders.map((folder, index) => (
+                  <DraggableItem key={folder.id} id={folder.id} index={index} isAdmin={isAdmin}>
+                    <FolderCard
+                      folder={folder}
+                      itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                      isAdmin={isAdmin}
+                      onDelete={(id) => deleteFolderMutation.mutate(id)}
+                      onEdit={setEditingFolder}
+                      onClick={() => setCurrentFolderId(folder.id)}
+                    />
+                  </DraggableItem>
                 ))}
-                {currentFolderSubjects.map((subject) => (
-                  <SubjectCard
-                    key={subject.id}
-                    subject={subject}
-                    quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                    stats={getSubjectStats(subject.id)}
-                    isAdmin={isAdmin}
-                    onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                    onEdit={setEditingSubject}
-                    onClick={() => { setSelectedSubject(subject); setView('list'); }}
-                  />
+              </DroppableArea>
+              <DroppableArea 
+                droppableId={currentFolderId ? `folder-${currentFolderId}` : `course-${selectedCourse?.id}`} 
+                type="SUBJECT" 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              >
+                {currentFolderSubjects.map((subject, index) => (
+                  <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
+                    <SubjectCard
+                      subject={subject}
+                      quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                      stats={getSubjectStats(subject.id)}
+                      isAdmin={isAdmin}
+                      onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                      onEdit={setEditingSubject}
+                      onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                    />
+                  </DraggableItem>
                 ))}
-              </div>
+              </DroppableArea>
 
               {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
                 <div className="text-center py-16">
