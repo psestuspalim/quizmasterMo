@@ -132,7 +132,7 @@ export default function AdminProgress() {
 
   // Generar PDF de errores
   const generateErrorsPDF = (student) => {
-    // Recopilar todas las preguntas incorrectas únicas
+    // Recopilar todas las preguntas incorrectas únicas con todas las opciones
     const wrongQuestionsMap = new Map();
     student.attempts.forEach(attempt => {
       attempt.wrong_questions?.forEach(wq => {
@@ -142,6 +142,8 @@ export default function AdminProgress() {
             question: wq.question,
             selectedAnswer: wq.selected_answer,
             correctAnswer: wq.correct_answer,
+            answerOptions: wq.answerOptions || [],
+            hint: wq.hint,
             quizTitle: getQuizTitle(attempt.quiz_id),
             count: 1
           });
@@ -180,6 +182,16 @@ export default function AdminProgress() {
           .wrong { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
           .correct { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
           .count-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+          .options-list { margin-top: 12px; }
+          .option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; margin: 4px 0; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; }
+          .option-correct { background: #f0fdf4; border-color: #86efac; }
+          .option-selected:not(.option-correct) { background: #fef2f2; border-color: #fecaca; }
+          .option-letter { font-weight: bold; color: #6b7280; min-width: 20px; }
+          .option-text { flex: 1; }
+          .check { color: #16a34a; font-weight: bold; }
+          .cross { color: #dc2626; font-weight: bold; }
+          .rationale { margin-top: 10px; padding: 10px; background: #eff6ff; border-radius: 6px; font-size: 13px; color: #1e40af; }
+          .hint { margin-top: 8px; padding: 8px; background: #fdf4ff; border-radius: 6px; font-size: 12px; color: #86198f; }
           .stats { display: flex; gap: 20px; margin-top: 10px; }
           .stat { text-align: center; }
           .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
@@ -217,14 +229,33 @@ export default function AdminProgress() {
               ${idx + 1}. ${wq.question}
               ${wq.count > 1 ? `<span class="count-badge">Fallada ${wq.count}x</span>` : ''}
             </div>
-            <div class="answer-row">
-              <div class="answer-box wrong">
-                <strong>❌ Respondió:</strong><br>${wq.selectedAnswer}
+            ${wq.answerOptions && wq.answerOptions.length > 0 ? `
+              <div class="options-list">
+                ${wq.answerOptions.map((opt, i) => `
+                  <div class="option ${opt.isCorrect ? 'option-correct' : ''} ${opt.text === wq.selectedAnswer ? 'option-selected' : ''}">
+                    <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                    <span class="option-text">${opt.text}</span>
+                    ${opt.isCorrect ? '<span class="check">✓</span>' : ''}
+                    ${opt.text === wq.selectedAnswer && !opt.isCorrect ? '<span class="cross">✗</span>' : ''}
+                  </div>
+                `).join('')}
               </div>
-              <div class="answer-box correct">
-                <strong>✓ Correcta:</strong><br>${wq.correctAnswer}
+              ${wq.answerOptions.find(o => o.isCorrect)?.rationale ? `
+                <div class="rationale">
+                  <strong>💡 Explicación:</strong> ${wq.answerOptions.find(o => o.isCorrect).rationale}
+                </div>
+              ` : ''}
+            ` : `
+              <div class="answer-row">
+                <div class="answer-box wrong">
+                  <strong>❌ Respondió:</strong><br>${wq.selectedAnswer}
+                </div>
+                <div class="answer-box correct">
+                  <strong>✓ Correcta:</strong><br>${wq.correctAnswer}
+                </div>
               </div>
-            </div>
+            `}
+            ${wq.hint ? `<div class="hint">🎬 <em>${wq.hint}</em></div>` : ''}
           </div>
         `).join('')}
 
