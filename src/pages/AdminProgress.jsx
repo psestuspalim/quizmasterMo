@@ -132,7 +132,7 @@ export default function AdminProgress() {
 
   // Generar PDF de errores
   const generateErrorsPDF = (student) => {
-    // Recopilar todas las preguntas incorrectas únicas con todas las opciones
+    // Recopilar todas las preguntas incorrectas únicas
     const wrongQuestionsMap = new Map();
     student.attempts.forEach(attempt => {
       attempt.wrong_questions?.forEach(wq => {
@@ -142,8 +142,6 @@ export default function AdminProgress() {
             question: wq.question,
             selectedAnswer: wq.selected_answer,
             correctAnswer: wq.correct_answer,
-            answerOptions: wq.answerOptions || [],
-            hint: wq.hint,
             quizTitle: getQuizTitle(attempt.quiz_id),
             count: 1
           });
@@ -182,13 +180,6 @@ export default function AdminProgress() {
           .wrong { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
           .correct { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
           .count-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
-          .options-list { margin-top: 12px; }
-          .option { padding: 8px 12px; margin: 4px 0; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 14px; }
-          .option-letter { font-weight: bold; margin-right: 8px; color: #6b7280; }
-          .option-correct { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-          .option-selected { background: #fef2f2; border-color: #fecaca; }
-          .option-selected.option-correct { background: #f0fdf4; border-color: #bbf7d0; }
-          .hint { margin-top: 10px; padding: 10px; background: #fefce8; border-radius: 6px; font-size: 13px; color: #854d0e; }
           .stats { display: flex; gap: 20px; margin-top: 10px; }
           .stat { text-align: center; }
           .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
@@ -226,28 +217,14 @@ export default function AdminProgress() {
               ${idx + 1}. ${wq.question}
               ${wq.count > 1 ? `<span class="count-badge">Fallada ${wq.count}x</span>` : ''}
             </div>
-            ${wq.answerOptions && wq.answerOptions.length > 0 ? `
-              <div class="options-list">
-                ${wq.answerOptions.map((opt, optIdx) => `
-                  <div class="option ${opt.isCorrect ? 'option-correct' : ''} ${opt.text === wq.selectedAnswer ? 'option-selected' : ''}">
-                    <span class="option-letter">${String.fromCharCode(65 + optIdx)}.</span>
-                    ${opt.text}
-                    ${opt.isCorrect ? ' ✓' : ''}
-                    ${opt.text === wq.selectedAnswer && !opt.isCorrect ? ' ← Tu respuesta' : ''}
-                  </div>
-                `).join('')}
+            <div class="answer-row">
+              <div class="answer-box wrong">
+                <strong>❌ Respondió:</strong><br>${wq.selectedAnswer}
               </div>
-              ${wq.hint ? `<div class="hint">💡 <strong>Pista:</strong> ${wq.hint}</div>` : ''}
-            ` : `
-              <div class="answer-row">
-                <div class="answer-box wrong">
-                  <strong>❌ Respondió:</strong><br>${wq.selectedAnswer}
-                </div>
-                <div class="answer-box correct">
-                  <strong>✓ Correcta:</strong><br>${wq.correctAnswer}
-                </div>
+              <div class="answer-box correct">
+                <strong>✓ Correcta:</strong><br>${wq.correctAnswer}
               </div>
-            `}
+            </div>
           </div>
         `).join('')}
 
