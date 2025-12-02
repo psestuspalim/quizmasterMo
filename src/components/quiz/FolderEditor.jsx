@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
-import { X, UserPlus } from 'lucide-react';
+import { X, UserPlus, Settings } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import QuizSettingsPanel from '../admin/QuizSettingsPanel';
 
 export default function FolderEditor({ folder, users = [], onSave, onCancel }) {
   const [editedFolder, setEditedFolder] = useState({
@@ -52,7 +54,17 @@ export default function FolderEditor({ folder, users = [], onSave, onCancel }) {
       <CardHeader>
         <CardTitle>Editar carpeta</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="quiz-settings" disabled={!folder?.id}>
+              <Settings className="w-4 h-4 mr-2" />
+              Vista Quiz
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general" className="space-y-4">
         <div>
           <Label>Nombre</Label>
           <Input
@@ -170,6 +182,18 @@ export default function FolderEditor({ folder, users = [], onSave, onCancel }) {
             Guardar
           </Button>
         </div>
+          </TabsContent>
+          
+          <TabsContent value="quiz-settings">
+            {folder?.id && (
+              <QuizSettingsPanel
+                entityType="folder"
+                entityId={folder.id}
+                entityName={folder.name}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

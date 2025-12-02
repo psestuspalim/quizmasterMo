@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Save, X, Users, Globe } from 'lucide-react';
+import { Save, X, Users, Globe, Settings } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import QuizSettingsPanel from '../admin/QuizSettingsPanel';
 
 export default function SubjectEditor({ subject, users = [], onSave, onCancel }) {
   const [edited, setEdited] = useState({
@@ -40,7 +42,17 @@ export default function SubjectEditor({ subject, users = [], onSave, onCancel })
       <CardHeader>
         <CardTitle>Editar Materia</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="quiz-settings" disabled={!subject?.id}>
+              <Settings className="w-4 h-4 mr-2" />
+              Vista Quiz
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general" className="space-y-6">
         <div>
           <Label>Nombre</Label>
           <Input
@@ -173,6 +185,18 @@ export default function SubjectEditor({ subject, users = [], onSave, onCancel })
             Guardar
           </Button>
         </div>
+          </TabsContent>
+          
+          <TabsContent value="quiz-settings">
+            {subject?.id && (
+              <QuizSettingsPanel
+                entityType="subject"
+                entityId={subject.id}
+                entityName={subject.name}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Save, X, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
+import { Trash2, Plus, Save, X, ChevronDown, ChevronUp, GripVertical, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import QuizSettingsPanel from '../admin/QuizSettingsPanel';
 
 export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
   const [editedQuiz, setEditedQuiz] = useState({
@@ -74,6 +76,16 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="general">General y Preguntas</TabsTrigger>
+          <TabsTrigger value="quiz-settings" disabled={!quiz?.id}>
+            <Settings className="w-4 h-4 mr-2" />
+            Vista Quiz
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general" className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Editar Cuestionario</CardTitle>
@@ -298,6 +310,18 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
           Guardar cambios
         </Button>
       </div>
+        </TabsContent>
+        
+        <TabsContent value="quiz-settings">
+          {quiz?.id && (
+            <QuizSettingsPanel
+              entityType="quiz"
+              entityId={quiz.id}
+              entityName={quiz.title}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

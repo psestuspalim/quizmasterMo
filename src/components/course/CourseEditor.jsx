@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { X, Save, Users, Search } from 'lucide-react';
+import { X, Save, Users, Search, Settings } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import QuizSettingsPanel from '../admin/QuizSettingsPanel';
 
 const EMOJI_OPTIONS = ['📚', '🎓', '🔬', '💊', '🏥', '🧬', '🩺', '📖', '✏️', '🎯', '💡', '⚕️'];
 
@@ -51,7 +53,17 @@ export default function CourseEditor({ course, users = [], onSave, onCancel }) {
       <CardHeader>
         <CardTitle>{course?.id ? 'Editar Curso' : 'Nuevo Curso'}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="quiz-settings" disabled={!course?.id}>
+              <Settings className="w-4 h-4 mr-2" />
+              Vista Quiz
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general" className="space-y-6">
         {/* Información básica */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -229,6 +241,18 @@ export default function CourseEditor({ course, users = [], onSave, onCancel }) {
             Guardar
           </Button>
         </div>
+          </TabsContent>
+          
+          <TabsContent value="quiz-settings">
+            {course?.id && (
+              <QuizSettingsPanel
+                entityType="course"
+                entityId={course.id}
+                entityName={course.name}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
