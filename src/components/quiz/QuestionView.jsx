@@ -28,6 +28,7 @@ export default function QuestionView({
   const [showHint, setShowHint] = useState(false);
   const [isMarked, setIsMarked] = useState(false);
   const [userNote, setUserNote] = useState('');
+  const [reflectionText, setReflectionText] = useState('');
   const [rephrasing, setRephrasing] = useState(false);
   const [rephrasedQuestion, setRephrasedQuestion] = useState(null);
   const [loadingEtymology, setLoadingEtymology] = useState(false);
