@@ -160,6 +160,10 @@ export default function StudentProgressModal({
               </div>
             </TabsContent>
 
+            <TabsContent value="attempts" className="mt-4">
+              <StudentAttemptsList attempts={analytics.attempts} quizzes={quizzes} />
+            </TabsContent>
+
             <TabsContent value="subjects" className="mt-4">
               <div className="space-y-3">
                 {analytics.subjectProgress.map((subject) => {
