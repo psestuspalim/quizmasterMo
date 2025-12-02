@@ -7,6 +7,9 @@ import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DragDropContext } from '@hello-pangea/dnd';
+import DraggableItem from '../components/dnd/DraggableItem';
+import DroppableArea from '../components/dnd/DroppableArea';
 import {
   Dialog,
   DialogContent,
