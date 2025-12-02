@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, ChevronDown, ChevronUp, Users, GraduationCap, User } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Users, GraduationCap, User, UserCircle } from 'lucide-react';
 
 export default function StudentSelector({ 
   users, 
@@ -12,10 +12,12 @@ export default function StudentSelector({
   attempts, 
   selectedStudent, 
   onSelectStudent,
-  currentUser
+  currentUser,
+  collapsed = false
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCourses, setExpandedCourses] = useState({});
+  const [isOpen, setIsOpen] = useState(!collapsed);
 
   // Calcular estadísticas por estudiante
   const getStudentStats = (email) => {
