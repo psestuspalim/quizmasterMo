@@ -15,6 +15,7 @@ import WeakPoints from '../progress/WeakPoints';
 import SpeedAnalysis from '../progress/SpeedAnalysis';
 import StudentTrendChart from './StudentTrendChart';
 import StudentWeakPointsList from './StudentWeakPointsList';
+import StudentAttemptsList from './StudentAttemptsList';
 
 export default function StudentProgressModal({ 
   open, 
