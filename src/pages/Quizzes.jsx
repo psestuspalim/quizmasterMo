@@ -784,20 +784,21 @@ export default function QuizzesPage() {
                   <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <BookOpen className="w-5 h-5" /> Materias
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {unassignedSubjects.map((subject) => (
-                      <SubjectCard
-                        key={subject.id}
-                        subject={subject}
-                        quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                        stats={getSubjectStats(subject.id)}
-                        isAdmin={isAdmin}
-                        onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                        onEdit={setEditingSubject}
-                        onClick={() => { setSelectedSubject(subject); setView('list'); }}
-                      />
+                  <DroppableArea droppableId="root-subjects" type="SUBJECT" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unassignedSubjects.map((subject, index) => (
+                      <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
+                        <SubjectCard
+                          subject={subject}
+                          quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
+                          stats={getSubjectStats(subject.id)}
+                          isAdmin={isAdmin}
+                          onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                          onEdit={setEditingSubject}
+                          onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                        />
+                      </DraggableItem>
                     ))}
-                  </div>
+                  </DroppableArea>
                 </div>
               )}
 
