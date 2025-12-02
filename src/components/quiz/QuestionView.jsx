@@ -155,9 +155,12 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   const handleNext = () => {
     const selectedOption = question.answerOptions[selectedAnswer];
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, { ...selectedOption, userNote }, question);
+    onAnswer(isCorrect, { ...selectedOption, userNote, reflection: reflectionText }, question);
     setUserNote('');
+    setReflectionText('');
   };
+
+  const canProceed = selectedOption?.isCorrect || reflectionText.trim().length >= 10;
 
   const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
   const answeredQuestions = correctAnswers + wrongAnswers;
