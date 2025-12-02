@@ -44,6 +44,7 @@ import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 import ContentManager from '../components/admin/ContentManager';
 import useQuizSettings from '../components/quiz/useQuizSettings';
+import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -67,6 +68,7 @@ export default function QuizzesPage() {
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [showBulkUploader, setShowBulkUploader] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState('quizzes');
+  const [swipeMode, setSwipeMode] = useState(false);
     const [responseTimes, setResponseTimes] = useState([]);
     const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   
@@ -558,16 +560,50 @@ export default function QuizzesPage() {
   };
 
   const handleExitQuiz = async () => {
-    if (currentAttemptId) {
-      await updateAttemptMutation.mutateAsync({
-        id: currentAttemptId,
-        data: { is_completed: false }
-      });
-      queryClient.invalidateQueries(['attempts']);
-    }
-    setSelectedQuiz(null);
-    setView('list');
-  };
+        if (currentAttemptId) {
+          await updateAttemptMutation.mutateAsync({
+            id: currentAttemptId,
+            data: { is_completed: false }
+          });
+          queryClient.invalidateQueries(['attempts']);
+        }
+        setSelectedQuiz(null);
+        setSwipeMode(false);
+        setView('list');
+      };
+
+      const handleStartSwipeMode = (quiz) => {
+        if (!quiz.questions || quiz.questions.length === 0) {
+          alert('Este quiz no tiene preguntas');
+          return;
+        }
+        setSelectedQuiz(quiz);
+        setSwipeMode(true);
+        setView('quiz');
+      };
+
+      const handleSwipeComplete = async (score, total, wrongAnswers) => {
+        await saveAttemptMutation.mutateAsync({
+          quiz_id: selectedQuiz.id,
+          subject_id: selectedQuiz.subject_id,
+          user_email: currentUser.email,
+          username: currentUser.username,
+          score: score,
+          total_questions: total,
+          answered_questions: total,
+          is_completed: true,
+          wrong_questions: wrongAnswers.map(w => ({
+            question: w.statement,
+            selected_answer: w.userAnswer,
+            correct_answer: w.correctAnswer
+          })),
+          completed_at: new Date().toISOString()
+        });
+        queryClient.invalidateQueries(['attempts']);
+        setSwipeMode(false);
+        setSelectedQuiz(null);
+        setView('list');
+      };
 
   const handleHome = () => {
     setSelectedQuiz(null);
@@ -1040,6 +1076,7 @@ export default function QuizzesPage() {
                           onStart={handleStartQuiz}
                           onEdit={setEditingQuiz}
                           onDelete={(id) => deleteQuizMutation.mutate(id)}
+                          onStartSwipe={handleStartSwipeMode}
                         />
                       ))}
                     </div>
@@ -1068,7 +1105,7 @@ export default function QuizzesPage() {
           )}
 
           {/* Quiz View */}
-          {view === 'quiz' && selectedQuiz && (
+          {view === 'quiz' && selectedQuiz && !swipeMode && (
             <motion.div key="quiz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Button onClick={handleExitQuiz} variant="ghost" className="mb-6">
                 <ArrowLeft className="w-4 h-4 mr-2" /> Salir del cuestionario
@@ -1085,6 +1122,17 @@ export default function QuizzesPage() {
                 quizId={selectedQuiz.id}
                 userEmail={currentUser?.email}
                 settings={quizSettings}
+              />
+            </motion.div>
+          )}
+
+          {/* Swipe Quiz Mode */}
+          {view === 'quiz' && selectedQuiz && swipeMode && (
+            <motion.div key="swipe-quiz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <SwipeQuizMode
+                questions={selectedQuiz.questions}
+                onComplete={handleSwipeComplete}
+                onExit={handleExitQuiz}
               />
             </motion.div>
           )}
