@@ -761,19 +761,20 @@ export default function QuizzesPage() {
                   <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Folder className="w-5 h-5" /> Carpetas
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {unassignedFolders.map((folder) => (
-                      <FolderCard
-                        key={folder.id}
-                        folder={folder}
-                        itemCount={subjects.filter(s => s.folder_id === folder.id).length}
-                        isAdmin={isAdmin}
-                        onDelete={(id) => deleteFolderMutation.mutate(id)}
-                        onEdit={setEditingFolder}
-                        onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
-                      />
+                  <DroppableArea droppableId="root-folders" type="FOLDER" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unassignedFolders.map((folder, index) => (
+                      <DraggableItem key={folder.id} id={folder.id} index={index} isAdmin={isAdmin}>
+                        <FolderCard
+                          folder={folder}
+                          itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                          isAdmin={isAdmin}
+                          onDelete={(id) => deleteFolderMutation.mutate(id)}
+                          onEdit={setEditingFolder}
+                          onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
+                        />
+                      </DraggableItem>
                     ))}
-                  </div>
+                  </DroppableArea>
                 </div>
               )}
 
