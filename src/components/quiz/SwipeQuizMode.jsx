@@ -66,7 +66,7 @@ export default function SwipeQuizMode({
         setCurrentIndex(i => i + 1);
       }
       setShowFeedback(null);
-    }, 1200);
+    }, card.rationale && !isCorrect ? 3000 : 1200);
   };
 
   if (cards.length === 0) {
