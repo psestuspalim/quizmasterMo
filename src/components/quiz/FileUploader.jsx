@@ -22,18 +22,50 @@ export default function FileUploader({ onUploadSuccess }) {
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
     let title = fileName.replace('.json', '');
+    let description = '';
     
     // Mapeo de dificultad inglés a español
     const difficultyMap = {
       'easy': 'fácil',
       'medium': 'moderado',
       'hard': 'difícil',
-      'moderate': 'moderado'
+      'moderate': 'moderado',
+      1: 'fácil',
+      2: 'moderado',
+      3: 'difícil'
     };
 
+    // Mapeo de Bloom codes
+    const bloomMap = {
+      1: 'Recordar',
+      2: 'Comprender',
+      3: 'Aplicar',
+      4: 'Analizar',
+      5: 'Evaluar'
+    };
+
+    // FORMATO COMPACTO (qm, q, etc.)
+    if (data.qm && data.q && Array.isArray(data.q)) {
+      title = data.qm.ttl || title;
+      description = data.qm.foc || '';
+
+      questions = data.q.map((q) => ({
+        type: 'text',
+        question: q.t,
+        hint: q.ct || '',
+        difficulty: difficultyMap[q.d] || 'moderado',
+        bloomLevel: bloomMap[q.b] || '',
+        answerOptions: (q.o || []).map(opt => ({
+          text: opt.t,
+          isCorrect: opt.c === true || opt.c === 1,
+          rationale: opt.r || ''
+        }))
+      }));
+    }
     // Formato con quizMetadata y questions
-    if (data.questions && Array.isArray(data.questions)) {
+    else if (data.questions && Array.isArray(data.questions)) {
       title = data.quizMetadata?.title || title;
+      description = data.quizMetadata?.focus || data.quizMetadata?.source || '';
 
       questions = data.questions.map((q) => ({
         type: q.type || 'text',
@@ -55,7 +87,7 @@ export default function FileUploader({ onUploadSuccess }) {
         ...q,
         type: q.type || 'text',
         question: q.questionText || q.question,
-        difficulty: q.difficulty || 'moderado',
+        difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
         answerOptions: (q.answerOptions || []).map(opt => ({
           text: opt.text,
           isCorrect: opt.isCorrect,
@@ -64,12 +96,12 @@ export default function FileUploader({ onUploadSuccess }) {
       }));
     }
     else {
-      throw new Error('Formato de archivo inválido. Debe contener "quiz" o "questions"');
+      throw new Error('Formato de archivo inválido. Debe contener "qm/q", "quiz" o "questions"');
     }
 
     await onUploadSuccess({
       title,
-      description: data.quizMetadata?.focus || data.quizMetadata?.source || `Cuestionario con ${questions.length} preguntas`,
+      description: description || `Cuestionario con ${questions.length} preguntas`,
       questions,
       total_questions: questions.length,
       file_name: fileName,
