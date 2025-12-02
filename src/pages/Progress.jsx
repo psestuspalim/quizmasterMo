@@ -17,9 +17,11 @@ import AttemptHistory from '../components/progress/AttemptHistory';
 import QuizCompletionBadges from '../components/progress/QuizCompletionBadges';
 import TimeVsPerformance from '../components/progress/TimeVsPerformance';
 import SpeedAnalysis from '../components/progress/SpeedAnalysis';
+import StudentSelector from '../components/progress/StudentSelector';
 
 export default function ProgressPage() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -33,6 +35,8 @@ export default function ProgressPage() {
     loadUser();
   }, []);
 
+  const isAdmin = currentUser?.role === 'admin';
+
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
     queryFn: () => base44.entities.Subject.list('-created_date'),
@@ -43,15 +47,43 @@ export default function ProgressPage() {
     queryFn: () => base44.entities.Quiz.list('-created_date'),
   });
 
-  const { data: attempts = [] } = useQuery({
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => base44.entities.Course.list('order'),
+    enabled: isAdmin,
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: () => base44.entities.User.list('-created_date', 1000),
+    enabled: isAdmin,
+  });
+
+  const { data: allAttempts = [] } = useQuery({
+    queryKey: ['all-attempts'],
+    queryFn: () => base44.entities.QuizAttempt.list('-created_date', 5000),
+    enabled: isAdmin,
+  });
+
+  // Intentos del usuario actual o del estudiante seleccionado
+  const targetEmail = selectedStudent ? selectedStudent.email : currentUser?.email;
+  
+  const { data: userAttempts = [] } = useQuery({
     queryKey: ['attempts', currentUser?.email],
     queryFn: () => base44.entities.QuizAttempt.filter(
       { user_email: currentUser?.email }, 
       '-created_date',
       1000
     ),
-    enabled: !!currentUser?.email,
+    enabled: !!currentUser?.email && !isAdmin,
   });
+
+  // Usar intentos filtrados según el contexto
+  const attempts = isAdmin 
+    ? (selectedStudent 
+        ? allAttempts.filter(a => a.user_email === selectedStudent.email)
+        : allAttempts.filter(a => a.user_email === currentUser?.email))
+    : userAttempts;
 
   const analytics = useMemo(() => {
     if (!attempts.length) return null;
