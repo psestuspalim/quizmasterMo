@@ -233,12 +233,24 @@ export default function ProgressPage() {
 
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Mi Progreso
+            {selectedStudent ? `Progreso de ${selectedStudent.username || selectedStudent.full_name || selectedStudent.email}` : 'Mi Progreso'}
           </h1>
           <p className="text-gray-600">
-            Análisis detallado de tu desempeño y recomendaciones personalizadas
+            {selectedStudent ? 'Análisis detallado del desempeño del estudiante' : 'Análisis detallado de tu desempeño y recomendaciones personalizadas'}
           </p>
         </div>
+
+        {/* Selector de estudiantes para admin */}
+        {isAdmin && (
+          <StudentSelector
+            users={allUsers}
+            courses={courses}
+            attempts={allAttempts}
+            selectedStudent={selectedStudent}
+            onSelectStudent={setSelectedStudent}
+            currentUser={currentUser}
+          />
+        )}
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="flex flex-wrap w-full lg:w-auto gap-1">
