@@ -249,6 +249,7 @@ export default function ProgressPage() {
             selectedStudent={selectedStudent}
             onSelectStudent={setSelectedStudent}
             currentUser={currentUser}
+            collapsed
           />
         )}
 
