@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import MathText from '../components/quiz/MathText';
 import AttemptDetailModal from '../components/admin/AttemptDetailModal';
+import StudentProgressModal from '../components/admin/StudentProgressModal';
 
 export default function AdminProgress() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +18,7 @@ export default function AdminProgress() {
   const [selectedAttempt, setSelectedAttempt] = useState(null);
   const [isPurging, setIsPurging] = useState(false);
   const [expandedAttempts, setExpandedAttempts] = useState({});
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -289,11 +291,20 @@ export default function AdminProgress() {
               <div className="space-y-6">
                 {/* Resumen */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {selectedStudent.username || 'Sin nombre'}
-                    </CardTitle>
-                    <p className="text-sm text-gray-500">{selectedStudent.email}</p>
+                  <CardHeader className="flex flex-row items-start justify-between">
+                    <div>
+                      <CardTitle>
+                        {selectedStudent.username || 'Sin nombre'}
+                      </CardTitle>
+                      <p className="text-sm text-gray-500">{selectedStudent.email}</p>
+                    </div>
+                    <Button
+                      onClick={() => setShowProgressModal(true)}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Ver análisis completo
+                    </Button>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
                     <div className="grid grid-cols-3 gap-2 sm:gap-4">
@@ -533,6 +544,15 @@ export default function AdminProgress() {
           open={!!selectedAttempt}
           onClose={() => setSelectedAttempt(null)}
           onDelete={(id) => deleteAttemptMutation.mutate(id)}
+        />
+
+        {/* Student Progress Modal */}
+        <StudentProgressModal
+          open={showProgressModal}
+          onClose={() => setShowProgressModal(false)}
+          student={selectedStudent}
+          subjects={subjects}
+          quizzes={quizzes}
         />
       </div>
     </div>
