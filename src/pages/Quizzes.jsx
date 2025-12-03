@@ -785,18 +785,10 @@ export default function QuizzesPage() {
                     </Link>
                   {isAdmin && (
                     <>
-                      <Link to={createPageUrl('AdminTasks')}>
-                        <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 text-xs sm:text-sm h-9">
-                          <ClipboardList className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Tareas</span>
-                        </Button>
-                      </Link>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowContentManager(true)}
-                        className="border-gray-400 text-gray-600 hover:bg-gray-50 text-xs sm:text-sm h-9"
-                      >
-                        <Trash2 className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Gestionar</span>
-                      </Button>
+                      <AdminMenu 
+                        compact 
+                        onOpenContentManager={() => setShowContentManager(true)}
+                      />
                       <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
                         <DialogTrigger asChild>
                           <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
