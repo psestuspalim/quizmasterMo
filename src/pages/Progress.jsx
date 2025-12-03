@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy, Clock, Zap } from 'lucide-react';
+import { TrendingUp, Target, AlertCircle, BookOpen, Award, ArrowLeft, History, Trophy, Clock, Zap, LayoutDashboard, Brain, PieChart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -18,6 +18,10 @@ import QuizCompletionBadges from '../components/progress/QuizCompletionBadges';
 import TimeVsPerformance from '../components/progress/TimeVsPerformance';
 import SpeedAnalysis from '../components/progress/SpeedAnalysis';
 import StudentSelector from '../components/progress/StudentSelector';
+import StudentDashboard from '../components/progress/StudentDashboard';
+import PerformanceRadarChart from '../components/progress/PerformanceRadarChart';
+import QuizTimeStats from '../components/progress/QuizTimeStats';
+import DifficultQuestionsAnalysis from '../components/progress/DifficultQuestionsAnalysis';
 
 export default function ProgressPage() {
   const [currentUser, setCurrentUser] = useState(null);
