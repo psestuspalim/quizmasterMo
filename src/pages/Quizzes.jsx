@@ -607,13 +607,75 @@ export default function QuizzesPage() {
       };
 
   const handleHome = () => {
-    setSelectedQuiz(null);
-    setSelectedSubject(null);
-    setSelectedCourse(null);
-    setCurrentFolderId(null);
-    setView('home');
-    setShowUploader(false);
-  };
+        setSelectedQuiz(null);
+        setSelectedSubject(null);
+        setSelectedCourse(null);
+        setCurrentFolderId(null);
+        setView('home');
+        setShowUploader(false);
+      };
+
+      const handleReviewWrongBySubject = async (subjectId) => {
+        // Obtener todos los quizzes de la materia
+        const subjectQuizIds = quizzes.filter(q => q.subject_id === subjectId).map(q => q.id);
+
+        // Obtener todas las preguntas incorrectas de esa materia
+        const wrongQuestionsMap = new Map();
+        attempts
+          .filter(a => subjectQuizIds.includes(a.quiz_id))
+          .forEach(attempt => {
+            attempt.wrong_questions?.forEach(wq => {
+              if (!wrongQuestionsMap.has(wq.question)) {
+                wrongQuestionsMap.set(wq.question, {
+                  question: wq.question,
+                  answerOptions: wq.answerOptions || [],
+                  hint: wq.hint
+                });
+              }
+            });
+          });
+
+        const wrongQuestions = Array.from(wrongQuestionsMap.values());
+
+        if (wrongQuestions.length === 0) {
+          alert('No hay preguntas incorrectas para repasar');
+          return;
+        }
+
+        // Crear quiz temporal con preguntas incorrectas
+        const reviewQuiz = {
+          id: `review-${subjectId}`,
+          title: `Repaso: ${subjects.find(s => s.id === subjectId)?.name || 'Materia'}`,
+          subject_id: subjectId,
+          questions: wrongQuestions.map(q => ({
+            ...q,
+            answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
+          }))
+        };
+
+        const attempt = await saveAttemptMutation.mutateAsync({
+          quiz_id: reviewQuiz.id,
+          subject_id: subjectId,
+          user_email: currentUser.email,
+          username: currentUser.username,
+          score: 0,
+          total_questions: reviewQuiz.questions.length,
+          answered_questions: 0,
+          is_completed: false,
+          wrong_questions: []
+        });
+
+        setCurrentAttemptId(attempt.id);
+        setSelectedQuiz(reviewQuiz);
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setWrongAnswers([]);
+        setCorrectAnswers([]);
+        setMarkedQuestions([]);
+        setResponseTimes([]);
+        setQuestionStartTime(Date.now());
+        setView('quiz');
+      };
 
   const getSubjectStats = (subjectId) => {
     const subjectQuizzes = quizzes.filter(q => q.subject_id === subjectId);
