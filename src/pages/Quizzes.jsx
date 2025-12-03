@@ -1067,6 +1067,7 @@ export default function QuizzesPage() {
                       onDelete={(id) => deleteSubjectMutation.mutate(id)}
                       onEdit={setEditingSubject}
                       onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                      onReviewWrong={handleReviewWrongBySubject}
                     />
                   </DraggableItem>
                 ))}
