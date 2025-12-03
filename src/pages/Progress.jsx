@@ -349,10 +349,6 @@ export default function ProgressPage() {
             />
           </TabsContent>
 
-          <TabsContent value="time-analysis" className="space-y-6">
-            <TimeVsPerformance attempts={attempts} />
-          </TabsContent>
-
           <TabsContent value="speed-optimal" className="space-y-6">
             <SpeedAnalysis attempts={attempts} />
             <TimeVsPerformance attempts={attempts} />
