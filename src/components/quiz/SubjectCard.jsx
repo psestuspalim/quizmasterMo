@@ -2,9 +2,9 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FolderOpen, FileText, CheckCircle2, XCircle, Trash2, Pencil, EyeOff, Users } from 'lucide-react';
+import { FolderOpen, FileText, CheckCircle2, XCircle, Trash2, Pencil, EyeOff, Users, RotateCcw } from 'lucide-react';
 
-export default function SubjectCard({ subject, quizCount, stats, onClick, onDelete, onEdit, isAdmin }) {
+export default function SubjectCard({ subject, quizCount, stats, onClick, onDelete, onEdit, isAdmin, onReviewWrong }) {
   const { totalCorrect = 0, totalWrong = 0, totalAnswered = 0 } = stats || {};
   const correctPercentage = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
   const wrongPercentage = totalAnswered > 0 ? (totalWrong / totalAnswered) * 100 : 0;
@@ -100,6 +100,20 @@ export default function SubjectCard({ subject, quizCount, stats, onClick, onDele
                     style={{ width: `${wrongPercentage}%` }}
                   />
                 </div>
+                {totalWrong > 0 && onReviewWrong && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2 text-xs h-7 border-red-200 text-red-600 hover:bg-red-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReviewWrong(subject.id);
+                    }}
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Repasar {totalWrong} incorrectas
+                  </Button>
+                )}
               </div>
             )}
             </div>
