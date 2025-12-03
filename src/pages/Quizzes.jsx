@@ -43,6 +43,7 @@ import ChallengeNotifications from '../components/challenge/ChallengeNotificatio
 import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 import ContentManager from '../components/admin/ContentManager';
+import AdminMenu from '../components/admin/AdminMenu';
 import useQuizSettings from '../components/quiz/useQuizSettings';
 import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 
