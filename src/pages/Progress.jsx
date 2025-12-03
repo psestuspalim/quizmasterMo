@@ -257,45 +257,49 @@ export default function ProgressPage() {
           />
         )}
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="flex flex-wrap w-full lg:w-auto gap-1">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
+              <LayoutDashboard className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
             <TabsTrigger value="overview" className="text-xs sm:text-sm">
               <Award className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">General</span>
-            </TabsTrigger>
-            <TabsTrigger value="badges" className="text-xs sm:text-sm">
-              <Trophy className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Completados</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs sm:text-sm">
               <History className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Historial</span>
             </TabsTrigger>
             <TabsTrigger value="subjects" className="text-xs sm:text-sm">
-              <BookOpen className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Por Materia</span>
+              <PieChart className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Materias</span>
             </TabsTrigger>
-            <TabsTrigger value="trends" className="text-xs sm:text-sm">
-              <TrendingUp className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Tendencias</span>
-            </TabsTrigger>
-            <TabsTrigger value="weak" className="text-xs sm:text-sm">
-              <AlertCircle className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Puntos Débiles</span>
-            </TabsTrigger>
-            <TabsTrigger value="recommendations" className="text-xs sm:text-sm">
-              <Target className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Recomendaciones</span>
-            </TabsTrigger>
-            <TabsTrigger value="time-analysis" className="text-xs sm:text-sm">
-              <Clock className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Tiempo vs Rendimiento</span>
+            <TabsTrigger value="difficult" className="text-xs sm:text-sm">
+              <Brain className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Dificultad</span>
             </TabsTrigger>
             <TabsTrigger value="speed-optimal" className="text-xs sm:text-sm">
               <Zap className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Velocidad Óptima</span>
+              <span className="hidden sm:inline">Velocidad</span>
+            </TabsTrigger>
+            <TabsTrigger value="badges" className="text-xs sm:text-sm">
+              <Trophy className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logros</span>
+            </TabsTrigger>
+            <TabsTrigger value="weak" className="text-xs sm:text-sm">
+              <AlertCircle className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Débiles</span>
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="text-xs sm:text-sm">
+              <Target className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tips</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            <StudentDashboard analytics={analytics} attempts={attempts} subjects={subjects} />
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">
             <OverviewStats analytics={analytics} />
@@ -318,6 +322,10 @@ export default function ProgressPage() {
           </TabsContent>
 
           <TabsContent value="subjects" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PerformanceRadarChart subjectStats={analytics.subjectStats} />
+              <QuizTimeStats attempts={attempts} quizzes={quizzes} />
+            </div>
             <SubjectProgress 
               subjectStats={analytics.subjectStats}
               quizzes={quizzes}
@@ -325,11 +333,8 @@ export default function ProgressPage() {
             />
           </TabsContent>
 
-          <TabsContent value="trends" className="space-y-6">
-            <TrendAnalysis 
-              last30Days={analytics.last30Days}
-              attempts={attempts}
-            />
+          <TabsContent value="difficult" className="space-y-6">
+            <DifficultQuestionsAnalysis attempts={attempts} />
           </TabsContent>
 
           <TabsContent value="weak" className="space-y-6">
@@ -350,8 +355,9 @@ export default function ProgressPage() {
 
           <TabsContent value="speed-optimal" className="space-y-6">
             <SpeedAnalysis attempts={attempts} />
+            <TimeVsPerformance attempts={attempts} />
           </TabsContent>
-          </Tabs>
+        </Tabs>
       </div>
     </div>
   );
