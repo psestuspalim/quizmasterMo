@@ -158,10 +158,12 @@ INSTRUCCIONES:
         }
       });
 
+      const targetSubjectId = showSubjectSelector ? selectedSubjectId : subjectId;
+      
       const quizData = {
         title: result.title || 'Quiz generado desde JSON',
         description: 'Cuestionario generado desde contenido JSON',
-        subject_id: subjectId,
+        subject_id: targetSubjectId,
         questions: result.questions,
         total_questions: result.questions.length
       };
