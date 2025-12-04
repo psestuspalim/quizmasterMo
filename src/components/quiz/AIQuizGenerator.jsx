@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Loader2, ArrowLeft, FileJson, Brain } from 'lucide-react';
 
-export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerated, onCancel }) {
+export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerated, onCancel, subjects = [], showSubjectSelector = false }) {
   const [mode, setMode] = useState('topic'); // 'topic' or 'json'
   const [topic, setTopic] = useState('');
   const [jsonContent, setJsonContent] = useState('');
@@ -17,6 +17,7 @@ export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerate
   const [difficulty, setDifficulty] = useState('medium');
   const [additionalContext, setAdditionalContext] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(subjectId || '');
 
   const handleGenerateFromTopic = async () => {
     if (!topic.trim()) {
