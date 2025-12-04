@@ -18,7 +18,7 @@ export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerate
   const [additionalContext, setAdditionalContext] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = async () => {
+  const handleGenerateFromTopic = async () => {
     if (!topic.trim()) {
       alert('Por favor ingresa un tema');
       return;
@@ -90,6 +90,90 @@ El formato debe seguir esta estructura exacta para cada pregunta.`;
       alert('Error al generar el cuestionario. Intenta de nuevo.');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateFromJson = async () => {
+    if (!jsonContent.trim()) {
+      alert('Por favor pega el contenido JSON');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const prompt = `Convierte el siguiente contenido en un cuestionario de opción múltiple estructurado.
+
+CONTENIDO:
+${jsonContent}
+
+INSTRUCCIONES:
+- Analiza el contenido y genera preguntas basadas en él
+- Cada pregunta debe tener 4-5 opciones de respuesta
+- Solo UNA opción debe ser correcta
+- Incluye una explicación (rationale) para cada opción explicando por qué es correcta o incorrecta
+- Si el contenido ya tiene formato de preguntas, conviértelo al formato requerido
+- Si es texto plano o información, genera preguntas relevantes sobre ese contenido
+- Las preguntas deben ser claras y sin ambigüedades`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string",
+              description: "Título del cuestionario basado en el contenido"
+            },
+            questions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question: { type: "string" },
+                  answerOptions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        text: { type: "string" },
+                        isCorrect: { type: "boolean" },
+                        rationale: { type: "string" }
+                      }
+                    }
+                  },
+                  hint: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const quizData = {
+        title: result.title || 'Quiz generado desde JSON',
+        description: 'Cuestionario generado desde contenido JSON',
+        subject_id: subjectId,
+        questions: result.questions,
+        total_questions: result.questions.length
+      };
+
+      const createdQuiz = await base44.entities.Quiz.create(quizData);
+      onQuizGenerated(createdQuiz);
+
+    } catch (error) {
+      console.error('Error procesando JSON:', error);
+      alert('Error al procesar el contenido. Verifica el formato e intenta de nuevo.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerate = () => {
+    if (mode === 'topic') {
+      handleGenerateFromTopic();
+    } else {
+      handleGenerateFromJson();
     }
   };
 
