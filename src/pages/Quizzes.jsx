@@ -1096,10 +1096,15 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <p className="text-gray-600">{selectedSubject.description || 'Cuestionarios de esta materia'}</p>
                 </div>
                 {isAdmin && (
-                  <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
-                    <Plus className="w-4 h-4 mr-2" /> Nuevo cuestionario
-                  </Button>
-                )}
+                                        <div className="flex gap-2">
+                                          <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                                            <Sparkles className="w-4 h-4 mr-2" /> Generar con IA
+                                          </Button>
+                                          <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                                            <Plus className="w-4 h-4 mr-2" /> Subir archivo
+                                          </Button>
+                                        </div>
+                                      )}
               </div>
 
               <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
