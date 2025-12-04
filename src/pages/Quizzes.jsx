@@ -1079,17 +1079,37 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               </DroppableArea>
 
               {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
-                <div className="text-center py-16">
-                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Curso vacío</h3>
-                  <p className="text-gray-500">Agrega carpetas o materias</p>
-                </div>
-              )}
-            </motion.div>
-          )}
+                                    <div className="text-center py-16">
+                                      <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Curso vacío</h3>
+                                      <p className="text-gray-500">Agrega carpetas o materias</p>
+                                    </div>
+                                  )}
+                                </motion.div>
+                              )}
 
-          {/* AI Quiz Generator */}
-                          {view === 'list' && selectedSubject && showAIGenerator && (
+                              {/* AI Quiz Generator - Folder Level */}
+                              {view === 'subjects' && (selectedCourse || currentFolderId) && showAIGenerator && (
+                                <motion.div key="ai-generator-folder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                  <Button onClick={() => setShowAIGenerator(false)} variant="ghost" className="mb-6">
+                                    <ArrowLeft className="w-4 h-4 mr-2" /> Volver
+                                  </Button>
+                                  <AIQuizGenerator
+                                    subjectId={null}
+                                    subjectName={selectedCourse?.name || folders.find(f => f.id === currentFolderId)?.name || 'Carpeta'}
+                                    onQuizGenerated={() => {
+                                      queryClient.invalidateQueries(['quizzes']);
+                                      setShowAIGenerator(false);
+                                    }}
+                                    onCancel={() => setShowAIGenerator(false)}
+                                    subjects={currentFolderSubjects}
+                                    showSubjectSelector={true}
+                                  />
+                                </motion.div>
+                              )}
+
+                              {/* AI Quiz Generator - Subject Level */}
+                                              {view === 'list' && selectedSubject && showAIGenerator && (
                             <motion.div key="ai-generator" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                               <AIQuizGenerator
                                 subjectId={selectedSubject.id}
