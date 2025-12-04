@@ -967,50 +967,53 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           )}
 
           {/* Subjects View (inside a course or folder) */}
-          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && (
-            <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Breadcrumb />
+                          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && (
+                            <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                              <Breadcrumb />
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                    {selectedCourse ? (
-                      <>{selectedCourse.icon} {selectedCourse.name}</>
-                    ) : currentFolderId ? (
-                      <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
-                    ) : null}
-                  </h1>
-                  <p className="text-gray-600">
-                    {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
-                  </p>
-                </div>
-                {isAdmin && (
-                  <div className="flex flex-wrap gap-2">
-                    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="text-xs sm:text-sm h-9">
-                          <Folder className="w-4 h-4 mr-2" /> Nueva carpeta
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader><DialogTitle>Crear carpeta (parcial)</DialogTitle></DialogHeader>
-                        <div className="space-y-4 mt-4">
-                          <div>
-                            <Label>Nombre</Label>
-                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
-                          </div>
-                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse?.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
-                            Crear carpeta
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
-                      <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
-                          <Plus className="w-4 h-4 mr-2" /> Nueva materia
-                        </Button>
-                      </DialogTrigger>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <div>
+                                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                    {selectedCourse ? (
+                                      <>{selectedCourse.icon} {selectedCourse.name}</>
+                                    ) : currentFolderId ? (
+                                      <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
+                                    ) : null}
+                                  </h1>
+                                  <p className="text-gray-600">
+                                    {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
+                                  </p>
+                                </div>
+                                {isAdmin && (
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                                      <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
+                                    </Button>
+                                    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline" className="text-xs sm:text-sm h-9">
+                                          <Folder className="w-4 h-4 mr-2" /> Nueva carpeta
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader><DialogTitle>Crear carpeta (parcial)</DialogTitle></DialogHeader>
+                                        <div className="space-y-4 mt-4">
+                                          <div>
+                                            <Label>Nombre</Label>
+                                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
+                                          </div>
+                                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse?.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
+                                            Crear carpeta
+                                          </Button>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                                      <DialogTrigger asChild>
+                                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                                          <Plus className="w-4 h-4 mr-2" /> Nueva materia
+                                        </Button>
+                                      </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
                         <div className="space-y-4 mt-4">
