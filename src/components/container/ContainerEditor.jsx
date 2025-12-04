@@ -21,11 +21,11 @@ const defaultColors = [
   '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'
 ];
 
-export default function ContainerEditor({ container, users = [], onSave, onCancel }) {
+export default function ContainerEditor({ container, users = [], onSave, onCancel, defaultType = 'folder' }) {
   const [formData, setFormData] = useState({
     name: container?.name || '',
     description: container?.description || '',
-    type: container?.type || 'folder',
+    type: container?.type || defaultType,
     color: container?.color || '#6366f1',
     icon: container?.icon || '',
     is_hidden: container?.is_hidden || false,

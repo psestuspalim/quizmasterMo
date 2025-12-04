@@ -579,11 +579,11 @@ export default function QuizzesPage() {
     }
   };
 
-  // Get subjects for AI generator
-  const getAvailableSubjects = () => {
-    if (!currentContainerId) return containers.filter(c => c.type === 'subject');
+  // Get containers where quizzes can be added (any container can have quizzes now)
+  const getAvailableContainers = () => {
+    if (!currentContainerId) return containers;
     const descendantIds = getDescendantIds(currentContainerId);
-    return containers.filter(c => c.type === 'subject' && descendantIds.includes(c.id));
+    return containers.filter(c => descendantIds.includes(c.id));
   };
 
   // Username prompt
@@ -671,21 +671,21 @@ export default function QuizzesPage() {
                   <ArrowLeft className="w-4 h-4 mr-2" /> Volver
                 </Button>
                 
-                {currentContainer?.type === 'subject' ? (
+                {currentContainerId ? (
                   <FileUploader onUploadSuccess={(data) => {
                     createQuizMutation.mutate({ ...data, subject_id: currentContainerId });
                   }} />
                 ) : (
                   <div className="max-w-xl mx-auto">
                     <div className="mb-6">
-                      <Label>Materia destino *</Label>
+                      <Label>Contenedor destino *</Label>
                       <select
                         className="w-full mt-1 p-2 border rounded-md"
                         id="subject-select"
                         defaultValue=""
                       >
-                        <option value="">Selecciona una materia</option>
-                        {getAvailableSubjects().map(s => (
+                        <option value="">Selecciona un contenedor</option>
+                        {containers.map(s => (
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                       </select>
@@ -693,7 +693,7 @@ export default function QuizzesPage() {
                     <FileUploader onUploadSuccess={(data) => {
                       const subjectId = document.getElementById('subject-select').value;
                       if (!subjectId) {
-                        alert('Selecciona una materia');
+                        alert('Selecciona un contenedor');
                         return;
                       }
                       createQuizMutation.mutate({ ...data, subject_id: subjectId });
@@ -707,15 +707,15 @@ export default function QuizzesPage() {
             {showAIGenerator && !showUploader && !editingContainer && !editingQuiz && (
               <motion.div key="ai-generator" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <AIQuizGenerator
-                  subjectId={currentContainer?.type === 'subject' ? currentContainerId : null}
+                  subjectId={currentContainerId}
                   subjectName={currentContainer?.name || 'General'}
                   onQuizGenerated={() => {
                     queryClient.invalidateQueries(['quizzes']);
                     setShowAIGenerator(false);
                   }}
                   onCancel={() => setShowAIGenerator(false)}
-                  subjects={getAvailableSubjects()}
-                  showSubjectSelector={currentContainer?.type !== 'subject'}
+                  subjects={currentContainerId ? getAvailableContainers() : containers}
+                  showSubjectSelector={!currentContainerId}
                 />
               </motion.div>
             )}
@@ -959,13 +959,14 @@ export default function QuizzesPage() {
 
           {/* Create Dialog */}
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crear nuevo contenido</DialogTitle>
               </DialogHeader>
               <ContainerEditor
                 container={{ parent_id: currentContainerId }}
                 users={allUsers}
+                defaultType={currentContainerId ? 'folder' : 'course'}
                 onSave={(data) => createContainerMutation.mutate({ ...data, parent_id: currentContainerId })}
                 onCancel={() => setShowCreateDialog(false)}
               />
