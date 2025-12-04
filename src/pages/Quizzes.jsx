@@ -1085,8 +1085,23 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             </motion.div>
           )}
 
-          {/* Quiz List View */}
-          {view === 'list' && selectedSubject && !showUploader && !editingQuiz && (
+          {/* AI Quiz Generator */}
+                          {view === 'list' && selectedSubject && showAIGenerator && (
+                            <motion.div key="ai-generator" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                              <AIQuizGenerator
+                                subjectId={selectedSubject.id}
+                                subjectName={selectedSubject.name}
+                                onQuizGenerated={() => {
+                                  queryClient.invalidateQueries(['quizzes']);
+                                  setShowAIGenerator(false);
+                                }}
+                                onCancel={() => setShowAIGenerator(false)}
+                              />
+                            </motion.div>
+                          )}
+
+                          {/* Quiz List View */}
+                          {view === 'list' && selectedSubject && !showUploader && !editingQuiz && !showAIGenerator && (
             <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Breadcrumb />
 
