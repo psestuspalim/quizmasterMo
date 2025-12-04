@@ -269,6 +269,21 @@ INSTRUCCIONES:
           </TabsContent>
 
           <TabsContent value="json" className="space-y-4 mt-4">
+            {showSubjectSelector && subjects.length > 0 && (
+              <div>
+                <Label>Materia destino *</Label>
+                <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId} disabled={isGenerating}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una materia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label>Pega tu contenido JSON o texto</Label>
               <Textarea
