@@ -191,58 +191,95 @@ INSTRUCCIONES:
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-          <Label>Tema del cuestionario *</Label>
-          <Input
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="Ej: Sistema cardiovascular, Farmacología de antibióticos..."
-            disabled={isGenerating}
-          />
-        </div>
+        <Tabs value={mode} onValueChange={setMode}>
+          <TabsList className="w-full">
+            <TabsTrigger value="topic" className="flex-1">
+              <Brain className="w-4 h-4 mr-2" />
+              Por tema
+            </TabsTrigger>
+            <TabsTrigger value="json" className="flex-1">
+              <FileJson className="w-4 h-4 mr-2" />
+              Desde JSON/Texto
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Número de preguntas</Label>
-            <Select value={String(questionCount)} onValueChange={(v) => setQuestionCount(Number(v))} disabled={isGenerating}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 preguntas</SelectItem>
-                <SelectItem value="10">10 preguntas</SelectItem>
-                <SelectItem value="15">15 preguntas</SelectItem>
-                <SelectItem value="20">20 preguntas</SelectItem>
-                <SelectItem value="30">30 preguntas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <TabsContent value="topic" className="space-y-4 mt-4">
+            <div>
+              <Label>Tema del cuestionario *</Label>
+              <Input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="Ej: Sistema cardiovascular, Farmacología de antibióticos..."
+                disabled={isGenerating}
+              />
+            </div>
 
-          <div>
-            <Label>Dificultad</Label>
-            <Select value={difficulty} onValueChange={setDifficulty} disabled={isGenerating}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="easy">Fácil</SelectItem>
-                <SelectItem value="medium">Intermedio</SelectItem>
-                <SelectItem value="hard">Difícil</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Número de preguntas</Label>
+                <Select value={String(questionCount)} onValueChange={(v) => setQuestionCount(Number(v))} disabled={isGenerating}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 preguntas</SelectItem>
+                    <SelectItem value="10">10 preguntas</SelectItem>
+                    <SelectItem value="15">15 preguntas</SelectItem>
+                    <SelectItem value="20">20 preguntas</SelectItem>
+                    <SelectItem value="30">30 preguntas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <div>
-          <Label>Contexto adicional (opcional)</Label>
-          <Textarea
-            value={additionalContext}
-            onChange={(e) => setAdditionalContext(e.target.value)}
-            placeholder="Instrucciones adicionales: enfocarse en casos clínicos, incluir imágenes mentales, etc."
-            rows={3}
-            disabled={isGenerating}
-          />
-        </div>
+              <div>
+                <Label>Dificultad</Label>
+                <Select value={difficulty} onValueChange={setDifficulty} disabled={isGenerating}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">Fácil</SelectItem>
+                    <SelectItem value="medium">Intermedio</SelectItem>
+                    <SelectItem value="hard">Difícil</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label>Contexto adicional (opcional)</Label>
+              <Textarea
+                value={additionalContext}
+                onChange={(e) => setAdditionalContext(e.target.value)}
+                placeholder="Instrucciones adicionales: enfocarse en casos clínicos, incluir imágenes mentales, etc."
+                rows={3}
+                disabled={isGenerating}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="json" className="space-y-4 mt-4">
+            <div>
+              <Label>Pega tu contenido JSON o texto</Label>
+              <Textarea
+                value={jsonContent}
+                onChange={(e) => setJsonContent(e.target.value)}
+                placeholder={`Pega aquí tu JSON, texto con preguntas, o cualquier contenido que quieras convertir en quiz.
+
+Ejemplo de formatos aceptados:
+- JSON con preguntas y respuestas
+- Texto plano con información
+- Lista de preguntas sin formato
+- Contenido de estudio
+
+La IA lo convertirá automáticamente al formato correcto.`}
+                rows={10}
+                disabled={isGenerating}
+                className="font-mono text-sm"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <div className="flex gap-2 pt-4">
           <Button variant="outline" onClick={onCancel} disabled={isGenerating} className="flex-1">
@@ -250,7 +287,7 @@ INSTRUCCIONES:
           </Button>
           <Button 
             onClick={handleGenerate} 
-            disabled={isGenerating || !topic.trim()}
+            disabled={isGenerating || (mode === 'topic' ? !topic.trim() : !jsonContent.trim())}
             className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
             {isGenerating ? (
