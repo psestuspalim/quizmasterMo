@@ -10,6 +10,7 @@ import MyTasks from './pages/MyTasks';
 import AdminTasks from './pages/AdminTasks';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
+import Quizzes2 from './pages/Quizzes2';
 
 
 export const PAGES = {
@@ -25,6 +26,7 @@ export const PAGES = {
     "AdminTasks": AdminTasks,
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
+    "Quizzes2": Quizzes2,
 }
 
 export const pagesConfig = {
