@@ -38,6 +38,7 @@ import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 import ContainerCard from '../components/container/ContainerCard';
 import ContainerEditor from '../components/container/ContainerEditor';
+import MoveQuizModal from '../components/quiz/MoveQuizModal';
 
 export default function QuizzesPage() {
   // Navigation state
@@ -65,6 +66,7 @@ export default function QuizzesPage() {
   const [editingQuiz, setEditingQuiz] = useState(null);
   const [showContentManager, setShowContentManager] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
+  const [movingQuiz, setMovingQuiz] = useState(null);
   
   // User state
   const [currentUser, setCurrentUser] = useState(null);
@@ -891,6 +893,7 @@ export default function QuizzesPage() {
                                 onEdit={setEditingQuiz}
                                 onDelete={(id) => deleteQuizMutation.mutate(id)}
                                 onStartSwipe={handleStartSwipeMode}
+                                onMove={setMovingQuiz}
                               />
                             ))}
                           </div>
@@ -976,6 +979,18 @@ export default function QuizzesPage() {
           <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
           <SessionTimer />
           <TaskProgressFloat />
+
+          {/* Move Quiz Modal */}
+          <MoveQuizModal
+            open={!!movingQuiz}
+            onClose={() => setMovingQuiz(null)}
+            quiz={movingQuiz}
+            containers={containers}
+            onMove={async (quizId, newContainerId) => {
+              await updateQuizMutation.mutateAsync({ id: quizId, data: { subject_id: newContainerId } });
+              setMovingQuiz(null);
+            }}
+          />
 
           {showContentManager && (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

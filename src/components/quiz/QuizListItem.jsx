@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Play, ChevronRight, CheckCircle2, XCircle, HelpCircle, BarChart3, Smartphone } from 'lucide-react';
+import { Pencil, Trash2, Play, ChevronRight, CheckCircle2, XCircle, HelpCircle, BarChart3, Smartphone, FolderInput } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,8 @@ export default function QuizListItem({
   onStart, 
   onEdit, 
   onDelete,
-  onStartSwipe
+  onStartSwipe,
+  onMove
 }) {
   const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
   const hasAttempts = attempts.length > 0;
@@ -176,6 +177,17 @@ export default function QuizListItem({
         
         {isAdmin && (
           <>
+            {onMove && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onMove(quiz)}
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-amber-600"
+                title="Mover quiz"
+              >
+                <FolderInput className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
