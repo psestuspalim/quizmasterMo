@@ -1091,8 +1091,42 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                 </motion.div>
                               )}
 
-                              {/* AI Quiz Generator - Folder Level */}
-                              {view === 'subjects' && (selectedCourse || currentFolderId) && showAIGenerator && (
+                              {/* File Uploader - Folder Level */}
+                                              {view === 'subjects' && (selectedCourse || currentFolderId) && showUploader && (
+                                                <motion.div key="uploader-folder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                                  <Button onClick={() => setShowUploader(false)} variant="ghost" className="mb-6">
+                                                    <ArrowLeft className="w-4 h-4 mr-2" /> Volver
+                                                  </Button>
+                                                  <div className="mb-6">
+                                                    <Label>Materia destino *</Label>
+                                                    <select
+                                                      className="w-full mt-1 p-2 border rounded-md"
+                                                      value={selectedSubject?.id || ''}
+                                                      onChange={(e) => {
+                                                        const subject = currentFolderSubjects.find(s => s.id === e.target.value);
+                                                        setSelectedSubject(subject);
+                                                      }}
+                                                    >
+                                                      <option value="">Selecciona una materia</option>
+                                                      {currentFolderSubjects.map(s => (
+                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                      ))}
+                                                    </select>
+                                                  </div>
+                                                  {selectedSubject ? (
+                                                    <FileUploader onUploadSuccess={(data) => {
+                                                      createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id });
+                                                      setShowUploader(false);
+                                                      setSelectedSubject(null);
+                                                    }} />
+                                                  ) : (
+                                                    <p className="text-center text-gray-500 py-8">Selecciona una materia para continuar</p>
+                                                  )}
+                                                </motion.div>
+                                              )}
+
+                                              {/* AI Quiz Generator - Folder Level */}
+                                              {view === 'subjects' && (selectedCourse || currentFolderId) && showAIGenerator && !showUploader && (
                                 <motion.div key="ai-generator-folder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                   <Button onClick={() => setShowAIGenerator(false)} variant="ghost" className="mb-6">
                                     <ArrowLeft className="w-4 h-4 mr-2" /> Volver
