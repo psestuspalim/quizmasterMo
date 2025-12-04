@@ -967,7 +967,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           )}
 
           {/* Subjects View (inside a course or folder) */}
-                          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && (
+                          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && !showUploader && (
                             <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                               <Breadcrumb />
 
