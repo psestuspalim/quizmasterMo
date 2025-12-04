@@ -19,6 +19,9 @@ export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerate
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjectId || '');
 
+  // Si ya tenemos un subjectId, no mostrar el selector
+  const shouldShowSelector = showSubjectSelector && !subjectId;
+
   const handleGenerateFromTopic = async () => {
     if (!topic.trim()) {
       alert('Por favor ingresa un tema');
@@ -75,7 +78,7 @@ El formato debe seguir esta estructura exacta para cada pregunta.`;
         }
       });
 
-      const targetSubjectId = showSubjectSelector ? selectedSubjectId : subjectId;
+      const targetSubjectId = shouldShowSelector ? selectedSubjectId : subjectId;
       
       const quizData = {
         title: result.title || `${topic} - Generado por IA`,
@@ -102,8 +105,8 @@ El formato debe seguir esta estructura exacta para cada pregunta.`;
       return;
     }
     
-    if (showSubjectSelector && !selectedSubjectId) {
-      alert('Por favor selecciona una materia');
+    if (shouldShowSelector && !selectedSubjectId) {
+      alert('Por favor selecciona un contenedor');
       return;
     }
 
@@ -158,7 +161,7 @@ INSTRUCCIONES:
         }
       });
 
-      const targetSubjectId = showSubjectSelector ? selectedSubjectId : subjectId;
+      const targetSubjectId = shouldShowSelector ? selectedSubjectId : subjectId;
       
       const quizData = {
         title: result.title || 'Quiz generado desde JSON',
@@ -214,7 +217,7 @@ INSTRUCCIONES:
           </TabsList>
 
           <TabsContent value="topic" className="space-y-4 mt-4">
-            {showSubjectSelector && subjects.length > 0 && (
+            {shouldShowSelector && subjects.length > 0 && (
               <div>
                 <Label>Materia destino *</Label>
                 <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId} disabled={isGenerating}>
@@ -284,7 +287,7 @@ INSTRUCCIONES:
           </TabsContent>
 
           <TabsContent value="json" className="space-y-4 mt-4">
-            {showSubjectSelector && subjects.length > 0 && (
+            {shouldShowSelector && subjects.length > 0 && (
               <div>
                 <Label>Materia destino *</Label>
                 <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId} disabled={isGenerating}>
@@ -327,7 +330,7 @@ La IA lo convertirá automáticamente al formato correcto.`}
           </Button>
           <Button 
             onClick={handleGenerate} 
-            disabled={isGenerating || (mode === 'topic' ? !topic.trim() : !jsonContent.trim()) || (showSubjectSelector && !selectedSubjectId)}
+            disabled={isGenerating || (mode === 'topic' ? !topic.trim() : !jsonContent.trim()) || (shouldShowSelector && !selectedSubjectId)}
             className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
             {isGenerating ? (
