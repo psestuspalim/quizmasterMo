@@ -75,10 +75,12 @@ El formato debe seguir esta estructura exacta para cada pregunta.`;
         }
       });
 
+      const targetSubjectId = showSubjectSelector ? selectedSubjectId : subjectId;
+      
       const quizData = {
         title: result.title || `${topic} - Generado por IA`,
         description: `Cuestionario generado automáticamente sobre ${topic}`,
-        subject_id: subjectId,
+        subject_id: targetSubjectId,
         questions: result.questions,
         total_questions: result.questions.length
       };
@@ -97,6 +99,11 @@ El formato debe seguir esta estructura exacta para cada pregunta.`;
   const handleGenerateFromJson = async () => {
     if (!jsonContent.trim()) {
       alert('Por favor pega el contenido JSON');
+      return;
+    }
+    
+    if (showSubjectSelector && !selectedSubjectId) {
+      alert('Por favor selecciona una materia');
       return;
     }
 
