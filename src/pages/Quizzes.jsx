@@ -985,11 +985,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                   </p>
                                 </div>
                                 {isAdmin && (
-                                  <div className="flex flex-wrap gap-2">
-                                    <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
-                                      <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
-                                    </Button>
-                                    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                                                        <div className="flex flex-wrap gap-2">
+                                                          <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                                                            <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
+                                                          </Button>
+                                                          <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
+                                                            <Upload className="w-4 h-4 mr-2" /> Subir archivo
+                                                          </Button>
+                                                          <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
                                       <DialogTrigger asChild>
                                         <Button variant="outline" className="text-xs sm:text-sm h-9">
                                           <Folder className="w-4 h-4 mr-2" /> Nueva carpeta
