@@ -46,6 +46,7 @@ import ContentManager from '../components/admin/ContentManager';
 import AdminMenu from '../components/admin/AdminMenu';
 import useQuizSettings from '../components/quiz/useQuizSettings';
 import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
+import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -78,6 +79,7 @@ export default function QuizzesPage() {
   const [showSubjectDialog, setShowSubjectDialog] = useState(false);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [showContentManager, setShowContentManager] = useState(false);
+const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
