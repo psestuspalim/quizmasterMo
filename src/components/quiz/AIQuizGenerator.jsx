@@ -6,10 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sparkles, Loader2, ArrowLeft, FileJson, Brain } from 'lucide-react';
 
 export default function AIQuizGenerator({ subjectId, subjectName, onQuizGenerated, onCancel }) {
+  const [mode, setMode] = useState('topic'); // 'topic' or 'json'
   const [topic, setTopic] = useState('');
+  const [jsonContent, setJsonContent] = useState('');
   const [questionCount, setQuestionCount] = useState(10);
   const [difficulty, setDifficulty] = useState('medium');
   const [additionalContext, setAdditionalContext] = useState('');
