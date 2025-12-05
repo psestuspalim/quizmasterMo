@@ -38,6 +38,7 @@ export default function FileExplorer({
   onMoveItems,
   onCopyItems,
   onItemClick,
+  onChangeType,
   isAdmin = false,
   currentContainerId = null
 }) {
@@ -200,19 +201,57 @@ export default function FileExplorer({
         </div>
 
         {isAdmin && type !== 'quiz' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMoveDialog({ open: true, targetId: item.id });
-            }}
-            className="opacity-0 group-hover:opacity-100"
-            title="Pegar aquí"
-            disabled={!clipboard}
-          >
-            <FolderInput className="w-4 h-4" />
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMoveDialog({ open: true, targetId: item.id });
+              }}
+              className="opacity-0 group-hover:opacity-100"
+              title="Pegar aquí"
+              disabled={!clipboard}
+            >
+              <FolderInput className="w-4 h-4" />
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => e.stopPropagation()}
+                  className="opacity-0 group-hover:opacity-100"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onChangeType && onChangeType(item.id, type, 'course');
+                }} disabled={type === 'course'}>
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Convertir a Curso
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onChangeType && onChangeType(item.id, type, 'folder');
+                }} disabled={type === 'folder'}>
+                  <Folder className="w-4 h-4 mr-2" />
+                  Convertir a Carpeta
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onChangeType && onChangeType(item.id, type, 'subject');
+                }} disabled={type === 'subject'}>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Convertir a Materia
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
 
         {type !== 'quiz' && <ChevronRight className="w-4 h-4 text-gray-400" />}

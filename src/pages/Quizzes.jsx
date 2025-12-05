@@ -1232,6 +1232,49 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                     }
                     queryClient.invalidateQueries(['quizzes']);
                   }}
+                  onChangeType={async (itemId, fromType, toType) => {
+                    try {
+                      // Get the original item
+                      let originalItem;
+                      if (fromType === 'course') {
+                        originalItem = courses.find(c => c.id === itemId);
+                      } else if (fromType === 'folder') {
+                        originalItem = folders.find(f => f.id === itemId);
+                      } else if (fromType === 'subject') {
+                        originalItem = subjects.find(s => s.id === itemId);
+                      }
+
+                      if (!originalItem) return;
+
+                      // Extract common fields
+                      const { id, created_date, updated_date, created_by, ...commonData } = originalItem;
+
+                      // Delete from old entity
+                      if (fromType === 'course') {
+                        await base44.entities.Course.delete(itemId);
+                      } else if (fromType === 'folder') {
+                        await base44.entities.Folder.delete(itemId);
+                      } else if (fromType === 'subject') {
+                        await base44.entities.Subject.delete(itemId);
+                      }
+
+                      // Create in new entity
+                      if (toType === 'course') {
+                        await base44.entities.Course.create(commonData);
+                      } else if (toType === 'folder') {
+                        await base44.entities.Folder.create(commonData);
+                      } else if (toType === 'subject') {
+                        await base44.entities.Subject.create(commonData);
+                      }
+
+                      // Refresh all data
+                      queryClient.invalidateQueries(['courses']);
+                      queryClient.invalidateQueries(['folders']);
+                      queryClient.invalidateQueries(['subjects']);
+                    } catch (error) {
+                      console.error('Error cambiando tipo:', error);
+                    }
+                  }}
                   onItemClick={(type, item) => {
                     if (type === 'quiz') {
                       handleStartQuiz(item, item.total_questions, 'all', attempts.filter(a => a.quiz_id === item.id));
