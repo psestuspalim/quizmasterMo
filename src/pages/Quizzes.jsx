@@ -1214,19 +1214,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                       if (item.type === 'quiz') {
                         const originalQuiz = quizzes.find(q => q.id === item.id);
                         if (originalQuiz) {
+                          const { id, created_date, updated_date, created_by, ...quizData } = originalQuiz;
                           const newQuiz = {
-                            ...originalQuiz,
+                            ...quizData,
                             title: `${originalQuiz.title} (copia)`,
                             subject_id: targetId
                           };
-                          delete newQuiz.id;
-                          delete newQuiz.created_date;
-                          delete newQuiz.updated_date;
                           await createQuizMutation.mutateAsync(newQuiz);
                         }
                       }
                     }
-                    queryClient.invalidateQueries(['quizzes']);
                   }}
                   onItemClick={(type, item) => {
                     if (type === 'quiz') {
