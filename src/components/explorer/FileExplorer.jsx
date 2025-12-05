@@ -323,8 +323,8 @@ export default function FileExplorer({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {clipboard?.operation === 'cut' 
-                ? `¿Mover ${clipboard.items.length} elementos a este destino?`
-                : `¿Copiar ${clipboard.items.filter(k => k.startsWith('quiz-')).length} cuestionarios a este destino?`
+                ? `¿Mover ${clipboard?.items?.length || 0} elementos a este destino?`
+                : `¿Copiar ${clipboard?.items?.filter(k => k.startsWith('quiz-')).length || 0} cuestionarios a este destino?`
               }
             </AlertDialogDescription>
           </AlertDialogHeader>
