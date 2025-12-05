@@ -48,6 +48,7 @@ import useQuizSettings from '../components/quiz/useQuizSettings';
 import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 import FileExplorer from '../components/explorer/FileExplorer';
+import MoveQuizModal from '../components/quiz/MoveQuizModal';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -82,6 +83,7 @@ export default function QuizzesPage() {
   const [showContentManager, setShowContentManager] = useState(false);
 const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [explorerMode, setExplorerMode] = useState(false);
+  const [movingQuiz, setMovingQuiz] = useState(null);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
@@ -1266,11 +1268,12 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                             onEdit={setEditingQuiz}
                             onDelete={(id) => deleteQuizMutation.mutate(id)}
                             onStartSwipe={handleStartSwipeMode}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
+                            onMove={setMovingQuiz}
+                            />
+                            ))}
+                            </div>
+                            )}
+                            </TabsContent>
 
                   <TabsContent value="audios">
                     <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
@@ -1348,6 +1351,18 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         <BadgeUnlockModal badge={newBadge} open={!!newBadge} onClose={() => setNewBadge(null)} />
         <SessionTimer />
         <TaskProgressFloat />
+
+        {/* Move Quiz Modal */}
+        <MoveQuizModal
+          open={!!movingQuiz}
+          onClose={() => setMovingQuiz(null)}
+          quiz={movingQuiz}
+          containers={subjects}
+          onMove={async (quizId, newSubjectId) => {
+            await updateQuizMutation.mutateAsync({ id: quizId, data: { subject_id: newSubjectId } });
+            setMovingQuiz(null);
+          }}
+        />
 
         {/* Content Manager Modal */}
         {showContentManager && (
