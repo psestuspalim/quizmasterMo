@@ -1196,7 +1196,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
               {explorerMode ? (
                 <FileExplorer
-                  containers={[selectedSubject]}
+                  containers={subjects.map(s => ({ ...s, type: 'subject' }))}
                   quizzes={subjectQuizzes}
                   isAdmin={isAdmin}
                   currentContainerId={selectedSubject.id}
