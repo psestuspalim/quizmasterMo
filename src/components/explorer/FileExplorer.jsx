@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
-  Folder, BookOpen, FileText, FolderInput, Scissors, Copy,
+  Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
   CheckSquare, X, ChevronRight, GraduationCap, MoreVertical
 } from 'lucide-react';
 import {
@@ -38,7 +38,8 @@ export default function FileExplorer({
   onMoveItems,
   onCopyItems,
   onItemClick,
-  isAdmin = false
+  isAdmin = false,
+  currentContainerId = null
 }) {
   const [selectedItems, setSelectedItems] = useState([]);
   const [clipboard, setClipboard] = useState(null); // { items: [], operation: 'cut' | 'copy' }
@@ -202,9 +203,22 @@ export default function FileExplorer({
               </Button>
             </>
           ) : clipboard ? (
-            <Badge className="bg-amber-100 text-amber-700">
-              {clipboard.items.length} en portapapeles ({clipboard.operation === 'cut' ? 'Cortar' : 'Copiar'})
-            </Badge>
+            <>
+              <Badge className="bg-amber-100 text-amber-700">
+                {clipboard.items.length} en portapapeles ({clipboard.operation === 'cut' ? 'Cortar' : 'Copiar'})
+              </Badge>
+              {currentContainerId && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => setMoveDialog({ open: true, targetId: currentContainerId })}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Clipboard className="w-4 h-4 mr-2" />
+                  Pegar aquí
+                </Button>
+              )}
+            </>
           ) : (
             <p className="text-sm text-gray-500">Selecciona elementos para mover</p>
           )}

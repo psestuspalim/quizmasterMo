@@ -1197,6 +1197,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   containers={[selectedSubject]}
                   quizzes={subjectQuizzes}
                   isAdmin={isAdmin}
+                  currentContainerId={selectedSubject.id}
                   onMoveItems={async (items, targetId) => {
                     for (const item of items) {
                       if (item.type === 'quiz') {
