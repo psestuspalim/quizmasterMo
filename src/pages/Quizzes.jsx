@@ -1208,6 +1208,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                     }
                     queryClient.invalidateQueries(['quizzes']);
                   }}
+                  onCopyItems={async (items, targetId) => {
+                    for (const item of items) {
+                      if (item.type === 'quiz') {
+                        const originalQuiz = quizzes.find(q => q.id === item.id);
+                        if (originalQuiz) {
+                          const newQuiz = {
+                            ...originalQuiz,
+                            title: `${originalQuiz.title} (copia)`,
+                            subject_id: targetId
+                          };
+                          delete newQuiz.id;
+                          delete newQuiz.created_date;
+                          delete newQuiz.updated_date;
+                          await createQuizMutation.mutateAsync(newQuiz);
+                        }
+                      }
+                    }
+                    queryClient.invalidateQueries(['quizzes']);
+                  }}
                   onItemClick={(type, item) => {
                     if (type === 'quiz') {
                       handleStartQuiz(item, item.total_questions, 'all', attempts.filter(a => a.quiz_id === item.id));

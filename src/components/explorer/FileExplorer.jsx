@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
-  Folder, BookOpen, FileText, FolderInput, Scissors, 
+  Folder, BookOpen, FileText, FolderInput, Scissors, Copy,
   CheckSquare, X, ChevronRight, GraduationCap, MoreVertical
 } from 'lucide-react';
 import {
@@ -36,6 +36,7 @@ export default function FileExplorer({
   containers = [],
   quizzes = [],
   onMoveItems,
+  onCopyItems,
   onItemClick,
   isAdmin = false
 }) {
@@ -79,22 +80,31 @@ export default function FileExplorer({
     if (!clipboard) return;
     
     try {
-      const itemsToMove = clipboard.items.map(key => {
+      const itemsToProcess = clipboard.items.map(key => {
         const [type, id] = key.split('-');
         return { type, id };
       });
 
-      await onMoveItems(itemsToMove, targetId);
+      if (clipboard.operation === 'cut') {
+        await onMoveItems(itemsToProcess, targetId);
+        toast.success('Elementos movidos correctamente');
+      } else {
+        // Copy operation - only for quizzes
+        const quizzesToCopy = itemsToProcess.filter(item => item.type === 'quiz');
+        if (quizzesToCopy.length > 0) {
+          await onCopyItems(quizzesToCopy, targetId);
+          toast.success(`${quizzesToCopy.length} cuestionarios copiados`);
+        }
+      }
       
       if (clipboard.operation === 'cut') {
         setClipboard(null);
-        clearSelection();
       }
+      clearSelection();
       
-      toast.success('Elementos movidos correctamente');
       setMoveDialog({ open: false, targetId: null });
     } catch (error) {
-      toast.error('Error al mover elementos');
+      toast.error(`Error al ${clipboard.operation === 'cut' ? 'mover' : 'copiar'} elementos`);
     }
   };
 
@@ -181,6 +191,10 @@ export default function FileExplorer({
               <Button variant="outline" size="sm" onClick={cutItems}>
                 <Scissors className="w-4 h-4 mr-2" />
                 Cortar
+              </Button>
+              <Button variant="outline" size="sm" onClick={copyItems}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copiar
               </Button>
               <Button variant="outline" size="sm" onClick={clearSelection}>
                 <X className="w-4 h-4 mr-2" />
@@ -304,15 +318,20 @@ export default function FileExplorer({
       <AlertDialog open={moveDialog.open} onOpenChange={(open) => !open && setMoveDialog({ open: false, targetId: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar movimiento</AlertDialogTitle>
+            <AlertDialogTitle>
+              {clipboard?.operation === 'cut' ? 'Confirmar movimiento' : 'Confirmar copia'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Mover {clipboard?.items.length || 0} elementos a este destino?
+              {clipboard?.operation === 'cut' 
+                ? `¿Mover ${clipboard.items.length} elementos a este destino?`
+                : `¿Copiar ${clipboard.items.filter(k => k.startsWith('quiz-')).length} cuestionarios a este destino?`
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => pasteItems(moveDialog.targetId)}>
-              Mover aquí
+              {clipboard?.operation === 'cut' ? 'Mover aquí' : 'Copiar aquí'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
