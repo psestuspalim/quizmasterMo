@@ -1196,7 +1196,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
               {explorerMode ? (
                 <FileExplorer
-                  containers={subjects.map(s => ({ ...s, type: 'subject' }))}
+                  containers={[
+                    ...courses.map(c => ({ ...c, type: 'course' })),
+                    ...folders.map(f => ({ ...f, type: 'folder' })),
+                    ...subjects.map(s => ({ ...s, type: 'subject' }))
+                  ]}
                   quizzes={subjectQuizzes}
                   isAdmin={isAdmin}
                   currentContainerId={selectedSubject.id}
@@ -1226,6 +1230,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                         }
                       }
                     }
+                    queryClient.invalidateQueries(['quizzes']);
                   }}
                   onItemClick={(type, item) => {
                     if (type === 'quiz') {
