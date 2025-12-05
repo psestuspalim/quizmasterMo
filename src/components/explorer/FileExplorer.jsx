@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
-  CheckSquare, X, ChevronRight, GraduationCap, MoreVertical
+  CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,6 +44,8 @@ export default function FileExplorer({
   const [selectedItems, setSelectedItems] = useState([]);
   const [clipboard, setClipboard] = useState(null); // { items: [], operation: 'cut' | 'copy' }
   const [moveDialog, setMoveDialog] = useState({ open: false, targetId: null });
+  const [instructionsDialog, setInstructionsDialog] = useState(false);
+  const [instructions, setInstructions] = useState('');
 
   // Toggle selection
   const toggleSelect = (type, id) => {
@@ -109,6 +111,37 @@ export default function FileExplorer({
     }
   };
 
+  // Process instructions
+  const processInstructions = async () => {
+    if (!instructions.trim() || !clipboard) return;
+    
+    try {
+      // Parse instructions like "move quiz-abc123 to subject-xyz789"
+      const lines = instructions.trim().split('\n');
+      
+      for (const line of lines) {
+        const match = line.match(/mover?\s+(.+?)\s+a\s+(.+)/i);
+        if (match) {
+          const itemKey = match[1].trim();
+          const targetId = match[2].trim().replace(/^(course|folder|subject)-/, '');
+          
+          if (clipboard.items.includes(itemKey)) {
+            const [type, id] = itemKey.split('-');
+            await onMoveItems([{ type, id }], targetId);
+          }
+        }
+      }
+      
+      toast.success('Instrucciones procesadas');
+      setClipboard(null);
+      clearSelection();
+      setInstructions('');
+      setInstructionsDialog(false);
+    } catch (error) {
+      toast.error('Error al procesar instrucciones');
+    }
+  };
+
   // Render item with selection
   const renderItem = (item, type) => {
     const Icon = typeIcons[type] || FileText;
@@ -158,6 +191,12 @@ export default function FileExplorer({
           {item.is_hidden && (
             <Badge variant="outline" className="text-xs">Oculto</Badge>
           )}
+          
+          {isAdmin && type !== 'quiz' && (
+            <Badge variant="outline" className="text-xs font-mono bg-gray-50 text-gray-600">
+              ID: {item.id.slice(0, 8)}
+            </Badge>
+          )}
         </div>
 
         {isAdmin && type !== 'quiz' && (
@@ -200,6 +239,10 @@ export default function FileExplorer({
               <Button variant="outline" size="sm" onClick={clearSelection}>
                 <X className="w-4 h-4 mr-2" />
                 Limpiar
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setInstructionsDialog(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Instrucciones
               </Button>
             </>
           ) : clipboard ? (
@@ -346,6 +389,43 @@ export default function FileExplorer({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => pasteItems(moveDialog.targetId)}>
               {clipboard?.operation === 'cut' ? 'Mover aquí' : 'Copiar aquí'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Instructions Dialog */}
+      <AlertDialog open={instructionsDialog} onOpenChange={setInstructionsDialog}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Instrucciones de transferencia</AlertDialogTitle>
+            <AlertDialogDescription>
+              Usa los IDs visibles en cada contenedor para especificar destinos.
+              <br />
+              Ejemplo: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">mover quiz-abc123 a xyz789</code>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Elementos seleccionados:</p>
+            <div className="bg-gray-50 rounded p-2 max-h-32 overflow-y-auto">
+              {clipboard?.items.map(key => (
+                <div key={key} className="text-xs font-mono text-gray-600">{key}</div>
+              ))}
+            </div>
+          </div>
+
+          <textarea
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            placeholder="mover quiz-abc123 a xyz789&#10;mover subject-def456 a xyz789"
+            className="w-full h-32 p-3 border rounded-md text-sm font-mono"
+          />
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={processInstructions} disabled={!instructions.trim()}>
+              Ejecutar instrucciones
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
