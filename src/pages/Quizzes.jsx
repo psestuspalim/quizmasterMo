@@ -810,10 +810,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           )}
 
           {/* Home View - Courses + Unassigned Subjects */}
-          {view === 'home' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
+          {view === 'home' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !explorerMode && (
             <motion.div key="courses" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <ChallengeNotifications currentUser={currentUser} onStartChallenge={(c) => window.location.href = `/ChallengePlay?id=${c.id}`} />
-              
+
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 {userStats && (
                   <div className="flex-1 max-w-md">
@@ -831,6 +831,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <p className="text-gray-600">Selecciona un curso para ver sus materias</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {isAdmin && (
+                    <Button 
+                      onClick={() => setExplorerMode(true)} 
+                      variant="outline"
+                      className="text-xs sm:text-sm h-9"
+                    >
+                      <FolderInput className="w-4 h-4 mr-2" /> 
+                      Modo explorador
+                    </Button>
+                  )}
                   <Link to={createPageUrl('Leaderboard')}>
                     <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-9">
                       <Crown className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Ranking</span>
@@ -968,9 +978,151 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </div>
               )}
             </motion.div>
-          )}
+            )}
 
-          {/* Subjects View (inside a course or folder) */}
+            {/* Explorer Mode - Home */}
+            {view === 'home' && explorerMode && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
+            <motion.div key="explorer-home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Modo Explorador</h1>
+                  <p className="text-gray-600">Gestiona todos tus contenedores y quizzes</p>
+                </div>
+                <Button 
+                  onClick={() => setExplorerMode(false)} 
+                  variant="outline"
+                  className="text-xs sm:text-sm h-9"
+                >
+                  Vista normal
+                </Button>
+              </div>
+
+              <FileExplorer
+                containers={[
+                  ...courses.map(c => ({ ...c, type: 'course' })),
+                  ...folders.map(f => ({ ...f, type: 'folder' })),
+                  ...subjects.map(s => ({ ...s, type: 'subject' }))
+                ]}
+                quizzes={quizzes}
+                isAdmin={isAdmin}
+                currentContainerId={null}
+                onMoveItems={async (items, targetId) => {
+                  for (const item of items) {
+                    if (item.type === 'quiz') {
+                      await updateQuizMutation.mutateAsync({ 
+                        id: item.id, 
+                        data: { subject_id: targetId } 
+                      });
+                    } else if (item.type === 'subject') {
+                      const target = [...courses, ...folders, ...subjects].find(c => c.id === targetId);
+                      if (target) {
+                        const updateData = {};
+                        if (target.type === 'course') {
+                          updateData.course_id = targetId;
+                          updateData.folder_id = null;
+                        } else if (target.type === 'folder') {
+                          updateData.folder_id = targetId;
+                        }
+                        await updateSubjectMutation.mutateAsync({ id: item.id, data: updateData });
+                      }
+                    } else if (item.type === 'folder') {
+                      const target = [...courses, ...folders].find(c => c.id === targetId);
+                      if (target) {
+                        const updateData = {};
+                        if (target.type === 'course') {
+                          updateData.course_id = targetId;
+                          updateData.parent_id = null;
+                        } else if (target.type === 'folder') {
+                          updateData.parent_id = targetId;
+                        }
+                        await updateFolderMutation.mutateAsync({ id: item.id, data: updateData });
+                      }
+                    }
+                  }
+                  queryClient.invalidateQueries(['quizzes']);
+                  queryClient.invalidateQueries(['subjects']);
+                  queryClient.invalidateQueries(['folders']);
+                }}
+                onCopyItems={async (items, targetId) => {
+                  for (const item of items) {
+                    if (item.type === 'quiz') {
+                      const originalQuiz = quizzes.find(q => q.id === item.id);
+                      if (originalQuiz) {
+                        const { id, created_date, updated_date, created_by, ...quizData } = originalQuiz;
+                        const newQuiz = {
+                          ...quizData,
+                          title: `${originalQuiz.title} (copia)`,
+                          subject_id: targetId
+                        };
+                        await createQuizMutation.mutateAsync(newQuiz);
+                      }
+                    }
+                  }
+                  queryClient.invalidateQueries(['quizzes']);
+                }}
+                onChangeType={async (itemId, fromType, toType) => {
+                  try {
+                    let originalItem;
+                    if (fromType === 'course') {
+                      originalItem = courses.find(c => c.id === itemId);
+                    } else if (fromType === 'folder') {
+                      originalItem = folders.find(f => f.id === itemId);
+                    } else if (fromType === 'subject') {
+                      originalItem = subjects.find(s => s.id === itemId);
+                    }
+
+                    if (!originalItem) return;
+
+                    const { id, created_date, updated_date, created_by, ...commonData } = originalItem;
+
+                    if (fromType === 'course') {
+                      await base44.entities.Course.delete(itemId);
+                    } else if (fromType === 'folder') {
+                      await base44.entities.Folder.delete(itemId);
+                    } else if (fromType === 'subject') {
+                      await base44.entities.Subject.delete(itemId);
+                    }
+
+                    if (toType === 'course') {
+                      await base44.entities.Course.create(commonData);
+                    } else if (toType === 'folder') {
+                      await base44.entities.Folder.create(commonData);
+                    } else if (toType === 'subject') {
+                      await base44.entities.Subject.create(commonData);
+                    }
+
+                    queryClient.invalidateQueries(['courses']);
+                    queryClient.invalidateQueries(['folders']);
+                    queryClient.invalidateQueries(['subjects']);
+                  } catch (error) {
+                    console.error('Error cambiando tipo:', error);
+                  }
+                }}
+                onItemClick={(type, item) => {
+                  if (type === 'quiz') {
+                    const quiz = quizzes.find(q => q.id === item.id);
+                    if (quiz) {
+                      handleStartQuiz(quiz, quiz.total_questions, 'all', attempts.filter(a => a.quiz_id === quiz.id));
+                    }
+                  } else if (type === 'course') {
+                    setSelectedCourse(item);
+                    setExplorerMode(false);
+                    setView('subjects');
+                  } else if (type === 'folder') {
+                    setCurrentFolderId(item.id);
+                    setExplorerMode(false);
+                    setView('subjects');
+                  } else if (type === 'subject') {
+                    setSelectedSubject(item);
+                    setExplorerMode(false);
+                    setView('list');
+                  }
+                }}
+              />
+            </motion.div>
+            )}
+
+            {/* Subjects View (inside a course or folder) */}
                           {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && !showUploader && (
                             <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                               <Breadcrumb />
