@@ -47,6 +47,7 @@ import AdminMenu from '../components/admin/AdminMenu';
 import useQuizSettings from '../components/quiz/useQuizSettings';
 import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
+import FileExplorer from '../components/explorer/FileExplorer';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -80,6 +81,7 @@ export default function QuizzesPage() {
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [showContentManager, setShowContentManager] = useState(false);
 const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [explorerMode, setExplorerMode] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
@@ -1172,6 +1174,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </div>
                 {isAdmin && (
                                         <div className="flex gap-2">
+                                          <Button 
+                                            onClick={() => setExplorerMode(!explorerMode)} 
+                                            variant={explorerMode ? "default" : "outline"}
+                                            className="text-xs sm:text-sm h-9"
+                                          >
+                                            <FolderInput className="w-4 h-4 mr-2" /> 
+                                            {explorerMode ? 'Vista normal' : 'Modo explorador'}
+                                          </Button>
                                           <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
                                             <Sparkles className="w-4 h-4 mr-2" /> Generar con IA
                                           </Button>
@@ -1182,50 +1192,74 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                       )}
               </div>
 
-              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="audios" className="flex items-center gap-2">
-                    <Music className="w-4 h-4" /> Audios
-                  </TabsTrigger>
-                </TabsList>
+              {explorerMode ? (
+                <FileExplorer
+                  containers={[selectedSubject]}
+                  quizzes={subjectQuizzes}
+                  isAdmin={isAdmin}
+                  onMoveItems={async (items, targetId) => {
+                    for (const item of items) {
+                      if (item.type === 'quiz') {
+                        await updateQuizMutation.mutateAsync({ 
+                          id: item.id, 
+                          data: { subject_id: targetId } 
+                        });
+                      }
+                    }
+                    queryClient.invalidateQueries(['quizzes']);
+                  }}
+                  onItemClick={(type, item) => {
+                    if (type === 'quiz') {
+                      handleStartQuiz(item, item.total_questions, 'all', attempts.filter(a => a.quiz_id === item.id));
+                    }
+                  }}
+                />
+              ) : (
+                <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="audios" className="flex items-center gap-2">
+                      <Music className="w-4 h-4" /> Audios
+                    </TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="quizzes">
-                  {subjectQuizzes.length === 0 ? (
-                    <div className="text-center py-12">
-                      <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
-                      <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
-                      {isAdmin && (
-                        <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                          <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {subjectQuizzes.map((quiz) => (
-                        <QuizListItem
-                          key={quiz.id}
-                          quiz={quiz}
-                          attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-                          isAdmin={isAdmin}
-                          onStart={handleStartQuiz}
-                          onEdit={setEditingQuiz}
-                          onDelete={(id) => deleteQuizMutation.mutate(id)}
-                          onStartSwipe={handleStartSwipeMode}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
+                  <TabsContent value="quizzes">
+                    {subjectQuizzes.length === 0 ? (
+                      <div className="text-center py-12">
+                        <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
+                        <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
+                        {isAdmin && (
+                          <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {subjectQuizzes.map((quiz) => (
+                          <QuizListItem
+                            key={quiz.id}
+                            quiz={quiz}
+                            attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                            isAdmin={isAdmin}
+                            onStart={handleStartQuiz}
+                            onEdit={setEditingQuiz}
+                            onDelete={(id) => deleteQuizMutation.mutate(id)}
+                            onStartSwipe={handleStartSwipeMode}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
 
-                <TabsContent value="audios">
-                  <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
-                </TabsContent>
-              </Tabs>
+                  <TabsContent value="audios">
+                    <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+                  </TabsContent>
+                </Tabs>
+              )}
             </motion.div>
           )}
 
