@@ -1,21 +1,201 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Users, Trophy, Sparkles, Brain, Smartphone, FileJson, FolderTree, Shield, CheckCircle } from 'lucide-react';
+import { BookOpen, Users, Trophy, Sparkles, Brain, Smartphone, FileJson, FolderTree, Shield, CheckCircle, FileDown } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 export default function QuizMasterDocs() {
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    let y = 20;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 20;
+
+    const addText = (text, fontSize = 10, isBold = false) => {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      const lines = doc.splitTextToSize(text, 170);
+      doc.text(lines, 20, y);
+      y += lineHeight * lines.length;
+    };
+
+    // Title
+    addText('QuizMaster - Complete Documentation', 18, true);
+    y += 5;
+    addText('Full guide to all features and functionalities', 12);
+    y += 10;
+
+    // Core Features
+    addText('CORE FEATURES', 14, true);
+    y += 3;
+    
+    addText('Quiz Organization System', 12, true);
+    addText('• 4-level hierarchy: Course → Folder → Subject → Quiz');
+    addText('• Drag & Drop organization with visual feedback');
+    addText('• Explorer Mode: Advanced file management with cut/copy/paste');
+    addText('• Visibility Controls: all users, specific users, or inherit');
+    addText('• Color & Icon Customization');
+    y += 3;
+
+    addText('Quiz Taking Experience', 12, true);
+    addText('• Multiple Question Types: text, image, tissue identification');
+    addText('• Configurable Settings: feedback, hints, error analysis per level');
+    addText('• Smart Answer Shuffling to prevent memorization');
+    addText('• Real-time progress tracking and score display');
+    addText('• Review marked questions');
+    y += 3;
+
+    addText('Question Features', 12, true);
+    addText('• Instant feedback with detailed rationales');
+    addText('• AI-powered question rephrase');
+    addText('• Etymology breakdown of medical terms');
+    addText('• Visual schema generation');
+    addText('• Personal notes per question');
+    addText('• Mandatory reflection on incorrect answers');
+    addText('• Movie tips (mnemonics)');
+    y += 3;
+
+    addText('Study Modes', 12, true);
+    addText('• Swipe Mode: True/False mobile interface');
+    addText('• Wrong questions review');
+    addText('• Custom quiz length (5-30 questions)');
+    addText('• Subject-wide review');
+    y += 5;
+
+    // Learning Features
+    addText('LEARNING FEATURES', 14, true);
+    y += 3;
+
+    addText('Error Analysis', 12, true);
+    addText('• AI-powered error pattern analysis');
+    addText('• Pattern recognition across attempts');
+    addText('• Context-aware explanations');
+    y += 3;
+
+    addText('Progress Analytics', 12, true);
+    addText('• Overall statistics: attempts, accuracy, streaks');
+    addText('• Subject and quiz performance breakdown');
+    addText('• Weak points analysis');
+    addText('• Temporal trends with weekly graphs');
+    addText('• Speed analysis');
+    addText('• Performance radar charts');
+    y += 3;
+
+    addText('Additional Learning Tools', 12, true);
+    addText('• Question difficulty rating (1-5)');
+    addText('• Spaced Repetition System (SRS)');
+    addText('• Audio learning support');
+    y += 5;
+
+    // Social Features
+    addText('SOCIAL FEATURES', 14, true);
+    y += 3;
+
+    addText('Leaderboards', 12, true);
+    addText('• Global and subject-specific rankings');
+    addText('• Medal system for top 3');
+    y += 3;
+
+    addText('1v1 Challenges', 12, true);
+    addText('• Challenge online users');
+    addText('• Custom settings per challenge');
+    addText('• Real-time progress tracking');
+    addText('• Automatic winner determination');
+    y += 3;
+
+    addText('Multiplayer', 12, true);
+    addText('• Game Rooms: public & private');
+    addText('• Live Tournaments: Kahoot-style with timers');
+    addText('• Speed bonus points');
+    addText('• Real-time rankings');
+    y += 3;
+
+    addText('Gamification', 12, true);
+    addText('• Points and level system');
+    addText('• Badge collection');
+    addText('• Streak counter');
+    y += 5;
+
+    // Admin Features
+    addText('ADMIN FEATURES', 14, true);
+    y += 3;
+
+    addText('Content Management', 12, true);
+    addText('• Bulk operations');
+    addText('• Visibility toggle');
+    addText('• Content search');
+    y += 3;
+
+    addText('Student Monitoring', 12, true);
+    addText('• Individual analytics');
+    addText('• Subject and quiz performance breakdown');
+    addText('• Attempt history');
+    addText('• Error report PDF generation');
+    y += 3;
+
+    addText('Quiz Management', 12, true);
+    addText('• Multiple upload formats');
+    addText('• Specialized creators: text, image, tissue');
+    addText('• JSON repair tool');
+    addText('• Quiz editor and exporter');
+    addText('• Move/copy quizzes');
+    y += 3;
+
+    addText('Task Assignment', 12, true);
+    addText('• Assign quizzes to students');
+    addText('• Target scores and due dates');
+    addText('• Progress tracking');
+    y += 5;
+
+    // AI Features
+    addText('AI FEATURES', 14, true);
+    y += 3;
+
+    addText('Quiz Generation', 12, true);
+    addText('• Topic-based generation');
+    addText('• JSON/text conversion');
+    addText('• Smart question creation');
+    addText('• Automatic rationale generation');
+    y += 3;
+
+    addText('Learning Enhancement', 12, true);
+    addText('• Question rephrase');
+    addText('• Etymology analysis');
+    addText('• Schema visualization');
+    addText('• Error pattern analysis');
+    addText('• Personalized recommendations');
+    y += 5;
+
+    addText('Generated on: ' + new Date().toLocaleDateString(), 8);
+
+    doc.save('QuizMaster_Documentation.pdf');
+  };
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-indigo-600" />
-            QuizMaster - Full Documentation
-          </CardTitle>
-          <p className="text-sm text-gray-600 mt-2">
-            Complete guide to all features and functionalities implemented in QuizMaster
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                QuizMaster - Full Documentation
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Complete guide to all features and functionalities implemented in QuizMaster
+              </p>
+            </div>
+            <Button onClick={generatePDF} className="bg-indigo-600 hover:bg-indigo-700">
+              <FileDown className="w-4 h-4 mr-2" />
+              Descargar PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="core">
