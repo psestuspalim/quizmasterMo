@@ -301,11 +301,15 @@ export default function FileExplorer({
               <Badge className="bg-amber-100 text-amber-700">
                 {clipboard.items.length} en portapapeles ({clipboard.operation === 'cut' ? 'Cortar' : 'Copiar'})
               </Badge>
-              {currentContainerId && (
+              {currentContainerId && onGetContainerType && (
                 <Button 
                   variant="default" 
                   size="sm" 
-                  onClick={() => setMoveDialog({ open: true, targetId: currentContainerId })}
+                  onClick={() => setMoveDialog({ 
+                    open: true, 
+                    targetId: currentContainerId,
+                    targetType: onGetContainerType(currentContainerId)
+                  })}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
                   <Clipboard className="w-4 h-4 mr-2" />
