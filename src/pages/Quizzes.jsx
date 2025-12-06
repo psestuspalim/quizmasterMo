@@ -1123,31 +1123,39 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             )}
 
             {/* Subjects View (inside a course or folder) */}
-                          {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && !showUploader && (
-                            <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                              <Breadcrumb />
+                            {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && !showUploader && !explorerMode && (
+                              <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                                <Breadcrumb />
 
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                                <div>
-                                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                                    {selectedCourse ? (
-                                      <>{selectedCourse.icon} {selectedCourse.name}</>
-                                    ) : currentFolderId ? (
-                                      <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
-                                    ) : null}
-                                  </h1>
-                                  <p className="text-gray-600">
-                                    {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
-                                  </p>
-                                </div>
-                                {isAdmin && (
-                                                        <div className="flex flex-wrap gap-2">
-                                                          <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
-                                                            <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
-                                                          </Button>
-                                                          <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
-                                                            <Upload className="w-4 h-4 mr-2" /> Subir archivo
-                                                          </Button>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                  <div>
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                      {selectedCourse ? (
+                                        <>{selectedCourse.icon} {selectedCourse.name}</>
+                                      ) : currentFolderId ? (
+                                        <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
+                                      ) : null}
+                                    </h1>
+                                    <p className="text-gray-600">
+                                      {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
+                                    </p>
+                                  </div>
+                                  {isAdmin && (
+                                                          <div className="flex flex-wrap gap-2">
+                                                            <Button 
+                                                              onClick={() => setExplorerMode(true)} 
+                                                              variant="outline"
+                                                              className="text-xs sm:text-sm h-9"
+                                                            >
+                                                              <FolderInput className="w-4 h-4 mr-2" /> 
+                                                              Modo explorador
+                                                            </Button>
+                                                            <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
+                                                              <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
+                                                            </Button>
+                                                            <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
+                                                              <Upload className="w-4 h-4 mr-2" /> Subir archivo
+                                                            </Button>
                                                           <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
                                       <DialogTrigger asChild>
                                         <Button variant="outline" className="text-xs sm:text-sm h-9">
@@ -1244,10 +1252,127 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                       <p className="text-gray-500">Agrega carpetas o materias</p>
                                     </div>
                                   )}
-                                </motion.div>
-                              )}
+                                  </motion.div>
+                                  )}
 
-                              {/* File Uploader - Folder Level */}
+                                  {/* Explorer Mode - Course/Folder Level */}
+                                  {view === 'subjects' && (selectedCourse || currentFolderId) && explorerMode && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && (
+                                  <motion.div key="explorer-subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                                  <Breadcrumb />
+
+                                  <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Modo Explorador</h1>
+                                      <p className="text-gray-600">Gestiona contenido de este nivel</p>
+                                    </div>
+                                    <Button 
+                                      onClick={() => setExplorerMode(false)} 
+                                      variant="outline"
+                                      className="text-xs sm:text-sm h-9"
+                                    >
+                                      Vista normal
+                                    </Button>
+                                  </div>
+
+                                  <FileExplorer
+                                    containers={[
+                                      ...courses.map(c => ({ ...c, type: 'course' })),
+                                      ...folders.map(f => ({ ...f, type: 'folder' })),
+                                      ...subjects.map(s => ({ ...s, type: 'subject' }))
+                                    ]}
+                                    quizzes={quizzes}
+                                    isAdmin={isAdmin}
+                                    currentContainerId={selectedCourse?.id || currentFolderId}
+                                    onMoveItems={async (items, targetId) => {
+                                      for (const item of items) {
+                                        if (item.type === 'quiz') {
+                                          await updateQuizMutation.mutateAsync({ id: item.id, data: { subject_id: targetId } });
+                                        } else if (item.type === 'subject') {
+                                          const target = [...courses, ...folders, ...subjects].find(c => c.id === targetId);
+                                          if (target) {
+                                            const updateData = {};
+                                            if (target.type === 'course') {
+                                              updateData.course_id = targetId;
+                                              updateData.folder_id = null;
+                                            } else if (target.type === 'folder') {
+                                              updateData.folder_id = targetId;
+                                            }
+                                            await updateSubjectMutation.mutateAsync({ id: item.id, data: updateData });
+                                          }
+                                        } else if (item.type === 'folder') {
+                                          const target = [...courses, ...folders].find(c => c.id === targetId);
+                                          if (target) {
+                                            const updateData = {};
+                                            if (target.type === 'course') {
+                                              updateData.course_id = targetId;
+                                              updateData.parent_id = null;
+                                            } else if (target.type === 'folder') {
+                                              updateData.parent_id = targetId;
+                                            }
+                                            await updateFolderMutation.mutateAsync({ id: item.id, data: updateData });
+                                          }
+                                        }
+                                      }
+                                      queryClient.invalidateQueries(['quizzes']);
+                                      queryClient.invalidateQueries(['subjects']);
+                                      queryClient.invalidateQueries(['folders']);
+                                    }}
+                                    onCopyItems={async (items, targetId) => {
+                                      for (const item of items) {
+                                        if (item.type === 'quiz') {
+                                          const originalQuiz = quizzes.find(q => q.id === item.id);
+                                          if (originalQuiz) {
+                                            const { id, created_date, updated_date, created_by, ...quizData } = originalQuiz;
+                                            await createQuizMutation.mutateAsync({ ...quizData, title: `${originalQuiz.title} (copia)`, subject_id: targetId });
+                                          }
+                                        }
+                                      }
+                                      queryClient.invalidateQueries(['quizzes']);
+                                    }}
+                                    onChangeType={async (itemId, fromType, toType) => {
+                                      try {
+                                        let originalItem;
+                                        if (fromType === 'course') originalItem = courses.find(c => c.id === itemId);
+                                        else if (fromType === 'folder') originalItem = folders.find(f => f.id === itemId);
+                                        else if (fromType === 'subject') originalItem = subjects.find(s => s.id === itemId);
+                                        if (!originalItem) return;
+                                        const { id, created_date, updated_date, created_by, ...commonData } = originalItem;
+                                        if (fromType === 'course') await base44.entities.Course.delete(itemId);
+                                        else if (fromType === 'folder') await base44.entities.Folder.delete(itemId);
+                                        else if (fromType === 'subject') await base44.entities.Subject.delete(itemId);
+                                        if (toType === 'course') await base44.entities.Course.create(commonData);
+                                        else if (toType === 'folder') await base44.entities.Folder.create(commonData);
+                                        else if (toType === 'subject') await base44.entities.Subject.create(commonData);
+                                        queryClient.invalidateQueries(['courses']);
+                                        queryClient.invalidateQueries(['folders']);
+                                        queryClient.invalidateQueries(['subjects']);
+                                      } catch (error) {
+                                        console.error('Error cambiando tipo:', error);
+                                      }
+                                    }}
+                                    onItemClick={(type, item) => {
+                                      if (type === 'quiz') {
+                                        const quiz = quizzes.find(q => q.id === item.id);
+                                        if (quiz) handleStartQuiz(quiz, quiz.total_questions, 'all', attempts.filter(a => a.quiz_id === quiz.id));
+                                      } else if (type === 'course') {
+                                        setSelectedCourse(item);
+                                        setExplorerMode(false);
+                                        setView('subjects');
+                                      } else if (type === 'folder') {
+                                        setCurrentFolderId(item.id);
+                                        setExplorerMode(false);
+                                        setView('subjects');
+                                      } else if (type === 'subject') {
+                                        setSelectedSubject(item);
+                                        setExplorerMode(false);
+                                        setView('list');
+                                      }
+                                    }}
+                                  />
+                                  </motion.div>
+                                  )}
+
+                                  {/* File Uploader - Folder Level */}
                                               {view === 'subjects' && (selectedCourse || currentFolderId) && showUploader && (
                                                 <motion.div key="uploader-folder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                                   <Button onClick={() => setShowUploader(false)} variant="ghost" className="mb-6">
@@ -1317,25 +1442,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                           )}
 
                           {/* Quiz List View */}
-                          {view === 'list' && selectedSubject && !showUploader && !editingQuiz && !showAIGenerator && (
-            <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Breadcrumb />
+                                          {view === 'list' && selectedSubject && !showUploader && !editingQuiz && !showAIGenerator && !explorerMode && (
+                            <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                              <Breadcrumb />
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900">{selectedSubject.name}</h1>
-                  <p className="text-gray-600">{selectedSubject.description || 'Cuestionarios de esta materia'}</p>
-                </div>
-                {isAdmin && (
-                                        <div className="flex gap-2">
-                                          <Button 
-                                            onClick={() => setExplorerMode(!explorerMode)} 
-                                            variant={explorerMode ? "default" : "outline"}
-                                            className="text-xs sm:text-sm h-9"
-                                          >
-                                            <FolderInput className="w-4 h-4 mr-2" /> 
-                                            {explorerMode ? 'Vista normal' : 'Modo explorador'}
-                                          </Button>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <div>
+                                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900">{selectedSubject.name}</h1>
+                                  <p className="text-gray-600">{selectedSubject.description || 'Cuestionarios de esta materia'}</p>
+                                </div>
+                                {isAdmin && (
+                                                        <div className="flex gap-2">
+                                                          <Button 
+                                                            onClick={() => setExplorerMode(true)} 
+                                                            variant="outline"
+                                                            className="text-xs sm:text-sm h-9"
+                                                          >
+                                                            <FolderInput className="w-4 h-4 mr-2" /> 
+                                                            Modo explorador
+                                                          </Button>
                                           <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
                                             <Sparkles className="w-4 h-4 mr-2" /> Generar con IA
                                           </Button>
@@ -1346,8 +1471,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                       )}
               </div>
 
-              {explorerMode ? (
-                <FileExplorer
+              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
                   containers={[
                     ...courses.map(c => ({ ...c, type: 'course' })),
                     ...folders.map(f => ({ ...f, type: 'folder' })),
@@ -1426,15 +1550,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                     } catch (error) {
                       console.error('Error cambiando tipo:', error);
                     }
-                  }}
-                  onItemClick={(type, item) => {
-                    if (type === 'quiz') {
-                      handleStartQuiz(item, item.total_questions, 'all', attempts.filter(a => a.quiz_id === item.id));
-                    }
-                  }}
-                />
-              ) : (
-                <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
+
                   <TabsList className="mb-4">
                     <TabsTrigger value="quizzes" className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
@@ -1478,10 +1594,99 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <TabsContent value="audios">
                     <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
                   </TabsContent>
-                </Tabs>
-              )}
-            </motion.div>
-          )}
+                  </Tabs>
+                  </motion.div>
+                  )}
+
+                  {/* Explorer Mode - Subject Level */}
+                  {view === 'list' && selectedSubject && explorerMode && !showUploader && !editingQuiz && !showAIGenerator && (
+                  <motion.div key="explorer-list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <Breadcrumb />
+
+                  <div className="flex items-center justify-between mb-6">
+                  <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Modo Explorador</h1>
+                  <p className="text-gray-600">Gestiona quizzes de {selectedSubject.name}</p>
+                  </div>
+                  <Button 
+                  onClick={() => setExplorerMode(false)} 
+                  variant="outline"
+                  className="text-xs sm:text-sm h-9"
+                  >
+                  Vista normal
+                  </Button>
+                  </div>
+
+                  <FileExplorer
+                  containers={[
+                  ...courses.map(c => ({ ...c, type: 'course' })),
+                  ...folders.map(f => ({ ...f, type: 'folder' })),
+                  ...subjects.map(s => ({ ...s, type: 'subject' }))
+                  ]}
+                  quizzes={subjectQuizzes}
+                  isAdmin={isAdmin}
+                  currentContainerId={selectedSubject.id}
+                  onMoveItems={async (items, targetId) => {
+                  for (const item of items) {
+                    if (item.type === 'quiz') {
+                      await updateQuizMutation.mutateAsync({ id: item.id, data: { subject_id: targetId } });
+                    }
+                  }
+                  queryClient.invalidateQueries(['quizzes']);
+                  }}
+                  onCopyItems={async (items, targetId) => {
+                  for (const item of items) {
+                    if (item.type === 'quiz') {
+                      const originalQuiz = quizzes.find(q => q.id === item.id);
+                      if (originalQuiz) {
+                        const { id, created_date, updated_date, created_by, ...quizData } = originalQuiz;
+                        await createQuizMutation.mutateAsync({ ...quizData, title: `${originalQuiz.title} (copia)`, subject_id: targetId });
+                      }
+                    }
+                  }
+                  queryClient.invalidateQueries(['quizzes']);
+                  }}
+                  onChangeType={async (itemId, fromType, toType) => {
+                  try {
+                    let originalItem;
+                    if (fromType === 'course') originalItem = courses.find(c => c.id === itemId);
+                    else if (fromType === 'folder') originalItem = folders.find(f => f.id === itemId);
+                    else if (fromType === 'subject') originalItem = subjects.find(s => s.id === itemId);
+                    if (!originalItem) return;
+                    const { id, created_date, updated_date, created_by, ...commonData } = originalItem;
+                    if (fromType === 'course') await base44.entities.Course.delete(itemId);
+                    else if (fromType === 'folder') await base44.entities.Folder.delete(itemId);
+                    else if (fromType === 'subject') await base44.entities.Subject.delete(itemId);
+                    if (toType === 'course') await base44.entities.Course.create(commonData);
+                    else if (toType === 'folder') await base44.entities.Folder.create(commonData);
+                    else if (toType === 'subject') await base44.entities.Subject.create(commonData);
+                    queryClient.invalidateQueries(['courses']);
+                    queryClient.invalidateQueries(['folders']);
+                    queryClient.invalidateQueries(['subjects']);
+                  } catch (error) {
+                    console.error('Error cambiando tipo:', error);
+                  }
+                  }}
+                  onItemClick={(type, item) => {
+                  if (type === 'quiz') {
+                    handleStartQuiz(item, item.total_questions, 'all', attempts.filter(a => a.quiz_id === item.id));
+                  } else if (type === 'course') {
+                    setSelectedCourse(item);
+                    setExplorerMode(false);
+                    setView('subjects');
+                  } else if (type === 'folder') {
+                    setCurrentFolderId(item.id);
+                    setExplorerMode(false);
+                    setView('subjects');
+                  } else if (type === 'subject') {
+                    setSelectedSubject(item);
+                    setExplorerMode(false);
+                    setView('list');
+                  }
+                  }}
+                  />
+                  </motion.div>
+                  )}
 
           {/* Upload View */}
           {view === 'list' && showUploader && (
