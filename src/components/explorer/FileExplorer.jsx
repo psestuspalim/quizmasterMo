@@ -6,6 +6,7 @@ import {
   Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
   CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles
 } from 'lucide-react';
+import { canMoveItemToTarget, prepareMoveData, isValidMove } from '../../utils/filesystem';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,12 +40,13 @@ export default function FileExplorer({
   onCopyItems,
   onItemClick,
   onChangeType,
+  onGetContainerType,
   isAdmin = false,
   currentContainerId = null
 }) {
   const [selectedItems, setSelectedItems] = useState([]);
   const [clipboard, setClipboard] = useState(null); // { items: [], operation: 'cut' | 'copy' }
-  const [moveDialog, setMoveDialog] = useState({ open: false, targetId: null });
+  const [moveDialog, setMoveDialog] = useState({ open: false, targetId: null, targetType: null });
   const [instructionsDialog, setInstructionsDialog] = useState(false);
   const [instructions, setInstructions] = useState('');
 
@@ -80,7 +82,7 @@ export default function FileExplorer({
   };
 
   // Paste operation
-  const pasteItems = async (targetId) => {
+  const pasteItems = async (targetId, targetType) => {
     if (!clipboard) return;
     
     try {
@@ -89,8 +91,18 @@ export default function FileExplorer({
         return { type, id };
       });
 
+      // Validar movimientos
+      const invalidMoves = itemsToProcess.filter(item => 
+        !canMoveItemToTarget(item.type, targetType)
+      );
+      
+      if (invalidMoves.length > 0) {
+        toast.error(`No se pueden mover ${invalidMoves.length} elementos a este destino`);
+        return;
+      }
+
       if (clipboard.operation === 'cut') {
-        await onMoveItems(itemsToProcess, targetId);
+        await onMoveItems(itemsToProcess, targetId, targetType);
         toast.success('Elementos movidos correctamente');
       } else {
         // Copy operation - only for quizzes
@@ -106,7 +118,7 @@ export default function FileExplorer({
       }
       clearSelection();
       
-      setMoveDialog({ open: false, targetId: null });
+      setMoveDialog({ open: false, targetId: null, targetType: null });
     } catch (error) {
       toast.error(`Error al ${clipboard.operation === 'cut' ? 'mover' : 'copiar'} elementos`);
     }
@@ -207,7 +219,7 @@ export default function FileExplorer({
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                setMoveDialog({ open: true, targetId: item.id });
+                setMoveDialog({ open: true, targetId: item.id, targetType: type });
               }}
               className="opacity-0 group-hover:opacity-100"
               title="Pegar aquí"
@@ -411,7 +423,7 @@ export default function FileExplorer({
       </div>
 
       {/* Move Dialog */}
-      <AlertDialog open={moveDialog.open} onOpenChange={(open) => !open && setMoveDialog({ open: false, targetId: null })}>
+      <AlertDialog open={moveDialog.open} onOpenChange={(open) => !open && setMoveDialog({ open: false, targetId: null, targetType: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -426,7 +438,7 @@ export default function FileExplorer({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => pasteItems(moveDialog.targetId)}>
+            <AlertDialogAction onClick={() => pasteItems(moveDialog.targetId, moveDialog.targetType)}>
               {clipboard?.operation === 'cut' ? 'Mover aquí' : 'Copiar aquí'}
             </AlertDialogAction>
           </AlertDialogFooter>
