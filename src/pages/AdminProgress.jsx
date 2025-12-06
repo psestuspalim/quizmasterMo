@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, AlertCircle, Calendar, Trash2, Eye, RefreshCw, Loader2, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, TrendingUp, AlertCircle, Calendar, Trash2, Eye, RefreshCw, Loader2, ChevronDown, ChevronUp, FileDown, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import MathText from '../components/quiz/MathText';
 import AttemptDetailModal from '../components/admin/AttemptDetailModal';
 import StudentProgressModal from '../components/admin/StudentProgressModal';
+import QuizMasterDocs from '../components/admin/QuizMasterDocs';
 
 export default function AdminProgress() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -366,6 +368,17 @@ export default function AdminProgress() {
           </div>
         </div>
 
+        <Tabs defaultValue="students" className="mb-6">
+          <TabsList>
+            <TabsTrigger value="students">Estudiantes</TabsTrigger>
+            <TabsTrigger value="docs">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Documentación
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="students">{/* Contenido de estudiantes */}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Lista de estudiantes */}
           <div className="lg:col-span-1">
@@ -711,6 +724,12 @@ export default function AdminProgress() {
           subjects={subjects}
           quizzes={quizzes}
         />
+        </TabsContent>
+
+        <TabsContent value="docs">
+          <QuizMasterDocs />
+        </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
