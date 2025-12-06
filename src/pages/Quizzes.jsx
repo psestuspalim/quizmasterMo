@@ -49,6 +49,7 @@ import SwipeQuizMode from '../components/quiz/SwipeQuizMode';
 import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 import FileExplorer from '../components/explorer/FileExplorer';
 import MoveQuizModal from '../components/quiz/MoveQuizModal';
+import QuizExporter from '../components/admin/QuizExporter';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -84,6 +85,7 @@ export default function QuizzesPage() {
 const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [explorerMode, setExplorerMode] = useState(false);
   const [movingQuiz, setMovingQuiz] = useState(null);
+  const [showQuizExporter, setShowQuizExporter] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
 
   const queryClient = useQueryClient();
@@ -866,6 +868,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                       <AdminMenu 
                         compact 
                         onOpenContentManager={() => setShowContentManager(true)}
+                        onOpenQuizExporter={() => setShowQuizExporter(true)}
                       />
                       <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
                         <DialogTrigger asChild>
@@ -1708,6 +1711,13 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 onClose={() => setShowContentManager(false)}
               />
             </div>
+          </div>
+        )}
+
+        {/* Quiz Exporter Modal */}
+        {showQuizExporter && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <QuizExporter onClose={() => setShowQuizExporter(false)} />
           </div>
         )}
       </div>
