@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog
+  ChevronDown, Shield, FileQuestion, Cog, Download
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -18,6 +18,7 @@ import {
 export default function AdminMenu({ 
   onOpenContentManager,
   onOpenQuizSettings,
+  onOpenQuizExporter,
   compact = false 
 }) {
   const menuItems = [
@@ -41,6 +42,12 @@ export default function AdminMenu({
       icon: Trash2,
       onClick: onOpenContentManager,
       description: 'Eliminar cursos, carpetas, materias'
+    },
+    {
+      label: 'Exportar Quizzes',
+      icon: Download,
+      onClick: onOpenQuizExporter,
+      description: 'Descargar todos los JSON'
     },
   ];
 
