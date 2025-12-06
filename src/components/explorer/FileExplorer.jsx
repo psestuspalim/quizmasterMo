@@ -6,7 +6,7 @@ import {
   Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
   CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles
 } from 'lucide-react';
-import { canMoveItemToTarget, prepareMoveData, isValidMove } from '../utils/filesystem';
+import { canMoveItemToTarget } from '../utils/filesystem';
 import {
   DropdownMenu,
   DropdownMenuContent,
