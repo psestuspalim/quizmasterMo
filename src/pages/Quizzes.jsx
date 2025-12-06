@@ -1472,52 +1472,52 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               </div>
 
               <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="audios" className="flex items-center gap-2">
-                      <Music className="w-4 h-4" /> Audios
-                    </TabsTrigger>
-                  </TabsList>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="audios" className="flex items-center gap-2">
+                    <Music className="w-4 h-4" /> Audios
+                  </TabsTrigger>
+                </TabsList>
 
-                  <TabsContent value="quizzes">
-                    {subjectQuizzes.length === 0 ? (
-                      <div className="text-center py-12">
-                        <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
-                        <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
-                        {isAdmin && (
-                          <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                            <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
-                          </Button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {subjectQuizzes.map((quiz) => (
-                          <QuizListItem
-                            key={quiz.id}
-                            quiz={quiz}
-                            attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-                            isAdmin={isAdmin}
-                            onStart={handleStartQuiz}
-                            onEdit={setEditingQuiz}
-                            onDelete={(id) => deleteQuizMutation.mutate(id)}
-                            onStartSwipe={handleStartSwipeMode}
-                            onMove={setMovingQuiz}
-                            />
-                            ))}
-                            </div>
-                            )}
-                            </TabsContent>
-
-                  <TabsContent value="audios">
-                    <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
-                  </TabsContent>
-                  </Tabs>
-                  </motion.div>
+                <TabsContent value="quizzes">
+                  {subjectQuizzes.length === 0 ? (
+                    <div className="text-center py-12">
+                      <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
+                      <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
+                      {isAdmin && (
+                        <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                          <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {subjectQuizzes.map((quiz) => (
+                        <QuizListItem
+                          key={quiz.id}
+                          quiz={quiz}
+                          attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                          isAdmin={isAdmin}
+                          onStart={handleStartQuiz}
+                          onEdit={setEditingQuiz}
+                          onDelete={(id) => deleteQuizMutation.mutate(id)}
+                          onStartSwipe={handleStartSwipeMode}
+                          onMove={setMovingQuiz}
+                        />
+                      ))}
+                    </div>
                   )}
+                </TabsContent>
+
+                <TabsContent value="audios">
+                  <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+          )}
 
                   {/* Explorer Mode - Subject Level */}
                   {view === 'list' && selectedSubject && explorerMode && !showUploader && !editingQuiz && !showAIGenerator && (
