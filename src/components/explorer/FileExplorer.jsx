@@ -230,13 +230,11 @@ export default function FileExplorer({
       const [destType, destId] = update.destination.droppableId.split('-');
       if (destType !== 'root' && destId) {
         setDragOverContainer(destId);
-        // Auto-expandir después de un delay
-        setTimeout(() => {
-          if (!expandedContainers.has(destId)) {
-            setExpandedContainers(prev => new Set([...prev, destId]));
-          }
-        }, 800);
+        // Auto-expandir inmediatamente
+        setExpandedContainers(prev => new Set([...prev, destId]));
       }
+    } else {
+      setDragOverContainer(null);
     }
   };
 
@@ -258,15 +256,19 @@ export default function FileExplorer({
             {...provided.draggableProps}
             {...provided.dragHandleProps}
           >
-            <div
-              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
-                isSelected 
-                  ? 'bg-indigo-50 border-indigo-400' 
-                  : isDragOver
-                  ? 'bg-amber-50 border-amber-400 shadow-lg'
-                  : 'bg-white border-gray-200 hover:border-gray-300'
-              } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
-            >
+            <Droppable droppableId={`${type}-${item.id}`} type="ITEM" isDropDisabled={type === 'quiz'}>
+              {(droppableProvided, droppableSnapshot) => (
+                <div
+                  ref={droppableProvided.innerRef}
+                  {...droppableProvided.droppableProps}
+                  className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
+                    isSelected 
+                      ? 'bg-indigo-50 border-indigo-400' 
+                      : droppableSnapshot.isDraggingOver || isDragOver
+                      ? 'bg-amber-50 border-amber-400 shadow-lg'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
+                >
               {isAdmin && (
                 <Checkbox 
                   checked={isSelected}
@@ -275,7 +277,7 @@ export default function FileExplorer({
                 />
               )}
               
-              {type !== 'quiz' && hasChildren && (
+              {type !== 'quiz' && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -285,7 +287,7 @@ export default function FileExplorer({
                   }}
                   className="h-6 w-6 p-0"
                 >
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'} ${!hasChildren ? 'opacity-30' : ''}`} />
                 </Button>
               )}
               
@@ -359,34 +361,24 @@ export default function FileExplorer({
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              {droppableProvided.placeholder}
             </div>
+              )}
+            </Droppable>
 
-            {/* Children - renderizados dentro de un droppable anidado */}
+            {/* Children expandidos */}
             <AnimatePresence>
               {isExpanded && hasChildren && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="ml-8 mt-2"
+                  className="ml-8 mt-2 space-y-2"
                 >
-                  <Droppable droppableId={`${type}-${item.id}`} type="ITEM">
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`space-y-2 p-2 rounded-lg border-2 border-dashed ${
-                          snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
-                        }`}
-                      >
-                        {children.map((child, idx) => {
-                          const childType = child.subject_id ? 'quiz' : child.type;
-                          return renderItem(child, childType, idx);
-                        })}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
+                  {children.map((child, idx) => {
+                    const childType = child.subject_id ? 'quiz' : child.type;
+                    return renderItem(child, childType, idx);
+                  })}
                 </motion.div>
               )}
             </AnimatePresence>
