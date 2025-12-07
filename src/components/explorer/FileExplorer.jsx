@@ -4,9 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
-  CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles
+  CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles, ChevronDown
 } from 'lucide-react';
 import { canMoveItemToTarget } from '../utils/filesystem';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const typeIcons = {
   course: GraduationCap,
@@ -45,10 +47,12 @@ export default function FileExplorer({
   currentContainerId = null
 }) {
   const [selectedItems, setSelectedItems] = useState([]);
-  const [clipboard, setClipboard] = useState(null); // { items: [], operation: 'cut' | 'copy' }
+  const [clipboard, setClipboard] = useState(null);
   const [moveDialog, setMoveDialog] = useState({ open: false, targetId: null, targetType: null });
   const [instructionsDialog, setInstructionsDialog] = useState(false);
   const [instructions, setInstructions] = useState('');
+  const [expandedContainers, setExpandedContainers] = useState(new Set());
+  const [dragOverContainer, setDragOverContainer] = useState(null);
 
   // Toggle selection
   const toggleSelect = (type, id) => {
@@ -155,336 +159,299 @@ export default function FileExplorer({
     }
   };
 
-  // Render item with selection
-  const renderItem = (item, type) => {
+  // Toggle expand
+  const toggleExpand = (containerId) => {
+    setExpandedContainers(prev => {
+      const next = new Set(prev);
+      if (next.has(containerId)) {
+        next.delete(containerId);
+      } else {
+        next.add(containerId);
+      }
+      return next;
+    });
+  };
+
+  // Get children of a container
+  const getChildren = (containerId, containerType) => {
+    if (containerType === 'subject') {
+      return quizzes.filter(q => q.subject_id === containerId);
+    }
+    if (containerType === 'course') {
+      return [
+        ...containers.filter(c => c.type === 'folder' && c.course_id === containerId && !c.parent_id),
+        ...containers.filter(c => c.type === 'subject' && c.course_id === containerId && !c.folder_id)
+      ];
+    }
+    if (containerType === 'folder') {
+      return [
+        ...containers.filter(c => c.type === 'folder' && c.parent_id === containerId),
+        ...containers.filter(c => c.type === 'subject' && c.folder_id === containerId)
+      ];
+    }
+    return [];
+  };
+
+  // Drag and drop handler
+  const handleDragEnd = async (result) => {
+    const { draggableId, destination, source } = result;
+    setDragOverContainer(null);
+    
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    const [dragType, dragId] = draggableId.split('-');
+    const [destType, destId] = destination.droppableId.split('-');
+
+    // Si hay múltiples seleccionados y el item dragged es uno de ellos, mover todos
+    const itemsToMove = selectedItems.includes(draggableId) 
+      ? selectedItems.map(key => {
+          const [type, id] = key.split('-');
+          return { type, id };
+        })
+      : [{ type: dragType, id: dragId }];
+
+    try {
+      if (destType === 'root') {
+        // Mover a raíz (sin contenedor padre)
+        await onMoveItems(itemsToMove, null, null);
+      } else {
+        await onMoveItems(itemsToMove, destId, destType);
+      }
+      clearSelection();
+      toast.success('Elementos movidos correctamente');
+    } catch (error) {
+      toast.error('Error al mover elementos');
+    }
+  };
+
+  const handleDragUpdate = (update) => {
+    if (update.destination) {
+      const [destType, destId] = update.destination.droppableId.split('-');
+      if (destType !== 'root' && destId) {
+        setDragOverContainer(destId);
+        // Auto-expandir después de un delay
+        setTimeout(() => {
+          if (!expandedContainers.has(destId)) {
+            setExpandedContainers(prev => new Set([...prev, destId]));
+          }
+        }, 800);
+      }
+    }
+  };
+
+  // Render draggable item
+  const renderItem = (item, type, index) => {
     const Icon = typeIcons[type] || FileText;
     const key = `${type}-${item.id}`;
     const isSelected = selectedItems.includes(key);
-    const isCut = clipboard?.operation === 'cut' && clipboard.items.includes(key);
+    const isExpanded = expandedContainers.has(item.id);
+    const children = type !== 'quiz' ? getChildren(item.id, type) : [];
+    const hasChildren = children.length > 0;
+    const isDragOver = dragOverContainer === item.id;
 
     return (
-      <div
-        key={key}
-        className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
-          isSelected 
-            ? 'bg-indigo-50 border-indigo-400' 
-            : 'bg-white border-gray-200 hover:border-gray-300'
-        } ${isCut ? 'opacity-50' : ''}`}
-      >
-        {isAdmin && (
-          <Checkbox 
-            checked={isSelected}
-            onCheckedChange={() => toggleSelect(type, item.id)}
-            className="shrink-0"
-          />
-        )}
-        
-        <div 
-          className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-          onClick={() => onItemClick && onItemClick(type, item)}
-        >
-          <div 
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${item.color || '#6366f1'}20` }}
+      <Draggable draggableId={key} index={index} key={key} isDragDisabled={!isAdmin}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
           >
-            {item.icon ? (
-              <span className="text-sm">{item.icon}</span>
-            ) : (
-              <Icon className="w-4 h-4" style={{ color: item.color || '#6366f1' }} />
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate">{item.name || item.title}</p>
-            {item.description && (
-              <p className="text-xs text-gray-500 truncate">{item.description}</p>
-            )}
-          </div>
-
-          {item.is_hidden && (
-            <Badge variant="outline" className="text-xs">Oculto</Badge>
-          )}
-          
-          {isAdmin && type !== 'quiz' && (
-            <Badge variant="outline" className="text-xs font-mono bg-gray-50 text-gray-600">
-              ID: {item.id.slice(0, 8)}
-            </Badge>
-          )}
-        </div>
-
-        {isAdmin && type !== 'quiz' && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMoveDialog({ open: true, targetId: item.id, targetType: type });
-              }}
-              className="opacity-0 group-hover:opacity-100"
-              title="Pegar aquí"
-              disabled={!clipboard}
+            <div
+              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
+                isSelected 
+                  ? 'bg-indigo-50 border-indigo-400' 
+                  : isDragOver
+                  ? 'bg-amber-50 border-amber-400 shadow-lg'
+                  : 'bg-white border-gray-200 hover:border-gray-300'
+              } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
             >
-              <FolderInput className="w-4 h-4" />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              {isAdmin && (
+                <Checkbox 
+                  checked={isSelected}
+                  onCheckedChange={() => toggleSelect(type, item.id)}
+                  className="shrink-0"
+                />
+              )}
+              
+              {type !== 'quiz' && hasChildren && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => e.stopPropagation()}
-                  className="opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpand(item.id);
+                  }}
+                  className="h-6 w-6 p-0"
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeType && onChangeType(item.id, type, 'course');
-                }} disabled={type === 'course'}>
-                  <GraduationCap className="w-4 h-4 mr-2" />
-                  Convertir a Curso
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeType && onChangeType(item.id, type, 'folder');
-                }} disabled={type === 'folder'}>
-                  <Folder className="w-4 h-4 mr-2" />
-                  Convertir a Carpeta
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeType && onChangeType(item.id, type, 'subject');
-                }} disabled={type === 'subject'}>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Convertir a Materia
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        )}
+              )}
+              
+              <div 
+                className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                onClick={() => !hasChildren && onItemClick && onItemClick(type, item)}
+              >
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${item.color || '#6366f1'}20` }}
+                >
+                  {item.icon ? (
+                    <span className="text-sm">{item.icon}</span>
+                  ) : (
+                    <Icon className="w-4 h-4" style={{ color: item.color || '#6366f1' }} />
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{item.name || item.title}</p>
+                  {item.description && (
+                    <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                  )}
+                </div>
 
-        {type !== 'quiz' && <ChevronRight className="w-4 h-4 text-gray-400" />}
-      </div>
+                {item.is_hidden && (
+                  <Badge variant="outline" className="text-xs">Oculto</Badge>
+                )}
+                
+                {isAdmin && type !== 'quiz' && (
+                  <Badge variant="outline" className="text-xs font-mono bg-gray-50 text-gray-600">
+                    ID: {item.id.slice(0, 8)}
+                  </Badge>
+                )}
+              </div>
+
+              {isAdmin && type !== 'quiz' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      onChangeType && onChangeType(item.id, type, 'course');
+                    }} disabled={type === 'course'}>
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      Convertir a Curso
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      onChangeType && onChangeType(item.id, type, 'folder');
+                    }} disabled={type === 'folder'}>
+                      <Folder className="w-4 h-4 mr-2" />
+                      Convertir a Carpeta
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      onChangeType && onChangeType(item.id, type, 'subject');
+                    }} disabled={type === 'subject'}>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Convertir a Materia
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            {/* Children - renderizados dentro de un droppable anidado */}
+            <AnimatePresence>
+              {isExpanded && hasChildren && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="ml-8 mt-2"
+                >
+                  <Droppable droppableId={`${type}-${item.id}`} type="ITEM">
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`space-y-2 p-2 rounded-lg border-2 border-dashed ${
+                          snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
+                        }`}
+                      >
+                        {children.map((child, idx) => {
+                          const childType = child.subject_id ? 'quiz' : child.type;
+                          return renderItem(child, childType, idx);
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </Draggable>
     );
   };
 
+  // Obtener todos los contenedores de nivel raíz (sin padres)
+  const rootContainers = containers.filter(c => {
+    if (c.type === 'course') return true;
+    if (c.type === 'folder') return !c.course_id && !c.parent_id;
+    if (c.type === 'subject') return !c.course_id && !c.folder_id;
+    return false;
+  });
+
+  const rootQuizzes = quizzes.filter(q => !q.subject_id);
+
   return (
-    <div className="space-y-4">
-      {/* Toolbar */}
-      {isAdmin && (
-        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
-          {selectedItems.length > 0 ? (
-            <>
-              <Badge className="bg-indigo-600">{selectedItems.length} seleccionados</Badge>
-              <Button variant="outline" size="sm" onClick={cutItems}>
-                <Scissors className="w-4 h-4 mr-2" />
-                Cortar
-              </Button>
-              <Button variant="outline" size="sm" onClick={copyItems}>
-                <Copy className="w-4 h-4 mr-2" />
-                Copiar
-              </Button>
-              <Button variant="outline" size="sm" onClick={clearSelection}>
-                <X className="w-4 h-4 mr-2" />
-                Limpiar
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setInstructionsDialog(true)}>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Instrucciones
-              </Button>
-            </>
-          ) : clipboard ? (
-            <>
-              <Badge className="bg-amber-100 text-amber-700">
-                {clipboard.items.length} en portapapeles ({clipboard.operation === 'cut' ? 'Cortar' : 'Copiar'})
-              </Badge>
-              {currentContainerId && onGetContainerType && (
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={() => setMoveDialog({ 
-                    open: true, 
-                    targetId: currentContainerId,
-                    targetType: onGetContainerType(currentContainerId)
-                  })}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <Clipboard className="w-4 h-4 mr-2" />
-                  Pegar aquí
+    <DragDropContext onDragEnd={handleDragEnd} onDragUpdate={handleDragUpdate}>
+      <div className="space-y-4">
+        {/* Toolbar */}
+        {isAdmin && (
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+            {selectedItems.length > 0 ? (
+              <>
+                <Badge className="bg-indigo-600">{selectedItems.length} seleccionados</Badge>
+                <Button variant="outline" size="sm" onClick={clearSelection}>
+                  <X className="w-4 h-4 mr-2" />
+                  Limpiar selección
                 </Button>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">Arrastra elementos para moverlos entre contenedores</p>
+            )}
+          </div>
+        )}
+
+        {/* Droppable root */}
+        <Droppable droppableId="root" type="ITEM">
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`space-y-2 min-h-[200px] p-4 rounded-lg border-2 border-dashed ${
+                snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
+              }`}
+            >
+              {rootContainers.length === 0 && rootQuizzes.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <p>No hay contenido en el nivel raíz</p>
+                </div>
+              ) : (
+                <>
+                  {rootContainers.map((item, idx) => renderItem(item, item.type, idx))}
+                  {rootQuizzes.map((item, idx) => renderItem(item, 'quiz', rootContainers.length + idx))}
+                </>
               )}
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Selecciona elementos para mover</p>
+              {provided.placeholder}
+            </div>
           )}
-        </div>
-      )}
+        </Droppable>
 
-      {/* Content sections */}
-      <div className="space-y-6">
-        {/* Courses */}
-        {containers.filter(c => c.type === 'course').length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" />
-                Cursos
-              </h3>
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => selectAll(containers.filter(c => c.type === 'course'), 'course')}
-                >
-                  <CheckSquare className="w-3 h-3 mr-1" />
-                  Todos
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2">
-              {containers.filter(c => c.type === 'course').map(item => renderItem(item, 'course'))}
-            </div>
-          </div>
-        )}
-
-        {/* Folders */}
-        {containers.filter(c => c.type === 'folder').length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                <Folder className="w-4 h-4" />
-                Carpetas
-              </h3>
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => selectAll(containers.filter(c => c.type === 'folder'), 'folder')}
-                >
-                  <CheckSquare className="w-3 h-3 mr-1" />
-                  Todos
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2">
-              {containers.filter(c => c.type === 'folder').map(item => renderItem(item, 'folder'))}
-            </div>
-          </div>
-        )}
-
-        {/* Subjects */}
-        {containers.filter(c => c.type === 'subject').length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Materias
-              </h3>
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => selectAll(containers.filter(c => c.type === 'subject'), 'subject')}
-                >
-                  <CheckSquare className="w-3 h-3 mr-1" />
-                  Todos
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2">
-              {containers.filter(c => c.type === 'subject').map(item => renderItem(item, 'subject'))}
-            </div>
-          </div>
-        )}
-
-        {/* Quizzes */}
-        {quizzes.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Cuestionarios
-              </h3>
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => selectAll(quizzes, 'quiz')}
-                >
-                  <CheckSquare className="w-3 h-3 mr-1" />
-                  Todos
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2">
-              {quizzes.map(item => renderItem(item, 'quiz'))}
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Move Dialog */}
-      <AlertDialog open={moveDialog.open} onOpenChange={(open) => !open && setMoveDialog({ open: false, targetId: null, targetType: null })}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {clipboard?.operation === 'cut' ? 'Confirmar movimiento' : 'Confirmar copia'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {clipboard?.operation === 'cut' 
-                ? `¿Mover ${clipboard?.items?.length || 0} elementos a este destino?`
-                : `¿Copiar ${clipboard?.items?.filter(k => k.startsWith('quiz-')).length || 0} cuestionarios a este destino?`
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => pasteItems(moveDialog.targetId, moveDialog.targetType)}>
-              {clipboard?.operation === 'cut' ? 'Mover aquí' : 'Copiar aquí'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Instructions Dialog */}
-      <AlertDialog open={instructionsDialog} onOpenChange={setInstructionsDialog}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Instrucciones de transferencia</AlertDialogTitle>
-            <AlertDialogDescription>
-              Usa los IDs visibles en cada contenedor para especificar destinos.
-              <br />
-              Ejemplo: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">mover quiz-abc123 a xyz789</code>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Elementos seleccionados:</p>
-            <div className="bg-gray-50 rounded p-2 max-h-32 overflow-y-auto">
-              {clipboard?.items.map(key => (
-                <div key={key} className="text-xs font-mono text-gray-600">{key}</div>
-              ))}
-            </div>
-          </div>
-
-          <textarea
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="mover quiz-abc123 a xyz789&#10;mover subject-def456 a xyz789"
-            className="w-full h-32 p-3 border rounded-md text-sm font-mono"
-          />
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={processInstructions} disabled={!instructions.trim()}>
-              Ejecutar instrucciones
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </DragDropContext>
   );
 }
