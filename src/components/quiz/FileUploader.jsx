@@ -68,48 +68,44 @@ export default function FileUploader({ onUploadSuccess }) {
       description = data.quizMetadata?.focus || data.quizMetadata?.source || data.description || '';
 
       questions = data.questions.map((q) => {
-        // Si answerOptions ya existe y tiene la estructura correcta, usarlo directamente
+        // Normalizar answerOptions
+        let normalizedOptions = [];
+        
         if (q.answerOptions && Array.isArray(q.answerOptions) && q.answerOptions.length > 0) {
           // Verificar que tenga la estructura correcta
           const hasCorrectStructure = q.answerOptions.every(opt => 
-            opt && typeof opt === 'object' && 'text' in opt && 'isCorrect' in opt
+            opt && typeof opt === 'object' && opt.text && opt.text.trim().length > 0
           );
           
           if (hasCorrectStructure) {
-            return {
-              type: q.type || 'text',
-              question: q.questionText || q.question || q.text,
-              hint: q.cinephileTip || q.hint || q.analysis || '',
-              feedback: q.analysis || q.feedback || '',
-              difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
-              bloomLevel: q.bloomLevel || '',
-              answerOptions: q.answerOptions.map(opt => ({
-                text: opt.text,
-                isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
-                rationale: opt.rationale || opt.feedback || ''
-              })),
-              imageUrl: q.imageUrl || null
-            };
+            normalizedOptions = q.answerOptions.map(opt => ({
+              text: opt.text,
+              isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
+              rationale: opt.rationale || opt.feedback || ''
+            }));
           }
         }
         
-        // Si no, mapear desde options (solo si tiene contenido) o answerOptions
-        const options = (q.options && q.options.length > 0) ? q.options : (q.answerOptions || []);
+        // Si answerOptions no funcionó, intentar con options
+        if (normalizedOptions.length === 0 && q.options && Array.isArray(q.options) && q.options.length > 0) {
+          normalizedOptions = q.options.map(opt => ({
+            text: opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt),
+            isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
+            rationale: opt.feedback || opt.rationale || opt.analysis || ''
+          }));
+        }
+        
         return {
           type: q.type || 'text',
           question: q.questionText || q.question || q.text,
-          hint: q.cinephileTip || q.hint || q.analysis || '',
+          hint: q.hint || q.cinephileTip || q.analysis || '',
           feedback: q.analysis || q.feedback || '',
           difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
           bloomLevel: q.bloomLevel || '',
           imageUrl: q.imageUrl || null,
-          answerOptions: options.map(opt => ({
-            text: opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt),
-            isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
-            rationale: opt.feedback || opt.rationale || opt.analysis || q.analysis || ''
-          }))
+          answerOptions: normalizedOptions
         };
-      });
+      }).filter(q => q.answerOptions.length > 0);
     }
     // Formato original con array "quiz"
     else if (data.quiz && Array.isArray(data.quiz)) {
