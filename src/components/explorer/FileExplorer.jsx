@@ -172,34 +172,22 @@ export default function FileExplorer({
     });
   };
 
-  // Get children of a container
+  // Get children of a container usando el modelo unificado
   const getChildren = (containerId, containerType) => {
-    if (containerType === 'subject') {
-      return quizzes.filter(q => q.subject_id === containerId);
+    // 1) Hijos contenedores (course/folder/subject) por parent_id
+    const childContainers = containers.filter(
+      (c) => c.parent_id === containerId
+    );
+
+    // 2) Quizzes SOLO cuelgan de subject
+    if (containerType === "subject") {
+      const childQuizzes = quizzes.filter((q) => q.subject_id === containerId);
+      // devolvemos mezcla: primero folders/subjects (en la práctica no habrá), luego quizzes
+      return [...childContainers, ...childQuizzes];
     }
-    if (containerType === 'course') {
-      return [
-        ...containers.filter(c => c.type === 'folder' && c.course_id === containerId && !c.parent_id),
-        ...containers.filter(c => c.type === 'subject' && c.course_id === containerId && !c.folder_id),
-        ...quizzes.filter(q => {
-          // Quizzes de materias que pertenecen a este curso
-          const parentSubject = containers.find(c => c.type === 'subject' && c.id === q.subject_id);
-          return parentSubject && parentSubject.course_id === containerId && !parentSubject.folder_id;
-        })
-      ];
-    }
-    if (containerType === 'folder') {
-      return [
-        ...containers.filter(c => c.type === 'folder' && c.parent_id === containerId),
-        ...containers.filter(c => c.type === 'subject' && c.folder_id === containerId),
-        ...quizzes.filter(q => {
-          // Quizzes de materias que pertenecen a esta carpeta
-          const parentSubject = containers.find(c => c.type === 'subject' && c.id === q.subject_id);
-          return parentSubject && parentSubject.folder_id === containerId;
-        })
-      ];
-    }
-    return [];
+
+    // Courses y folders NO tienen quizzes directos, solo contenedores hijos
+    return childContainers;
   };
 
   // Drag and drop handler
