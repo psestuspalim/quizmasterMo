@@ -256,19 +256,15 @@ export default function FileExplorer({
             {...provided.draggableProps}
             {...provided.dragHandleProps}
           >
-            <Droppable droppableId={`${type}-${item.id}`} type="ITEM" isDropDisabled={type === 'quiz'}>
-              {(droppableProvided, droppableSnapshot) => (
-                <div
-                  ref={droppableProvided.innerRef}
-                  {...droppableProvided.droppableProps}
-                  className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
-                    isSelected 
-                      ? 'bg-indigo-50 border-indigo-400' 
-                      : droppableSnapshot.isDraggingOver || isDragOver
-                      ? 'bg-amber-50 border-amber-400 shadow-lg'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                  } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
-                >
+            <div
+              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
+                isSelected 
+                  ? 'bg-indigo-50 border-indigo-400' 
+                  : isDragOver
+                  ? 'bg-amber-50 border-amber-400 shadow-lg'
+                  : 'bg-white border-gray-200 hover:border-gray-300'
+              } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
+            >
               {isAdmin && (
                 <Checkbox 
                   checked={isSelected}
@@ -361,24 +357,34 @@ export default function FileExplorer({
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              {droppableProvided.placeholder}
             </div>
-              )}
-            </Droppable>
 
-            {/* Children expandidos */}
+            {/* Children expandidos con droppable */}
             <AnimatePresence>
               {isExpanded && hasChildren && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="ml-8 mt-2 space-y-2"
+                  className="ml-8 mt-2"
                 >
-                  {children.map((child, idx) => {
-                    const childType = child.subject_id ? 'quiz' : child.type;
-                    return renderItem(child, childType, idx);
-                  })}
+                  <Droppable droppableId={`${type}-${item.id}`} type="ITEM">
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`space-y-2 p-2 rounded-lg border-2 border-dashed min-h-[60px] ${
+                          snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
+                        }`}
+                      >
+                        {children.map((child, idx) => {
+                          const childType = child.subject_id ? 'quiz' : child.type;
+                          return renderItem(child, childType, idx);
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </motion.div>
               )}
             </AnimatePresence>
