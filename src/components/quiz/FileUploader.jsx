@@ -458,8 +458,14 @@ export default function FileUploader({ onUploadSuccess }) {
               <Textarea
                 value={jsonText}
                 onChange={(e) => setJsonText(e.target.value)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  setJsonText(pastedText);
+                }}
                 placeholder='{"quiz": [{"question": "...", "answerOptions": [...]}]}'
-                className="min-h-[200px] font-mono text-sm mb-4"
+                className="min-h-[200px] max-h-[400px] font-mono text-sm mb-4 resize-y"
+                rows={10}
               />
               <div className="flex flex-wrap gap-3">
                                     <Button
