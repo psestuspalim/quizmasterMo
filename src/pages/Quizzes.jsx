@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buildContainers } from '../components/utils/contentTree';
+import { moveItemsInBackend } from '../components/utils/moveItems';
 import { DragDropContext } from '@hello-pangea/dnd';
 import DraggableItem from '../components/dnd/DraggableItem';
 import DroppableArea from '../components/dnd/DroppableArea';
@@ -1007,41 +1008,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 isAdmin={isAdmin}
                 currentContainerId={null}
                 onMoveItems={async (items, targetId, targetType) => {
-                  for (const item of items) {
-                    if (item.type === 'quiz') {
-                      await updateQuizMutation.mutateAsync({ 
-                        id: item.id, 
-                        data: { subject_id: targetId || null } 
-                      });
-                    } else if (item.type === 'subject') {
-                      const updateData = {};
-                      if (!targetId) {
-                        updateData.course_id = null;
-                        updateData.folder_id = null;
-                      } else if (targetType === 'course') {
-                        updateData.course_id = targetId;
-                        updateData.folder_id = null;
-                      } else if (targetType === 'folder') {
-                        updateData.folder_id = targetId;
-                      }
-                      await updateSubjectMutation.mutateAsync({ id: item.id, data: updateData });
-                    } else if (item.type === 'folder') {
-                      const updateData = {};
-                      if (!targetId) {
-                        updateData.course_id = null;
-                        updateData.parent_id = null;
-                      } else if (targetType === 'course') {
-                        updateData.course_id = targetId;
-                        updateData.parent_id = null;
-                      } else if (targetType === 'folder') {
-                        updateData.parent_id = targetId;
-                        updateData.course_id = null;
-                      }
-                      await updateFolderMutation.mutateAsync({ id: item.id, data: updateData });
-                    } else if (item.type === 'course') {
-                      // Los cursos no se pueden mover a otros contenedores
-                    }
-                  }
+                  await moveItemsInBackend(items, targetId, targetType, {
+                    updateFolder: (params) => updateFolderMutation.mutateAsync(params),
+                    updateSubject: (params) => updateSubjectMutation.mutateAsync(params),
+                    updateQuiz: (params) => updateQuizMutation.mutateAsync(params)
+                  });
                   queryClient.invalidateQueries(['quizzes']);
                   queryClient.invalidateQueries(['subjects']);
                   queryClient.invalidateQueries(['folders']);
