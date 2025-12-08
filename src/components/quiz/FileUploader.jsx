@@ -64,37 +64,45 @@ export default function FileUploader({ onUploadSuccess }) {
     }
     // Formato con quizMetadata y questions
     else if (data.questions && Array.isArray(data.questions)) {
-      title = data.quizMetadata?.title || title;
-      description = data.quizMetadata?.focus || data.quizMetadata?.source || '';
+      title = data.quizMetadata?.title || data.title || title;
+      description = data.quizMetadata?.focus || data.quizMetadata?.source || data.description || '';
 
-      questions = data.questions.map((q) => ({
-        type: q.type || 'text',
-        question: q.questionText || q.question,
-        hint: q.cinephileTip || q.hint || q.analysis || '',
-        feedback: q.analysis || q.feedback || '',
-        difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
-        bloomLevel: q.bloomLevel || '',
-        answerOptions: (q.options || q.answerOptions || []).map(opt => ({
-          // Soportar formato con label (A, B, C, D)
-          text: opt.label ? `${opt.label}. ${opt.text}` : opt.text,
-          isCorrect: opt.isCorrect,
-          rationale: opt.feedback || opt.rationale || q.analysis || ''
-        }))
-      }));
+      questions = data.questions.map((q) => {
+        const options = q.options || q.answerOptions || [];
+        return {
+          type: q.type || 'text',
+          question: q.questionText || q.question || q.text,
+          hint: q.cinephileTip || q.hint || q.analysis || '',
+          feedback: q.analysis || q.feedback || '',
+          difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
+          bloomLevel: q.bloomLevel || '',
+          answerOptions: options.map(opt => ({
+            text: opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt),
+            isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
+            rationale: opt.feedback || opt.rationale || opt.analysis || q.analysis || ''
+          }))
+        };
+      });
     }
     // Formato original con array "quiz"
     else if (data.quiz && Array.isArray(data.quiz)) {
-      questions = data.quiz.map((q) => ({
-        ...q,
-        type: q.type || 'text',
-        question: q.questionText || q.question,
-        difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
-        answerOptions: (q.answerOptions || []).map(opt => ({
-          text: opt.text,
-          isCorrect: opt.isCorrect,
-          rationale: opt.feedback || opt.rationale || ''
-        }))
-      }));
+      title = data.title || title;
+      description = data.description || '';
+      
+      questions = data.quiz.map((q) => {
+        const options = q.answerOptions || q.options || [];
+        return {
+          type: q.type || 'text',
+          question: q.questionText || q.question || q.text,
+          hint: q.hint || q.cinephileTip || '',
+          difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
+          answerOptions: options.map(opt => ({
+            text: opt.text || opt,
+            isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
+            rationale: opt.feedback || opt.rationale || ''
+          }))
+        };
+      });
     }
     else {
       throw new Error('Formato de archivo inválido. Debe contener "qm/q", "quiz" o "questions"');
