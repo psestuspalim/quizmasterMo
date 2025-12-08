@@ -68,6 +68,21 @@ export default function FileUploader({ onUploadSuccess }) {
       description = data.quizMetadata?.focus || data.quizMetadata?.source || data.description || '';
 
       questions = data.questions.map((q) => {
+        // Si answerOptions ya existe y tiene la estructura correcta, usarlo
+        if (q.answerOptions && Array.isArray(q.answerOptions) && q.answerOptions.length > 0 && q.answerOptions[0].text) {
+          return {
+            type: q.type || 'text',
+            question: q.questionText || q.question || q.text,
+            hint: q.cinephileTip || q.hint || q.analysis || '',
+            feedback: q.analysis || q.feedback || '',
+            difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
+            bloomLevel: q.bloomLevel || '',
+            answerOptions: q.answerOptions,
+            imageUrl: q.imageUrl || null
+          };
+        }
+        
+        // Si no, mapear desde options u otras fuentes
         const options = q.options || q.answerOptions || [];
         return {
           type: q.type || 'text',
@@ -76,6 +91,7 @@ export default function FileUploader({ onUploadSuccess }) {
           feedback: q.analysis || q.feedback || '',
           difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
           bloomLevel: q.bloomLevel || '',
+          imageUrl: q.imageUrl || null,
           answerOptions: options.map(opt => ({
             text: opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt),
             isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
