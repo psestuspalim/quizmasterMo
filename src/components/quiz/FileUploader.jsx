@@ -44,8 +44,25 @@ export default function FileUploader({ onUploadSuccess }) {
       5: 'Evaluar'
     };
 
+    // FORMATO META + Q (nuevo formato modular)
+    if (data.meta && data.q && Array.isArray(data.q)) {
+      title = data.meta.title || title;
+      description = data.meta.src || '';
+
+      questions = data.q.map((q) => ({
+        type: 'text',
+        question: q.txt,
+        hint: q.ana || '',
+        difficulty: difficultyMap[q.dif] || 'moderado',
+        answerOptions: (q.ops || []).map(opt => ({
+          text: opt.val,
+          isCorrect: opt.ok === true,
+          rationale: opt.err ? `Error común: ${opt.err}` : ''
+        }))
+      }));
+    }
     // FORMATO COMPACTO (qm, q, etc.)
-    if (data.qm && data.q && Array.isArray(data.q)) {
+    else if (data.qm && data.q && Array.isArray(data.q)) {
       title = data.qm.ttl || title;
       description = data.qm.foc || '';
 
@@ -137,7 +154,7 @@ export default function FileUploader({ onUploadSuccess }) {
       });
     }
     else {
-      throw new Error('Formato de archivo inválido. Debe contener "qm/q", "quiz" o "questions"');
+      throw new Error('Formato de archivo inválido. Debe contener "meta/q", "qm/q", "quiz" o "questions"');
     }
 
     await onUploadSuccess({
