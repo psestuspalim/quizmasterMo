@@ -67,45 +67,54 @@ export default function FileUploader({ onUploadSuccess }) {
       title = data.quizMetadata?.title || data.title || title;
       description = data.quizMetadata?.focus || data.quizMetadata?.source || data.description || '';
 
-      questions = data.questions.map((q) => {
+      questions = data.questions.map((q, idx) => {
         // Normalizar answerOptions
         let normalizedOptions = [];
-        
+
         if (q.answerOptions && Array.isArray(q.answerOptions) && q.answerOptions.length > 0) {
-          // Verificar que tenga la estructura correcta
-          const hasCorrectStructure = q.answerOptions.every(opt => 
-            opt && typeof opt === 'object' && opt.text && opt.text.trim().length > 0
-          );
-          
-          if (hasCorrectStructure) {
-            normalizedOptions = q.answerOptions.map(opt => ({
-              text: opt.text,
-              isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
-              rationale: opt.rationale || opt.feedback || ''
+          normalizedOptions = q.answerOptions
+            .filter(opt => opt && typeof opt === 'object' && opt.text && opt.text.trim().length > 0)
+            .map(opt => ({
+              text: opt.text.trim(),
+              isCorrect: opt.isCorrect === true || opt.isCorrect === 1 || opt.isCorrect === '1',
+              rationale: (opt.rationale || opt.feedback || opt.explanation || '').trim()
             }));
-          }
         }
-        
+
         // Si answerOptions no funcionó, intentar con options
         if (normalizedOptions.length === 0 && q.options && Array.isArray(q.options) && q.options.length > 0) {
-          normalizedOptions = q.options.map(opt => ({
-            text: opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt),
-            isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
-            rationale: opt.feedback || opt.rationale || opt.analysis || ''
-          }));
+          normalizedOptions = q.options
+            .filter(opt => opt && (opt.text || typeof opt === 'string'))
+            .map(opt => ({
+              text: (opt.label ? `${opt.label}. ${opt.text}` : (opt.text || opt)).trim(),
+              isCorrect: opt.isCorrect === true || opt.isCorrect === 1 || opt.isCorrect === '1',
+              rationale: (opt.feedback || opt.rationale || opt.analysis || '').trim()
+            }));
         }
-        
+
+        const questionText = (q.questionText || q.question || q.text || '').trim();
+
+        if (!questionText) {
+          console.warn(`Pregunta ${idx + 1} sin texto válido, omitida`);
+          return null;
+        }
+
+        if (normalizedOptions.length === 0) {
+          console.warn(`Pregunta ${idx + 1} ("${questionText.slice(0, 50)}...") sin opciones válidas, omitida`);
+          return null;
+        }
+
         return {
           type: q.type || 'text',
-          question: q.questionText || q.question || q.text,
-          hint: q.hint || q.cinephileTip || q.analysis || '',
-          feedback: q.analysis || q.feedback || '',
+          question: questionText,
+          hint: (q.hint || q.cinephileTip || q.analysis || '').trim(),
+          feedback: (q.analysis || q.feedback || '').trim(),
           difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
           bloomLevel: q.bloomLevel || '',
           imageUrl: q.imageUrl || null,
           answerOptions: normalizedOptions
         };
-      }).filter(q => q.answerOptions.length > 0);
+      }).filter(q => q !== null);
     }
     // Formato original con array "quiz"
     else if (data.quiz && Array.isArray(data.quiz)) {
