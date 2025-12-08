@@ -68,18 +68,29 @@ export default function FileUploader({ onUploadSuccess }) {
       description = data.quizMetadata?.focus || data.quizMetadata?.source || data.description || '';
 
       questions = data.questions.map((q) => {
-        // Si answerOptions ya existe y tiene la estructura correcta, usarlo
-        if (q.answerOptions && Array.isArray(q.answerOptions) && q.answerOptions.length > 0 && q.answerOptions[0].text) {
-          return {
-            type: q.type || 'text',
-            question: q.questionText || q.question || q.text,
-            hint: q.cinephileTip || q.hint || q.analysis || '',
-            feedback: q.analysis || q.feedback || '',
-            difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
-            bloomLevel: q.bloomLevel || '',
-            answerOptions: q.answerOptions,
-            imageUrl: q.imageUrl || null
-          };
+        // Si answerOptions ya existe y tiene la estructura correcta, usarlo directamente
+        if (q.answerOptions && Array.isArray(q.answerOptions) && q.answerOptions.length > 0) {
+          // Verificar que tenga la estructura correcta
+          const hasCorrectStructure = q.answerOptions.every(opt => 
+            opt && typeof opt === 'object' && 'text' in opt && 'isCorrect' in opt
+          );
+          
+          if (hasCorrectStructure) {
+            return {
+              type: q.type || 'text',
+              question: q.questionText || q.question || q.text,
+              hint: q.cinephileTip || q.hint || q.analysis || '',
+              feedback: q.analysis || q.feedback || '',
+              difficulty: difficultyMap[q.difficulty] || q.difficulty || 'moderado',
+              bloomLevel: q.bloomLevel || '',
+              answerOptions: q.answerOptions.map(opt => ({
+                text: opt.text,
+                isCorrect: opt.isCorrect === true || opt.isCorrect === 1,
+                rationale: opt.rationale || opt.feedback || ''
+              })),
+              imageUrl: q.imageUrl || null
+            };
+          }
         }
         
         // Si no, mapear desde options u otras fuentes
