@@ -110,23 +110,41 @@ export default function FileUploader({ onUploadSuccess }) {
     });
   };
 
-  const handleFile = async (file) => {
-    if (!file) return;
+  const handleFiles = async (files) => {
+    if (!files || files.length === 0) return;
     
-    if (file.type !== 'application/json') {
-      setError('Por favor, selecciona un archivo JSON válido');
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
 
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      await processJsonData(data, file.name);
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const file of files) {
+        if (file.type !== 'application/json') {
+          errorCount++;
+          continue;
+        }
+
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          await processJsonData(data, file.name);
+          successCount++;
+        } catch (err) {
+          console.error(`Error en ${file.name}:`, err);
+          errorCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        setError(null);
+      }
+      if (errorCount > 0) {
+        setError(`${successCount} archivos cargados correctamente, ${errorCount} con errores`);
+      }
     } catch (err) {
-      setError(err.message || 'Error al procesar el archivo');
+      setError(err.message || 'Error al procesar los archivos');
     } finally {
       setIsProcessing(false);
     }
@@ -226,8 +244,8 @@ export default function FileUploader({ onUploadSuccess }) {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
   };
 
   const handleDragOver = (e) => {
@@ -281,10 +299,10 @@ export default function FileUploader({ onUploadSuccess }) {
                 </div>
                 
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Cargar archivo de cuestionario
+                  Cargar archivos de cuestionario
                 </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Arrastra un archivo JSON o haz clic para seleccionar
+                  Arrastra uno o múltiples archivos JSON
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -312,8 +330,9 @@ export default function FileUploader({ onUploadSuccess }) {
                   id="file-upload"
                   type="file"
                   accept=".json"
+                  multiple
                   className="hidden"
-                  onChange={(e) => handleFile(e.target.files[0])}
+                  onChange={(e) => handleFiles(Array.from(e.target.files))}
                 />
               </div>
             </Card>
