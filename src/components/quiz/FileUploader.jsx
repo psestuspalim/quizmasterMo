@@ -44,8 +44,32 @@ export default function FileUploader({ onUploadSuccess }) {
       5: 'Evaluar'
     };
 
-    // FORMATO META + Q (nuevo formato modular)
-    if (data.meta && data.q && Array.isArray(data.q)) {
+    // FORMATO COMPACTO MÁXIMO (m + q con array p)
+    if (data.m && data.q && Array.isArray(data.q)) {
+      title = data.m.title || title;
+      description = data.m.fmt || '';
+
+      questions = data.q.map((q) => {
+        if (!q.p || !Array.isArray(q.p)) return null;
+        
+        const [id, bloomCode, diffNum, questionText, ...optionsArrays] = q.p;
+        
+        return {
+          type: 'text',
+          question: questionText,
+          hint: q.ana || '',
+          difficulty: difficultyMap[diffNum] || 'moderado',
+          bloomLevel: bloomMap[bloomCode] || bloomCode || '',
+          answerOptions: optionsArrays.map(opt => ({
+            text: `${opt[0]}. ${opt[1]}`,
+            isCorrect: opt[2] === 1,
+            rationale: opt[3] ? `Tipo de error: ${opt[3]}` : ''
+          }))
+        };
+      }).filter(q => q !== null);
+    }
+    // FORMATO META + Q (formato modular)
+    else if (data.meta && data.q && Array.isArray(data.q)) {
       title = data.meta.title || title;
       description = data.meta.src || '';
 
@@ -154,7 +178,7 @@ export default function FileUploader({ onUploadSuccess }) {
       });
     }
     else {
-      throw new Error('Formato de archivo inválido. Debe contener "meta/q", "qm/q", "quiz" o "questions"');
+      throw new Error('Formato de archivo inválido. Debe contener "m/q", "meta/q", "qm/q", "quiz" o "questions"');
     }
 
     await onUploadSuccess({
