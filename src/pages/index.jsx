@@ -1,7 +1,6 @@
-// src/pages/index.jsx
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./Layout.jsx";
+import Layout from "../Layout";
 
 // ✅ Lazy load de todas las páginas para reducir el bundle inicial
 const Quizzes = lazy(() => import("./Quizzes"));
