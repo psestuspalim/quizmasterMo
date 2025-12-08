@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MathText from './MathText';
 import ImageQuestionView from './ImageQuestionView';
 import ErrorAnalysis from './ErrorAnalysis';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 export default function QuestionView({ 
   question, 
@@ -164,7 +164,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
   const handleNext = () => {
     const isCorrect = selectedOption.isCorrect;
-    onAnswer(isCorrect, { ...selectedOption, userNote, reflection: reflectionText }, question);
+    onAnswer(isCorrect, selectedOption, question);
     setUserNote('');
     setReflectionText('');
   };
