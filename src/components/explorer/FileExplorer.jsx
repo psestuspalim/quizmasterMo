@@ -180,13 +180,23 @@ export default function FileExplorer({
     if (containerType === 'course') {
       return [
         ...containers.filter(c => c.type === 'folder' && c.course_id === containerId && !c.parent_id),
-        ...containers.filter(c => c.type === 'subject' && c.course_id === containerId && !c.folder_id)
+        ...containers.filter(c => c.type === 'subject' && c.course_id === containerId && !c.folder_id),
+        ...quizzes.filter(q => {
+          // Quizzes de materias que pertenecen a este curso
+          const parentSubject = containers.find(c => c.type === 'subject' && c.id === q.subject_id);
+          return parentSubject && parentSubject.course_id === containerId && !parentSubject.folder_id;
+        })
       ];
     }
     if (containerType === 'folder') {
       return [
         ...containers.filter(c => c.type === 'folder' && c.parent_id === containerId),
-        ...containers.filter(c => c.type === 'subject' && c.folder_id === containerId)
+        ...containers.filter(c => c.type === 'subject' && c.folder_id === containerId),
+        ...quizzes.filter(q => {
+          // Quizzes de materias que pertenecen a esta carpeta
+          const parentSubject = containers.find(c => c.type === 'subject' && c.id === q.subject_id);
+          return parentSubject && parentSubject.folder_id === containerId;
+        })
       ];
     }
     return [];
@@ -216,11 +226,15 @@ export default function FileExplorer({
         // Mover a raíz (sin contenedor padre)
         await onMoveItems(itemsToMove, null, null);
       } else {
-        await onMoveItems(itemsToMove, destId, destType);
+        // Determinar el tipo correcto del destino
+        const targetContainer = containers.find(c => c.id === destId);
+        const targetType = targetContainer ? targetContainer.type : destType;
+        await onMoveItems(itemsToMove, destId, targetType);
       }
       clearSelection();
       toast.success('Elementos movidos correctamente');
     } catch (error) {
+      console.error('Error al mover:', error);
       toast.error('Error al mover elementos');
     }
   };
@@ -378,7 +392,7 @@ export default function FileExplorer({
                         }`}
                       >
                         {children.map((child, idx) => {
-                          const childType = child.subject_id ? 'quiz' : child.type;
+                          const childType = child.subject_id !== undefined ? 'quiz' : child.type;
                           return renderItem(child, childType, idx);
                         })}
                         {provided.placeholder}
