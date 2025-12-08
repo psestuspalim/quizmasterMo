@@ -57,11 +57,11 @@ export default function FileUploader({ onUploadSuccess }) {
         return {
           type: 'text',
           question: questionText,
-          hint: q.ana || '',
+          feedback: q.ana || '',
           difficulty: difficultyMap[diffNum] || 'moderado',
           bloomLevel: bloomMap[bloomCode] || bloomCode || '',
           answerOptions: optionsArrays.map(opt => ({
-            text: `${opt[0]}. ${opt[1]}`,
+            text: opt[1],
             isCorrect: opt[2] === 1,
             rationale: opt[3] ? `Tipo de error: ${opt[3]}` : ''
           }))
