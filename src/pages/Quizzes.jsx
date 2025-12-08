@@ -7,6 +7,7 @@ import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { buildContainers } from '../components/utils/contentTree';
 import { DragDropContext } from '@hello-pangea/dnd';
 import DraggableItem from '../components/dnd/DraggableItem';
 import DroppableArea from '../components/dnd/DroppableArea';
@@ -1001,11 +1002,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               </div>
 
               <FileExplorer
-                containers={[
-                  ...courses.map(c => ({ ...c, type: 'course' })),
-                  ...folders.map(f => ({ ...f, type: 'folder' })),
-                  ...subjects.map(s => ({ ...s, type: 'subject' }))
-                ]}
+                containers={buildContainers(courses, folders, subjects)}
                 quizzes={quizzes}
                 isAdmin={isAdmin}
                 currentContainerId={null}

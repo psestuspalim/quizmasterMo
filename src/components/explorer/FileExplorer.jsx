@@ -6,7 +6,7 @@ import {
   Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
   CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles, ChevronDown
 } from 'lucide-react';
-import { canMoveItemToTarget } from '../utils/filesystem';
+import { canMoveItemToTarget } from '../utils/contentTree';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
   DropdownMenu,
