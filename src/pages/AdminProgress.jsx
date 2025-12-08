@@ -132,6 +132,147 @@ export default function AdminProgress() {
     return subject?.name || 'Sin materia';
   };
 
+  // Generar PDF por quiz
+  const generateQuizPDF = (student, quizStat) => {
+    const quizAttempts = quizStat.attempts;
+    
+    // Recopilar preguntas incorrectas de este quiz
+    const wrongQuestionsMap = new Map();
+    quizAttempts.forEach(attempt => {
+      attempt.wrong_questions?.forEach(wq => {
+        const key = wq.question;
+        if (!wrongQuestionsMap.has(key)) {
+          wrongQuestionsMap.set(key, {
+            question: wq.question,
+            selectedAnswer: wq.selected_answer,
+            correctAnswer: wq.correct_answer,
+            answerOptions: wq.answerOptions || [],
+            hint: wq.hint,
+            count: 1
+          });
+        } else {
+          wrongQuestionsMap.get(key).count++;
+        }
+      });
+    });
+
+    const wrongQuestions = Array.from(wrongQuestionsMap.values()).sort((a, b) => b.count - a.count);
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reporte ${quizStat.quizTitle} - ${student.username}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #1f2937; border-bottom: 2px solid #6366f1; padding-bottom: 10px; }
+          h2 { color: #374151; margin-top: 30px; }
+          .header-info { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          .header-info p { margin: 5px 0; color: #4b5563; }
+          .stats { display: flex; gap: 20px; margin-top: 10px; }
+          .stat { text-align: center; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
+          .stat-label { font-size: 12px; color: #6b7280; }
+          .attempts-section { margin-top: 20px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; }
+          .attempt-item { border-bottom: 1px solid #e5e7eb; padding: 10px 0; }
+          .attempt-item:last-child { border-bottom: none; }
+          .question-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+          .question-title { font-weight: bold; color: #1f2937; margin-bottom: 10px; }
+          .options-list { margin-top: 12px; }
+          .option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; margin: 4px 0; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; }
+          .option-correct { background: #f0fdf4; border-color: #86efac; }
+          .option-selected:not(.option-correct) { background: #fef2f2; border-color: #fecaca; }
+          .option-letter { font-weight: bold; color: #6b7280; min-width: 20px; }
+          .option-text { flex: 1; }
+          .check { color: #16a34a; font-weight: bold; }
+          .cross { color: #dc2626; font-weight: bold; }
+          .rationale { margin-top: 10px; padding: 10px; background: #eff6ff; border-radius: 6px; font-size: 13px; color: #1e40af; }
+          .hint { margin-top: 8px; padding: 8px; background: #fdf4ff; border-radius: 6px; font-size: 12px; color: #86198f; }
+          .count-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>📊 ${quizStat.quizTitle}</h1>
+        <div class="header-info">
+          <p><strong>Estudiante:</strong> ${student.username || 'Sin nombre'}</p>
+          <p><strong>Email:</strong> ${student.email}</p>
+          <p><strong>Fecha:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">${quizStat.totalAttempts}</div>
+              <div class="stat-label">Intentos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${Math.round(quizStat.bestScore)}%</div>
+              <div class="stat-label">Mejor</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${Math.round(quizStat.avgScore)}%</div>
+              <div class="stat-label">Promedio</div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Historial de Intentos</h2>
+        <div class="attempts-section">
+          ${quizAttempts.map((att, idx) => `
+            <div class="attempt-item">
+              <strong>Intento ${idx + 1}</strong> - 
+              ${format(new Date(att.completed_at || att.created_date), 'dd/MM/yyyy HH:mm')} - 
+              <span style="color: ${(att.score / att.total_questions) * 100 >= 70 ? '#16a34a' : '#dc2626'}">
+                ${att.score}/${att.total_questions} (${Math.round((att.score / att.total_questions) * 100)}%)
+              </span>
+            </div>
+          `).join('')}
+        </div>
+
+        ${wrongQuestions.length > 0 ? `
+          <h2>Preguntas Incorrectas (${wrongQuestions.length})</h2>
+          ${wrongQuestions.map((wq, idx) => `
+            <div class="question-card">
+              <div class="question-title">
+                ${idx + 1}. ${wq.question}
+                ${wq.count > 1 ? `<span class="count-badge">Fallada ${wq.count}x</span>` : ''}
+              </div>
+              ${wq.answerOptions && wq.answerOptions.length > 0 ? `
+                <div class="options-list">
+                  ${wq.answerOptions.map((opt, i) => `
+                    <div class="option ${opt.isCorrect ? 'option-correct' : ''} ${opt.text === wq.selectedAnswer ? 'option-selected' : ''}">
+                      <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                      <span class="option-text">${opt.text}</span>
+                      ${opt.isCorrect ? '<span class="check">✓</span>' : ''}
+                      ${opt.text === wq.selectedAnswer && !opt.isCorrect ? '<span class="cross">✗</span>' : ''}
+                    </div>
+                  `).join('')}
+                </div>
+                ${wq.answerOptions.find(o => o.isCorrect)?.rationale ? `
+                  <div class="rationale">
+                    <strong>💡 Explicación:</strong> ${wq.answerOptions.find(o => o.isCorrect).rationale}
+                  </div>
+                ` : ''}
+              ` : ''}
+              ${wq.hint ? `<div class="hint">🎬 <em>${wq.hint}</em></div>` : ''}
+            </div>
+          `).join('')}
+        ` : '<p style="text-align: center; color: #16a34a; padding: 20px;">✓ Sin errores registrados</p>'}
+
+        <div style="margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px;">
+          Generado automáticamente • ${format(new Date(), 'dd/MM/yyyy')}
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
   // Generar PDF de errores
   const generateErrorsPDF = (student) => {
     // Recopilar todas las preguntas incorrectas únicas con todas las opciones
@@ -548,18 +689,29 @@ export default function AdminProgress() {
                                 Mejor: {Math.round(quizStat.bestScore)}%
                               </Badge>
                               <Badge className={`text-xs ${
-                                quizStat.avgScore >= 70 ? 'bg-green-100 text-green-800' :
-                                quizStat.avgScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
+                              quizStat.avgScore >= 70 ? 'bg-green-100 text-green-800' :
+                              quizStat.avgScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
                               }`}>
-                                Prom: {Math.round(quizStat.avgScore)}%
+                              Prom: {Math.round(quizStat.avgScore)}%
                               </Badge>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {quizStat.totalAttempts} {quizStat.totalAttempts === 1 ? 'intento' : 'intentos'}
-                          </div>
-                        </div>
+                              </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                              <div className="text-xs text-gray-500">
+                              {quizStat.totalAttempts} {quizStat.totalAttempts === 1 ? 'intento' : 'intentos'}
+                              </div>
+                              <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => generateQuizPDF(selectedStudent, quizStat)}
+                              className="h-7 text-xs text-indigo-600 hover:bg-indigo-50"
+                              >
+                              <FileDown className="w-3 h-3 mr-1" />
+                              PDF
+                              </Button>
+                              </div>
+                              </div>
                       ))}
                     </div>
                   </CardContent>
