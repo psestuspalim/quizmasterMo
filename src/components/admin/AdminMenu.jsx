@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import FixQuizzesButton from './FixQuizzesButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,13 @@ export default function AdminMenu({
       onClick: onOpenQuizExporter,
       description: 'Descargar todos los JSON'
     },
+  ];
+
+  const specialActions = [
+    {
+      component: FixQuizzesButton,
+      key: 'fix-quizzes'
+    }
   ];
 
   if (compact) {
@@ -121,6 +129,9 @@ export default function AdminMenu({
           <span className="hidden sm:inline">{action.label}</span>
         </Button>
       ))}
+      {specialActions.map((action) => (
+        <action.component key={action.key} />
+      ))}
     </div>
   );
-}
+  }
