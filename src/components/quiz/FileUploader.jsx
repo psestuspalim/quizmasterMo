@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
 import TextQuizCreator from './TextQuizCreator';
+import { toCompactFormat } from '../utils/quizFormats';
 
 export default function FileUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
@@ -181,11 +182,16 @@ export default function FileUploader({ onUploadSuccess }) {
       throw new Error('Formato de archivo inválido. Debe contener "m/q", "meta/q", "qm/q", "quiz" o "questions"');
     }
 
-    await onUploadSuccess({
+    // Convertir a formato compacto cQ-v2 antes de guardar
+    const compactQuiz = toCompactFormat({
       title,
       description: description || `Cuestionario con ${questions.length} preguntas`,
       questions,
-      total_questions: questions.length,
+      total_questions: questions.length
+    });
+
+    await onUploadSuccess({
+      ...compactQuiz,
       file_name: fileName,
       is_hidden: false
     });

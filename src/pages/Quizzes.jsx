@@ -9,6 +9,7 @@ import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buildContainers } from '../components/utils/contentTree';
 import { moveItemsInBackend } from '../components/utils/moveItems';
+import { fromCompactFormat, isCompactFormat } from '../components/utils/quizFormats';
 import { DragDropContext } from '@hello-pangea/dnd';
 import DraggableItem from '../components/dnd/DraggableItem';
 import DroppableArea from '../components/dnd/DroppableArea';
@@ -407,12 +408,15 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
-    if (!quiz.questions || quiz.questions.length === 0) {
+    // Convertir de formato compacto si es necesario
+    const expandedQuiz = isCompactFormat(quiz) ? fromCompactFormat(quiz) : quiz;
+    
+    if (!expandedQuiz.questions || expandedQuiz.questions.length === 0) {
       alert('Este quiz no tiene preguntas');
       return;
     }
     
-    let filteredQuestions = [...quiz.questions];
+    let filteredQuestions = [...expandedQuiz.questions];
     
     if (selectedDeck === 'wrong') {
       const wrongQuestionsMap = new Map();
@@ -432,7 +436,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: quiz.id,
-      subject_id: quiz.subject_id,
+      subject_id: quiz.subject_id || expandedQuiz.subject_id,
       user_email: currentUser.email,
       username: currentUser.username,
       score: 0,
@@ -443,7 +447,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     });
     
     setCurrentAttemptId(attempt.id);
-    setSelectedQuiz({ ...quiz, questions: shuffledQuestions });
+    setSelectedQuiz({ ...expandedQuiz, ...quiz, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
@@ -584,11 +588,13 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       };
 
       const handleStartSwipeMode = (quiz) => {
-        if (!quiz.questions || quiz.questions.length === 0) {
+        const expandedQuiz = isCompactFormat(quiz) ? fromCompactFormat(quiz) : quiz;
+
+        if (!expandedQuiz.questions || expandedQuiz.questions.length === 0) {
           alert('Este quiz no tiene preguntas');
           return;
         }
-        setSelectedQuiz(quiz);
+        setSelectedQuiz({ ...quiz, questions: expandedQuiz.questions });
         setSwipeMode(true);
         setView('quiz');
       };
