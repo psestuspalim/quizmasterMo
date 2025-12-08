@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "../Layout";
 
 // ✅ Lazy load de todas las páginas para reducir el bundle inicial
 const Quizzes = lazy(() => import("./Quizzes"));
@@ -28,16 +27,12 @@ function FullPageFallback() {
   );
 }
 
-function PagesContent() {
+export default function Pages() {
   return (
-    <Layout>
-      {/* Suspense envuelve todas las rutas lazy */}
+    <Router>
       <Suspense fallback={<FullPageFallback />}>
         <Routes>
-          {/* Ruta por defecto */}
           <Route path="/" element={<Quizzes />} />
-
-          {/* Mantengo los mismos paths que ya usas en createPageUrl('Quizzes'), etc. */}
           <Route path="/Quizzes" element={<Quizzes />} />
           <Route path="/AdminProgress" element={<AdminProgress />} />
           <Route path="/Progress" element={<Progress />} />
@@ -50,19 +45,8 @@ function PagesContent() {
           <Route path="/AdminTasks" element={<AdminTasks />} />
           <Route path="/TournamentLobby" element={<TournamentLobby />} />
           <Route path="/TournamentPlay" element={<TournamentPlay />} />
-
-          {/* (Opcional) Ruta catch-all a Quizzes o a una página 404 más adelante */}
-          {/* <Route path="*" element={<Quizzes />} /> */}
         </Routes>
       </Suspense>
-    </Layout>
-  );
-}
-
-export default function Pages() {
-  return (
-    <Router>
-      <PagesContent />
     </Router>
   );
 }
