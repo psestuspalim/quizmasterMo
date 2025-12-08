@@ -102,10 +102,18 @@ export default function AdminMenu({
               </div>
             </DropdownMenuItem>
           ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
+
+          <DropdownMenuSeparator />
+
+          <div className="px-2 py-1">
+            {specialActions.map((action) => (
+              <action.component key={action.key} />
+            ))}
+          </div>
+          </DropdownMenuContent>
+          </DropdownMenu>
+          );
+          }
 
   return (
     <div className="flex flex-wrap gap-2">
