@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import FixQuizzesButton from './FixQuizzesButton';
 import RemoveDuplicatesButton from './RemoveDuplicatesButton';
+import RemoveDuplicateQuestionsButton from './RemoveDuplicateQuestionsButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +62,10 @@ export default function AdminMenu({
     {
       component: RemoveDuplicatesButton,
       key: 'remove-duplicates'
+    },
+    {
+      component: RemoveDuplicateQuestionsButton,
+      key: 'remove-duplicate-questions'
     }
   ];
 
