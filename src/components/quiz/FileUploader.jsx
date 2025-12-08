@@ -93,8 +93,8 @@ export default function FileUploader({ onUploadSuccess }) {
           }
         }
         
-        // Si no, mapear desde options u otras fuentes
-        const options = q.options || q.answerOptions || [];
+        // Si no, mapear desde options (solo si tiene contenido) o answerOptions
+        const options = (q.options && q.options.length > 0) ? q.options : (q.answerOptions || []);
         return {
           type: q.type || 'text',
           question: q.questionText || q.question || q.text,
