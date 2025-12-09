@@ -25,7 +25,7 @@ export default function FileUploader({ onUploadSuccess }) {
     let questions = [];
     let title = fileName.replace('.json', '');
     let description = '';
-    
+
     // Mapeo de dificultad inglés a español
     const difficultyMap = {
       'easy': 'fácil',
@@ -48,9 +48,17 @@ export default function FileUploader({ onUploadSuccess }) {
 
     // FORMATO NUEVO {t, q} con estructura compacta
     if (data.t && data.q && Array.isArray(data.q) && !data.m) {
+      // Expandir el formato compacto
       const expandedQuiz = fromCompactFormat(data);
+
+      // Guardar tanto el formato expandido como el compacto
       await onUploadSuccess({
-        ...toCompactFormat(expandedQuiz),
+        title: data.t,
+        description: '',
+        total_questions: data.q.length,
+        questions: expandedQuiz.questions,
+        t: data.t,
+        q: data.q,
         file_name: fileName,
         is_hidden: false
       });
