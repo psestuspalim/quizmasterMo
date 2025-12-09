@@ -76,12 +76,21 @@ export function fromCompactFormat(compactData) {
   // Formato nuevo
   if (isNewFormat) {
     const { t, q } = compactData;
+    
+    console.log('🔍 Expandiendo formato nuevo {t, q}');
+    console.log('- Array q:', q);
+    console.log('- Primera pregunta:', q[0]);
+    console.log('- Tipo de primera pregunta:', typeof q[0]);
 
     return {
       title: t || 'Quiz sin título',
       description: '',
       total_questions: q.length,
-      questions: q.map(question => {
+      questions: q.map((question, idx) => {
+        console.log(`📝 Pregunta ${idx + 1}:`, question);
+        
+        // Si la pregunta es un string JSON, parsearla
+        const parsedQuestion = typeof question === 'string' ? JSON.parse(question) : question;
         // Buscar feedback general de opciones incorrectas
         let generalFeedback = '';
         if (question.o) {
