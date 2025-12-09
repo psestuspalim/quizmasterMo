@@ -58,11 +58,19 @@ export default function FileUploader({ onUploadSuccess }) {
         description: '',
         total_questions: data.q.length,
         questions: expandedQuiz.questions,
+        t: data.t,
+        q: data.q,
         file_name: fileName,
         is_hidden: false
       };
 
-      console.log('💾 Guardando quiz:', quizData);
+      console.log('💾 Quiz a guardar:');
+      console.log('- Título:', quizData.title);
+      console.log('- Total preguntas:', quizData.total_questions);
+      console.log('- Questions expandidas:', quizData.questions?.length);
+      console.log('- Array q compacto:', quizData.q?.length);
+      console.log('- Primera pregunta expandida:', quizData.questions?.[0]);
+      
       await onUploadSuccess(quizData);
       console.log('✅ Quiz guardado exitosamente');
       return;
