@@ -400,8 +400,9 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                       <p className={`font-semibold text-sm ${selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
                         {selectedOption.isCorrect ? '¡Correcto!' : 'Incorrecto'}
                       </p>
+                      {/* Mostrar feedback de opción o feedback general de pregunta */}
                       {(selectedOption.rationale || question.feedback) && (
-                        <p className={`text-xs mt-1 ${selectedOption.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                        <p className={`text-xs mt-1 leading-relaxed ${selectedOption.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
                           <MathText text={selectedOption.rationale || question.feedback} />
                         </p>
                       )}

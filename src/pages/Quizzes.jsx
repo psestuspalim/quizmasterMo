@@ -422,6 +422,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       return;
     }
 
+    // Asegurar que el feedback (campo n) esté mapeado en todas las preguntas
+    if (quiz.q && Array.isArray(quiz.q)) {
+      expandedQuiz.questions = expandedQuiz.questions.map((q, idx) => ({
+        ...q,
+        feedback: q.feedback || quiz.q[idx]?.n || ''
+      }));
+    }
+
     let filteredQuestions = [...expandedQuiz.questions];
 
     if (selectedDeck === 'wrong') {
