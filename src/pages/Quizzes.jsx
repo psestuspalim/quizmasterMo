@@ -408,27 +408,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   // Filtered data
-  const visibleCourses = courses.filter(c => canUserAccess(c));
-  const unassignedSubjects = subjects.filter(s => !s.course_id && canUserAccess(s));
-  const unassignedFolders = folders.filter(f => !f.course_id && !f.parent_id && canUserAccess(f));
+  const visibleCourses = courses.filter(c => c && c.id && canUserAccess(c));
+  const unassignedSubjects = subjects.filter(s => s && s.id && !s.course_id && canUserAccess(s));
+  const unassignedFolders = folders.filter(f => f && f.id && !f.course_id && !f.parent_id && canUserAccess(f));
   const currentCourseSubjects = selectedCourse 
-    ? subjects.filter(s => s.course_id === selectedCourse.id && canUserAccess(s, selectedCourse))
+    ? subjects.filter(s => s && s.id && s.course_id === selectedCourse.id && canUserAccess(s, selectedCourse))
     : [];
   const currentCourseFolders = selectedCourse
-    ? folders.filter(f => f.course_id === selectedCourse.id && f.parent_id === currentFolderId && canUserAccess(f, selectedCourse))
+    ? folders.filter(f => f && f.id && f.course_id === selectedCourse.id && f.parent_id === currentFolderId && canUserAccess(f, selectedCourse))
     : currentFolderId 
-    ? folders.filter(f => f.parent_id === currentFolderId && canUserAccess(f))
+    ? folders.filter(f => f && f.id && f.parent_id === currentFolderId && canUserAccess(f))
     : [];
 
   const currentFolderQuizzes = currentFolderId
-    ? quizzes.filter(q => q.folder_id === currentFolderId && (isAdmin || !q.is_hidden))
+    ? quizzes.filter(q => q && q.id && q.folder_id === currentFolderId && (isAdmin || !q.is_hidden))
     : [];
   const currentFolderSubjects = currentFolderId
-    ? subjects.filter(s => s.folder_id === currentFolderId && canUserAccess(s))
-    : currentCourseSubjects.filter(s => !s.folder_id);
+    ? subjects.filter(s => s && s.id && s.folder_id === currentFolderId && canUserAccess(s))
+    : currentCourseSubjects.filter(s => s && s.id && !s.folder_id);
 
   const subjectQuizzes = selectedSubject
-    ? quizzes.filter(q => q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
+    ? quizzes.filter(q => q && q.id && q.subject_id === selectedSubject.id && (isAdmin || !q.is_hidden))
     : [];
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
