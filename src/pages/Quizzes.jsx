@@ -408,26 +408,22 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
-    // Convertir de formato compacto si es necesario
-    let expandedQuiz = quiz;
-    if (isCompactFormat(quiz)) {
-      expandedQuiz = fromCompactFormat(quiz);
-    } else if (!quiz.questions && quiz.q) {
-      // Si tiene q pero no questions, expandir
-      expandedQuiz = fromCompactFormat(quiz);
+    // SIEMPRE expandir desde formato compacto si existe q
+    let expandedQuiz;
+    if (quiz.q && Array.isArray(quiz.q)) {
+      // Re-expandir desde formato compacto para asegurar que el feedback esté presente
+      expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: quiz.q.length }, q: quiz.q });
+    } else if (quiz.questions) {
+      // Usar questions si no hay formato compacto
+      expandedQuiz = quiz;
+    } else {
+      alert('Este quiz no tiene preguntas');
+      return;
     }
 
     if (!expandedQuiz.questions || expandedQuiz.questions.length === 0) {
       alert('Este quiz no tiene preguntas');
       return;
-    }
-
-    // Asegurar que el feedback (campo n) esté mapeado en todas las preguntas
-    if (quiz.q && Array.isArray(quiz.q)) {
-      expandedQuiz.questions = expandedQuiz.questions.map((q, idx) => ({
-        ...q,
-        feedback: q.feedback || quiz.q[idx]?.n || ''
-      }));
     }
 
     let filteredQuestions = [...expandedQuiz.questions];

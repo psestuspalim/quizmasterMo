@@ -71,20 +71,14 @@ export default function FileUploader({ onUploadSuccess }) {
 
     // FORMATO cQ COMPACTO (cQ-v2, cQ-v3.3Pro, etc.)
     if (data.m && data.q && Array.isArray(data.q) && data.m.v && data.m.v.startsWith('cQ-v')) {
-      // Expandir el formato compacto para guardar con questions
+      // Guardar AMBOS formatos: el compacto original (m/q) Y el expandido (questions)
       const expanded = fromCompactFormat(data);
-
-      // Asegurar que el feedback (campo n) esté presente
-      const questionsWithFeedback = expanded.questions.map((q, idx) => ({
-        ...q,
-        feedback: q.feedback || data.q[idx]?.n || ''
-      }));
 
       await onUploadSuccess({
         title: data.m.t || fileName,
         description: data.m.s || data.m.f || '',
         total_questions: data.m.c || data.q.length,
-        questions: questionsWithFeedback,
+        questions: expanded.questions,
         m: data.m,
         q: data.q,
         file_name: fileName,
