@@ -68,7 +68,18 @@ export default function FileUploader({ onUploadSuccess }) {
       return;
     }
 
-    // FORMATO COMPACTO MÁXIMO (m + q con array p)
+    // FORMATO cQ-v2 COMPLETO (m + q con campos i/d/x/o)
+    if (data.m && data.q && Array.isArray(data.q) && data.m.v === 'cQ-v2') {
+      const expandedQuiz = fromCompactFormat(data);
+      await onUploadSuccess({
+        ...toCompactFormat(expandedQuiz),
+        file_name: fileName,
+        is_hidden: false
+      });
+      return;
+    }
+    
+    // FORMATO COMPACTO MÁXIMO (m + q con array p) - legacy
     if (data.m && data.q && Array.isArray(data.q)) {
       title = data.m.title || title;
       description = data.m.fmt || '';
