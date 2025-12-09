@@ -411,8 +411,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     // SIEMPRE expandir desde formato compacto si existe q
     let expandedQuiz;
     if (quiz.q && Array.isArray(quiz.q)) {
-      // Re-expandir desde formato compacto para asegurar que el feedback esté presente
-      expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: quiz.q.length }, q: quiz.q });
+      // Detectar formato nuevo {t, q} vs viejo {m, q}
+      if (quiz.t && !quiz.m) {
+        // Formato nuevo
+        expandedQuiz = fromCompactFormat({ t: quiz.t, q: quiz.q });
+      } else {
+        // Formato viejo
+        expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: quiz.q.length }, q: quiz.q });
+      }
     } else if (quiz.questions) {
       // Usar questions si no hay formato compacto
       expandedQuiz = quiz;
