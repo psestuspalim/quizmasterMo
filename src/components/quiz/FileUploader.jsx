@@ -68,9 +68,9 @@ export default function FileUploader({ onUploadSuccess }) {
       return;
     }
 
-    // FORMATO cQ-v2 COMPLETO (m + q con campos i/d/x/o)
-    if (data.m && data.q && Array.isArray(data.q) && data.m.v === 'cQ-v2') {
-      // Ya está en formato compacto cQ-v2, guardar directamente
+    // FORMATO cQ COMPACTO (cQ-v2, cQ-v3.3Pro, etc.)
+    if (data.m && data.q && Array.isArray(data.q) && data.m.v && data.m.v.startsWith('cQ-v')) {
+      // Ya está en formato compacto, guardar directamente
       await onUploadSuccess({
         ...data,
         file_name: fileName,
