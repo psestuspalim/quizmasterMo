@@ -379,28 +379,27 @@ export default function FileUploader({ onUploadSuccess }) {
     try {
       const data = JSON.parse(jsonText);
 
-      // Validar esquema
-      const validation = validateJsonSchema(data);
+      // Validar esquema solo si el formato es el esperado
+      if (data.t && data.q) {
+        const validation = validateJsonSchema(data);
 
-      if (validation.errors.length > 0) {
-        setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
-        setError(`Se encontraron ${validation.errors.length} error(es) crítico(s)`);
-        setIsProcessing(false);
-        return;
-      }
+        if (validation.errors.length > 0) {
+          setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
+          setError(`Se encontraron ${validation.errors.length} error(es) crítico(s)`);
+          setIsProcessing(false);
+          return;
+        }
 
-      if (validation.warnings.length > 0 || validation.info.length > 0) {
-        setJsonErrors([...validation.info, ...validation.warnings]);
+        if (validation.warnings.length > 0 || validation.info.length > 0) {
+          setJsonErrors([...validation.info, ...validation.warnings]);
+        }
       }
 
       const fileName = data.t || data.m?.t || 'Quiz cargado';
       await processJsonData(data, fileName);
-      
-      // Limpiar estado después del éxito
       setJsonText('');
       setJsonErrors([]);
       setError(null);
-      setIsProcessing(false);
     } catch (err) {
       console.error('Error procesando JSON:', err);
       if (err instanceof SyntaxError) {
@@ -409,6 +408,7 @@ export default function FileUploader({ onUploadSuccess }) {
       } else {
         setError(`Error al procesar: ${err.message}`);
       }
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -610,7 +610,7 @@ export default function FileUploader({ onUploadSuccess }) {
             <div className="flex gap-3">
               <Button
                 onClick={handlePasteSubmit}
-                disabled={isProcessing || !jsonText.trim() || (jsonErrors.length > 0 && jsonErrors.some(e => e.startsWith('❌')))}
+                disabled={isProcessing || !jsonText.trim() || error}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
