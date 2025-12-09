@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
 import TextQuizCreator from './TextQuizCreator';
-import { toCompactFormat } from '../utils/quizFormats';
+import { toCompactFormat, fromCompactFormat } from '../utils/quizFormats';
 
 export default function FileUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
