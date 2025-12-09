@@ -46,6 +46,17 @@ export default function FileUploader({ onUploadSuccess }) {
       5: 'Evaluar'
     };
 
+    // FORMATO NUEVO {t, q} con estructura compacta
+    if (data.t && data.q && Array.isArray(data.q) && !data.m) {
+      const expandedQuiz = fromCompactFormat(data);
+      await onUploadSuccess({
+        ...toCompactFormat(expandedQuiz),
+        file_name: fileName,
+        is_hidden: false
+      });
+      return;
+    }
+
     // ARRAY DIRECTO DE PREGUNTAS cQ-v2 (sin wrapper m/q)
     if (Array.isArray(data) && data.length > 0 && data[0].i && data[0].x && data[0].o) {
       // Es un array directo de preguntas en formato cQ-v2
@@ -58,7 +69,7 @@ export default function FileUploader({ onUploadSuccess }) {
         },
         q: data
       };
-      
+
       // Procesar usando fromCompactFormat
       const expandedQuiz = fromCompactFormat(compactData);
       await onUploadSuccess({

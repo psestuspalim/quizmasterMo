@@ -29,40 +29,31 @@ const bloomTextToNumber = {
 };
 
 /**
- * Convierte cualquier formato de quiz a cQ-v2 ultra-compacto
+ * Convierte cualquier formato de quiz a formato compacto
  */
 export function toCompactFormat(quizData) {
   const { title, description, questions = [], total_questions } = quizData;
   
   return {
-    m: {
-      t: title || 'Quiz sin título',
-      s: description || '',
-      v: 'cQ-v2',
-      c: total_questions || questions.length
-    },
+    t: title || 'Quiz sin título',
     q: questions.map((q, idx) => {
-      const bloomLevel = typeof q.bloomLevel === 'string' 
-        ? bloomTextToNumber[q.bloomLevel] 
-        : q.bloomLevel;
-      
       const diffNum = typeof q.difficulty === 'string'
-        ? difficultyToNumber[q.difficulty.toLowerCase()] || 2
-        : q.difficulty || 2;
+        ? difficultyToNumber[q.difficulty.toLowerCase()] || 1
+        : q.difficulty || 1;
 
       return {
-        i: q.id || `Q${String(idx + 1).padStart(3, '0')}`,
-        d: diffNum,
-        ...(bloomLevel && { b: bloomLevel }),
         x: q.question || q.questionText || q.text || '',
-        ...(q.feedback && { n: q.feedback }),
-        ...(q.hint && { h: q.hint }),
-        o: (q.answerOptions || q.options || []).map((opt, optIdx) => ({
-          k: String.fromCharCode(65 + optIdx), // A, B, C, D...
-          v: opt.text || opt,
-          c: opt.isCorrect ? 1 : 0,
-          ...(opt.errorType && { e: opt.errorType }),
-          ...(opt.rationale && { f: opt.rationale })
+        dif: diffNum,
+        qt: q.type || 'mcq',
+        id: q.id || `Q${String(idx + 1).padStart(3, '0')}`,
+        sj: q.subject || '',
+        tp: q.topic || '',
+        sb: q.subtopic || '',
+        o: (q.answerOptions || q.options || []).map((opt) => ({
+          text: opt.text || opt,
+          c: opt.isCorrect === true,
+          r: opt.rationale || '',
+          et: opt.errorType || ''
         }))
       };
     })
@@ -70,22 +61,62 @@ export function toCompactFormat(quizData) {
 }
 
 /**
- * Convierte de formato cQ-v2 a formato expandido para uso en componentes
+ * Convierte de formato compacto a formato expandido para uso en componentes
  */
 export function fromCompactFormat(compactData) {
-  if (!compactData || !compactData.m || !compactData.q) {
-    // Si no es formato compacto, asumir que ya está expandido
+  // Detectar formato nuevo (t, q) vs viejo (m, q)
+  const isNewFormat = compactData && compactData.t && compactData.q && !compactData.m;
+  const isOldFormat = compactData && compactData.m && compactData.q;
+
+  if (!isNewFormat && !isOldFormat) {
+    // Ya está expandido
     return compactData;
   }
 
+  // Formato nuevo
+  if (isNewFormat) {
+    const { t, q } = compactData;
+
+    return {
+      title: t || 'Quiz sin título',
+      description: '',
+      total_questions: q.length,
+      questions: q.map(question => {
+        // Buscar feedback general de opciones incorrectas
+        let generalFeedback = '';
+        if (question.o) {
+          const incorrectOpts = question.o.filter(opt => opt.c === false || opt.c === 0);
+          if (incorrectOpts.length > 0 && incorrectOpts[0].r) {
+            generalFeedback = incorrectOpts[0].r;
+          }
+        }
+
+        return {
+          type: question.qt || 'text',
+          question: question.x || '',
+          difficulty: numberToDifficulty[question.dif] || 'moderado',
+          bloomLevel: null,
+          feedback: generalFeedback,
+          hint: question.h || '',
+          answerOptions: (question.o || []).map(opt => ({
+            text: opt.text || '',
+            isCorrect: opt.c === true,
+            errorType: opt.et || '',
+            rationale: opt.r || ''
+          }))
+        };
+      })
+    };
+  }
+
+  // Formato viejo (cQ-v2)
   const { m, q } = compactData;
-  
+
   return {
     title: m.t,
     description: m.s || '',
     total_questions: m.c || q.length,
     questions: q.map(question => {
-      // Si no hay campo 'n', buscar el 'r' de las opciones incorrectas como feedback general
       let generalFeedback = question.n || '';
       if (!generalFeedback && question.o) {
         const incorrectOpts = question.o.filter(opt => opt.c !== 1);
@@ -116,5 +147,10 @@ export function fromCompactFormat(compactData) {
  * Detecta si un quiz está en formato compacto
  */
 export function isCompactFormat(data) {
-  return data && data.m && data.q && data.m.v === 'cQ-v2';
+  // Formato nuevo: {t, q}
+  const isNewFormat = data && data.t && data.q && !data.m;
+  // Formato viejo: {m, q}
+  const isOldFormat = data && data.m && data.q && data.m.v === 'cQ-v2';
+  
+  return isNewFormat || isOldFormat;
 }
