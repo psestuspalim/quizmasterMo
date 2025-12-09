@@ -15,7 +15,7 @@ export default function FileUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('json');
+  const [activeTab, setActiveTab] = useState('text');
   const [jsonText, setJsonText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -490,14 +490,10 @@ export default function FileUploader({ onUploadSuccess }) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="text">
                     <FileText className="w-4 h-4 mr-2" />
                     Texto
-                  </TabsTrigger>
-                  <TabsTrigger value="json">
-                    <FileJson className="w-4 h-4 mr-2" />
-                    JSON
                   </TabsTrigger>
                   <TabsTrigger value="image">
                     <Image className="w-4 h-4 mr-2" />
@@ -509,179 +505,7 @@ export default function FileUploader({ onUploadSuccess }) {
                   </TabsTrigger>
                 </TabsList>
 
-        <TabsContent value="json">
-          {!showPasteArea ? (
-            <Card
-              className={`border-2 border-dashed transition-all duration-200 ${
-                isDragging
-                  ? 'border-indigo-500 bg-indigo-50/50'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
-              <div className="p-12 text-center">
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                    <FileJson className="w-10 h-10 text-gray-400" />
-                  </div>
-                </div>
-                
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Cargar archivos de cuestionario
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Arrastra uno o múltiples archivos JSON
-                </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    type="button"
-                    disabled={isProcessing}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                    onClick={() => document.getElementById('file-upload').click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {isProcessing ? 'Procesando...' : 'Seleccionar archivo'}
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowPasteArea(true)}
-                  >
-                    <ClipboardPaste className="w-4 h-4 mr-2" />
-                    Pegar JSON
-                  </Button>
-                </div>
-                
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".json"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFiles(Array.from(e.target.files))}
-                />
-              </div>
-            </Card>
-          ) : (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Pegar JSON
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const exampleJson = `{
-  "quizMetadata": {
-    "title": "Nombre del Quiz"
-  },
-  "questions": [
-    {
-      "questionText": "¿Tu pregunta aquí?",
-      "options": [
-        { "text": "Opción correcta", "isCorrect": true, "feedback": "Explicación" },
-        { "text": "Opción incorrecta", "isCorrect": false, "feedback": "Por qué no" }
-      ],
-      "cinephileTip": "Pista opcional"
-    }
-  ]
-}`;
-                    setJsonText(exampleJson);
-                  }}
-                  className="text-indigo-600 hover:text-indigo-700 text-xs"
-                >
-                  📋 Copiar estructura base
-                </Button>
-              </div>
-              <Textarea
-                value={jsonText}
-                onChange={(e) => {
-                  setJsonText(e.target.value);
-                  setJsonErrors([]);
-                  setError(null);
-                  // Validar sintaxis en tiempo real
-                  if (e.target.value.trim()) {
-                    try {
-                      JSON.parse(e.target.value);
-                    } catch (err) {
-                      if (err instanceof SyntaxError) {
-                        setError(`⚠️ Error de sintaxis: ${err.message}`);
-                      }
-                    }
-                  }
-                }}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  const pastedText = e.clipboardData.getData('text');
-                  setJsonText(pastedText);
-                }}
-                placeholder='{"m": {"t": "Título", "v": "cQ-v2", "c": 1}, "q": [...]}'
-                className="min-h-[200px] max-h-[400px] font-mono text-sm mb-4 resize-y"
-                rows={10}
-              />
-              {jsonErrors.length > 0 && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg max-h-60 overflow-y-auto">
-                  <p className="text-xs font-semibold text-amber-900 mb-2">
-                    {jsonErrors.some(e => e.startsWith('❌')) ? '⚠️ Problemas encontrados:' : '💡 Sugerencias:'}
-                  </p>
-                  <ul className="text-xs space-y-0.5">
-                    {jsonErrors.map((err, idx) => (
-                      <li key={idx} className={
-                        err.startsWith('❌') ? 'text-red-700' :
-                        err.startsWith('⚠️') ? 'text-amber-700' :
-                        'text-blue-600'
-                      }>{err}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="flex flex-wrap gap-3">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setShowPasteArea(false);
-                                        setJsonText('');
-                                        setError(null);
-                                      }}
-                                    >
-                                      Cancelar
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={handleRepairJson}
-                                      disabled={isRepairing || !jsonText.trim()}
-                                      className="text-amber-600 border-amber-300 hover:bg-amber-50"
-                                    >
-                                      {isRepairing ? (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      ) : (
-                                        <Wrench className="w-4 h-4 mr-2" />
-                                      )}
-                                      Reparar JSON
-                                    </Button>
-                                    <Button
-                                      onClick={handlePasteSubmit}
-                                      disabled={isProcessing || !jsonText.trim()}
-                                      className="bg-indigo-600 hover:bg-indigo-700"
-                                    >
-                                      {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
-                                    </Button>
-                                  </div>
-            </Card>
-          )}
-
-          {error && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
 
         <TabsContent value="text">
           <TextQuizCreator 
