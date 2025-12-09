@@ -409,15 +409,21 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
     // Convertir de formato compacto si es necesario
-    const expandedQuiz = isCompactFormat(quiz) ? fromCompactFormat(quiz) : quiz;
-    
+    let expandedQuiz = quiz;
+    if (isCompactFormat(quiz)) {
+      expandedQuiz = fromCompactFormat(quiz);
+    } else if (!quiz.questions && quiz.q) {
+      // Si tiene q pero no questions, expandir
+      expandedQuiz = fromCompactFormat(quiz);
+    }
+
     if (!expandedQuiz.questions || expandedQuiz.questions.length === 0) {
       alert('Este quiz no tiene preguntas');
       return;
     }
-    
+
     let filteredQuestions = [...expandedQuiz.questions];
-    
+
     if (selectedDeck === 'wrong') {
       const wrongQuestionsMap = new Map();
       quizAttempts.forEach(attempt => {
@@ -425,7 +431,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       });
       filteredQuestions = Array.from(wrongQuestionsMap.values());
     }
-    
+
     const shuffledQuestions = [...filteredQuestions]
       .sort(() => Math.random() - 0.5)
       .slice(0, Math.min(questionCount, filteredQuestions.length))
@@ -433,7 +439,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         ...q,
         answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
       }));
-    
+
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: quiz.id,
       subject_id: quiz.subject_id || expandedQuiz.subject_id,
@@ -445,9 +451,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       is_completed: false,
       wrong_questions: []
     });
-    
+
     setCurrentAttemptId(attempt.id);
-    setSelectedQuiz({ ...expandedQuiz, ...quiz, questions: shuffledQuestions });
+    setSelectedQuiz({ ...quiz, id: quiz.id, subject_id: quiz.subject_id, title: expandedQuiz.title, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setScore(0);
     setWrongAnswers([]);
