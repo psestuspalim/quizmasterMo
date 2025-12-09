@@ -58,14 +58,11 @@ export default function FileUploader({ onUploadSuccess }) {
         description: '',
         total_questions: data.q.length,
         questions: expandedQuiz.questions,
-        t: data.t,
-        q: data.q.map(q => typeof q === 'string' ? q : JSON.stringify(q)),
         file_name: fileName,
         is_hidden: false
       };
 
       console.log('💾 Guardando quiz:', quizData);
-      // Guardar tanto el formato expandido como el compacto
       await onUploadSuccess(quizData);
       console.log('✅ Quiz guardado exitosamente');
       return;
