@@ -400,20 +400,10 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                       <p className={`font-semibold text-sm ${selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
                         {selectedOption.isCorrect ? '¡Correcto!' : 'Incorrecto'}
                       </p>
-                      {selectedOption.rationale && (
+                      {(selectedOption.rationale || question.feedback) && (
                         <p className={`text-xs mt-1 ${selectedOption.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                          <MathText text={selectedOption.rationale} />
+                          <MathText text={selectedOption.rationale || question.feedback} />
                         </p>
-                      )}
-                      {question.feedback && (
-                        <div className={`text-xs mt-2 p-2 rounded-lg ${
-                          selectedOption.isCorrect ? 'bg-green-100/50' : 'bg-red-100/50'
-                        }`}>
-                          <p className="font-medium mb-1">📖 Análisis detallado:</p>
-                          <p className={selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'}>
-                            <MathText text={question.feedback} />
-                          </p>
-                        </div>
                       )}
                     </div>
                   </div>
