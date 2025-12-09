@@ -490,10 +490,14 @@ export default function FileUploader({ onUploadSuccess }) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger value="text">
                     <FileText className="w-4 h-4 mr-2" />
                     Texto
+                  </TabsTrigger>
+                  <TabsTrigger value="json">
+                    <FileJson className="w-4 h-4 mr-2" />
+                    JSON
                   </TabsTrigger>
                   <TabsTrigger value="image">
                     <Image className="w-4 h-4 mr-2" />
@@ -512,6 +516,62 @@ export default function FileUploader({ onUploadSuccess }) {
             onSave={onUploadSuccess}
             onCancel={() => setActiveTab('json')}
           />
+        </TabsContent>
+
+        <TabsContent value="json">
+          <Card className="p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Pegar JSON del quiz
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Formato esperado: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"{"}"t": "Título", "q": [...]{"}"}</code>
+              </p>
+            </div>
+            
+            <Textarea
+              value={jsonText}
+              onChange={(e) => {
+                setJsonText(e.target.value);
+                setJsonErrors([]);
+                setError(null);
+              }}
+              placeholder='{"t": "Título del quiz", "q": [{"x": "Pregunta...", "dif": 2, "o": [...]}]}'
+              className="min-h-[300px] max-h-[500px] font-mono text-xs mb-4 resize-y"
+              rows={15}
+            />
+
+            {jsonErrors.length > 0 && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg max-h-60 overflow-y-auto">
+                <p className="text-xs font-semibold text-amber-900 mb-2">
+                  ⚠️ Problemas encontrados:
+                </p>
+                <ul className="text-xs space-y-0.5">
+                  {jsonErrors.map((err, idx) => (
+                    <li key={idx} className="text-amber-700">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                onClick={handlePasteSubmit}
+                disabled={isProcessing || !jsonText.trim()}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
+              </Button>
+            </div>
+          </Card>
         </TabsContent>
 
         <TabsContent value="image">
