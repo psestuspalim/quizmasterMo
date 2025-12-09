@@ -13,10 +13,21 @@ export async function moveItemsInBackend(items, targetId, targetType, mutationFn
 
   for (const item of items) {
     if (item.type === 'quiz') {
-      // Quiz solo puede ir a subject
+      // Quiz puede ir a subject o folder
+      const updateData = {};
+      if (targetType === 'subject') {
+        updateData.subject_id = targetId;
+        updateData.folder_id = null;
+      } else if (targetType === 'folder') {
+        updateData.folder_id = targetId;
+        updateData.subject_id = null;
+      } else {
+        updateData.subject_id = null;
+        updateData.folder_id = null;
+      }
       await updateQuiz({ 
         id: item.id, 
-        data: { subject_id: targetId || null } 
+        data: updateData
       });
     } 
     else if (item.type === 'subject') {
@@ -40,12 +51,19 @@ export async function moveItemsInBackend(items, targetId, targetType, mutationFn
         // Mover a raíz
         updateData.course_id = null;
         updateData.parent_id = null;
+        updateData.subject_id = null;
       } else if (targetType === 'course') {
         updateData.course_id = targetId;
         updateData.parent_id = null;
+        updateData.subject_id = null;
       } else if (targetType === 'folder') {
         updateData.parent_id = targetId;
         updateData.course_id = null;
+        updateData.subject_id = null;
+      } else if (targetType === 'subject') {
+        updateData.subject_id = targetId;
+        updateData.course_id = null;
+        updateData.parent_id = null;
       }
       await updateFolder({ id: item.id, data: updateData });
     }

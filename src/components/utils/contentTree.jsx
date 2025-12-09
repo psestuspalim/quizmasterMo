@@ -28,13 +28,16 @@ export function buildContainers(courses = [], folders = [], subjects = []) {
     });
   }
 
-  // Folders → pueden colgar de course o de otro folder
+  // Folders → pueden colgar de course, folder o subject
   for (const f of folders) {
     let parent_id = null;
 
     if (f.parent_id) {
       // subcarpeta
       parent_id = f.parent_id;
+    } else if (f.subject_id) {
+      // carpeta dentro de materia
+      parent_id = f.subject_id;
     } else if (f.course_id) {
       // carpeta directa de un curso
       parent_id = f.course_id;
@@ -93,9 +96,9 @@ export function getChildrenContainers(containers = [], parentId) {
 export function canMoveItemToTarget(itemType, targetType) {
   const rules = {
     course: [], // no se mueve dentro de otro contenedor
-    folder: ["course", "folder"],
+    folder: ["course", "folder", "subject"],
     subject: ["course", "folder"],
-    quiz: ["subject"],
+    quiz: ["subject", "folder"],
   };
 
   if (!targetType) {
