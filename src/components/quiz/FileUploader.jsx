@@ -300,7 +300,7 @@ export default function FileUploader({ onUploadSuccess }) {
       return { errors, warnings, info };
     }
 
-    // NUEVO FORMATO: {t, q}
+    // FORMATO: {t, q}
     if (data.t && data.q && !data.m) {
       if (!Array.isArray(data.q)) {
         errors.push('❌ "q" debe ser un array de preguntas');
@@ -311,24 +311,41 @@ export default function FileUploader({ onUploadSuccess }) {
         return { errors, warnings, info };
       }
 
-      info.push(`✅ Formato nuevo detectado: ${data.q.length} preguntas`);
+      info.push(`✅ Formato válido: ${data.q.length} pregunta${data.q.length > 1 ? 's' : ''} detectada${data.q.length > 1 ? 's' : ''}`);
 
       data.q.forEach((q, idx) => {
         const qNum = idx + 1;
-        if (!q.x || q.x.trim() === '') errors.push(`❌ Q${qNum}: falta "x" (texto)`);
-        if (!q.dif || q.dif < 1 || q.dif > 3) warnings.push(`⚠️ Q${qNum}: "dif" debe ser 1-3`);
-        if (!q.id) warnings.push(`⚠️ Q${qNum}: falta "id"`);
 
+        // Validar campos obligatorios de pregunta
+        if (!q.x || q.x.trim() === '') errors.push(`❌ Pregunta ${qNum}: falta "x" (texto de la pregunta)`);
+        if (!q.dif) warnings.push(`⚠️ Pregunta ${qNum}: falta "dif" (dificultad)`);
+        else if (q.dif < 1 || q.dif > 3) warnings.push(`⚠️ Pregunta ${qNum}: "dif" debe ser 1, 2 o 3`);
+
+        if (!q.qt) warnings.push(`⚠️ Pregunta ${qNum}: falta "qt" (tipo de pregunta)`);
+        if (!q.id) warnings.push(`⚠️ Pregunta ${qNum}: falta "id" (identificador)`);
+
+        // Validar opciones
         if (!q.o || !Array.isArray(q.o)) {
-          errors.push(`❌ Q${qNum}: falta "o" (opciones)`);
+          errors.push(`❌ Pregunta ${qNum}: falta "o" (array de opciones)`);
         } else {
+          if (q.o.length === 0) {
+            errors.push(`❌ Pregunta ${qNum}: el array "o" está vacío`);
+          }
+
           const correctCount = q.o.filter(opt => opt.c === true).length;
-          if (correctCount === 0) errors.push(`❌ Q${qNum}: ninguna opción correcta`);
-          if (correctCount > 1) warnings.push(`⚠️ Q${qNum}: múltiples correctas`);
+          if (correctCount === 0) errors.push(`❌ Pregunta ${qNum}: ninguna opción marcada como correcta`);
+          if (correctCount > 1) warnings.push(`⚠️ Pregunta ${qNum}: ${correctCount} opciones correctas (multi-respuesta)`);
 
           q.o.forEach((opt, optIdx) => {
-            if (!opt.text || opt.text.trim() === '') errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "text"`);
-            if (typeof opt.c !== 'boolean') errors.push(`❌ Q${qNum} Op${optIdx + 1}: "c" debe ser boolean`);
+            if (!opt.text || opt.text.trim() === '') {
+              errors.push(`❌ Pregunta ${qNum}, Opción ${optIdx + 1}: falta "text"`);
+            }
+            if (typeof opt.c !== 'boolean') {
+              errors.push(`❌ Pregunta ${qNum}, Opción ${optIdx + 1}: "c" debe ser true o false`);
+            }
+            if (!opt.r || opt.r.trim() === '') {
+              warnings.push(`⚠️ Pregunta ${qNum}, Opción ${optIdx + 1}: falta "r" (razonamiento)`);
+            }
           });
         }
       });
@@ -336,22 +353,8 @@ export default function FileUploader({ onUploadSuccess }) {
       return { errors, warnings, info };
     }
 
-    // FORMATO VIEJO: {m, q}
-    if (!data.m && !data.q) {
-      errors.push('❌ Formato incorrecto: debe tener {t, q} o {m, q}');
-      return { errors, warnings, info };
-    }
-
-    if (!data.m) errors.push('❌ Falta el campo "m"');
-    else {
-      if (!data.m.t) errors.push('❌ m.t: título obligatorio');
-      if (!data.m.v) errors.push('❌ m.v: versión obligatoria');
-    }
-
-    if (!data.q || !Array.isArray(data.q) || data.q.length === 0) {
-      errors.push('❌ Falta o está vacío "q"');
-    }
-
+    // Formato no reconocido
+    errors.push('❌ Formato incorrecto: debe tener la estructura {"t": "Título", "q": [...]}');
     return { errors, warnings, info };
   };
 
@@ -370,31 +373,30 @@ export default function FileUploader({ onUploadSuccess }) {
 
       // Validar esquema
       const validation = validateJsonSchema(data);
-      const allIssues = [...validation.errors, ...validation.warnings];
 
       if (validation.errors.length > 0) {
-        setJsonErrors(allIssues);
-        setError(`❌ ${validation.errors.length} error(es) crítico(s) encontrado(s)`);
+        setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
+        setError(`Se encontraron ${validation.errors.length} error(es) crítico(s)`);
         setIsProcessing(false);
         return;
       }
 
-      if (validation.warnings.length > 0) {
-        setJsonErrors([...validation.warnings, ...validation.info]);
+      if (validation.warnings.length > 0 || validation.info.length > 0) {
+        setJsonErrors([...validation.info, ...validation.warnings]);
       }
 
-      const fileName = data.t || data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
+      const fileName = data.t || data.m?.t || 'Quiz cargado';
       await processJsonData(data, fileName);
       setJsonText('');
-      setShowPasteArea(false);
       setJsonErrors([]);
+      setError(null);
     } catch (err) {
       console.error('Error procesando JSON:', err);
       if (err instanceof SyntaxError) {
-        setError(`❌ Error de sintaxis JSON: ${err.message}`);
-        setJsonErrors(['💡 Revisa comillas, comas y llaves faltantes']);
+        setError(`Error de sintaxis JSON: ${err.message}`);
+        setJsonErrors(['💡 Verifica comillas, comas y llaves. Cada línea excepto la última debe terminar en coma.']);
       } else {
-        setError('❌ JSON inválido. Usa "Reparar JSON" para intentar corregirlo.');
+        setError(`Error al procesar: ${err.message}`);
       }
     } finally {
       setIsProcessing(false);
