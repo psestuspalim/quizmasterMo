@@ -19,6 +19,7 @@ export default function FileUploader({ onUploadSuccess }) {
   const [jsonText, setJsonText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
+  const [jsonErrors, setJsonErrors] = useState([]);
 
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
@@ -284,28 +285,78 @@ export default function FileUploader({ onUploadSuccess }) {
     }
   };
 
+  const validateJsonSchema = (data) => {
+    const errors = [];
+
+    // Validar formato cQ-v2
+    if (data.m && data.q) {
+      if (!data.m.t) errors.push('❌ Falta m.t (título)');
+      if (!data.m.v) errors.push('❌ Falta m.v (versión)');
+      if (!data.m.c) errors.push('⚠️ Falta m.c (contador de preguntas)');
+
+      if (!Array.isArray(data.q)) {
+        errors.push('❌ q debe ser un array de preguntas');
+      } else {
+        data.q.forEach((q, idx) => {
+          if (!q.i) errors.push(`❌ Q${idx + 1}: falta campo i (ID)`);
+          if (!q.d || q.d < 1 || q.d > 3) errors.push(`❌ Q${idx + 1}: d debe ser 1-3 (dificultad)`);
+          if (!q.x) errors.push(`❌ Q${idx + 1}: falta campo x (pregunta)`);
+          if (!Array.isArray(q.o) || q.o.length === 0) {
+            errors.push(`❌ Q${idx + 1}: falta array o (opciones)`);
+          } else {
+            const hasCorrect = q.o.some(opt => opt.c === 1);
+            if (!hasCorrect) errors.push(`⚠️ Q${idx + 1}: ninguna opción marcada como correcta`);
+            q.o.forEach((opt, optIdx) => {
+              if (!opt.k) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: falta k (letra)`);
+              if (!opt.v) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: falta v (texto)`);
+              if (opt.c !== 0 && opt.c !== 1) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: c debe ser 0 o 1`);
+            });
+          }
+        });
+      }
+    }
+
+    return errors;
+  };
+
   const handlePasteSubmit = async () => {
-        if (!jsonText.trim()) {
-          setError('Por favor, pega el contenido JSON');
-          return;
-        }
+    if (!jsonText.trim()) {
+      setError('Por favor, pega el contenido JSON');
+      return;
+    }
 
-        setIsProcessing(true);
-        setError(null);
+    setIsProcessing(true);
+    setError(null);
+    setJsonErrors([]);
 
-        try {
-          const data = JSON.parse(jsonText);
-          const fileName = data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
-          await processJsonData(data, fileName);
-          setJsonText('');
-          setShowPasteArea(false);
-        } catch (err) {
-          console.error('Error procesando JSON:', err);
-          setError('JSON inválido. Usa "Reparar JSON" para intentar corregirlo automáticamente.');
-        } finally {
-          setIsProcessing(false);
-        }
-      };
+    try {
+      const data = JSON.parse(jsonText);
+
+      // Validar esquema
+      const schemaErrors = validateJsonSchema(data);
+      if (schemaErrors.length > 0) {
+        setJsonErrors(schemaErrors);
+        setError(`Se encontraron ${schemaErrors.length} problema(s) en el formato`);
+        setIsProcessing(false);
+        return;
+      }
+
+      const fileName = data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
+      await processJsonData(data, fileName);
+      setJsonText('');
+      setShowPasteArea(false);
+      setJsonErrors([]);
+    } catch (err) {
+      console.error('Error procesando JSON:', err);
+      if (err instanceof SyntaxError) {
+        setError(`Error de sintaxis JSON en línea ${err.message.match(/position (\d+)/)?.[1] || 'desconocida'}`);
+      } else {
+        setError('JSON inválido. Usa "Reparar JSON" para intentar corregirlo automáticamente.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
       const handleRepairJson = async () => {
         if (!jsonText.trim()) {
@@ -506,16 +557,40 @@ export default function FileUploader({ onUploadSuccess }) {
               </div>
               <Textarea
                 value={jsonText}
-                onChange={(e) => setJsonText(e.target.value)}
+                onChange={(e) => {
+                  setJsonText(e.target.value);
+                  setJsonErrors([]);
+                  setError(null);
+                  // Validar sintaxis en tiempo real
+                  if (e.target.value.trim()) {
+                    try {
+                      JSON.parse(e.target.value);
+                    } catch (err) {
+                      if (err instanceof SyntaxError) {
+                        setError(`⚠️ Error de sintaxis: ${err.message}`);
+                      }
+                    }
+                  }
+                }}
                 onPaste={(e) => {
                   e.preventDefault();
                   const pastedText = e.clipboardData.getData('text');
                   setJsonText(pastedText);
                 }}
-                placeholder='{"quiz": [{"question": "...", "answerOptions": [...]}]}'
+                placeholder='{"m": {"t": "Título", "v": "cQ-v2", "c": 1}, "q": [...]}'
                 className="min-h-[200px] max-h-[400px] font-mono text-sm mb-4 resize-y"
                 rows={10}
               />
+              {jsonErrors.length > 0 && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg max-h-40 overflow-y-auto">
+                  <p className="text-xs font-semibold text-red-800 mb-2">Errores de validación:</p>
+                  <ul className="text-xs text-red-700 space-y-1">
+                    {jsonErrors.map((err, idx) => (
+                      <li key={idx}>• {err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="flex flex-wrap gap-3">
                                     <Button
                                       variant="outline"
