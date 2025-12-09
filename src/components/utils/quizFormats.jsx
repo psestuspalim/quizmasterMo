@@ -84,20 +84,23 @@ export function fromCompactFormat(compactData) {
     title: m.t,
     description: m.s || '',
     total_questions: m.c || q.length,
-    questions: q.map(question => ({
-      type: 'text',
-      question: question.x,
-      difficulty: numberToDifficulty[question.d] || 'moderado',
-      bloomLevel: question.b || null,
-      feedback: question.n || '',
-      hint: question.h || '',
-      answerOptions: (question.o || []).map(opt => ({
-        text: opt.v,
-        isCorrect: opt.c === 1,
-        errorType: opt.e || '',
-        rationale: opt.f || ''
-      }))
-    }))
+    questions: q.map(question => {
+      console.log(`Pregunta ${question.i}: campo n =`, question.n);
+      return {
+        type: 'text',
+        question: question.x,
+        difficulty: numberToDifficulty[question.d] || 'moderado',
+        bloomLevel: question.b || null,
+        feedback: question.n || '',
+        hint: question.h || '',
+        answerOptions: (question.o || []).map(opt => ({
+          text: opt.v,
+          isCorrect: opt.c === 1,
+          errorType: opt.e || '',
+          rationale: opt.f || ''
+        }))
+      };
+    })
   };
 }
 
