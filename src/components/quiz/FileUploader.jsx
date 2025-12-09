@@ -295,90 +295,61 @@ export default function FileUploader({ onUploadSuccess }) {
     const warnings = [];
     const info = [];
 
-    // Validar que sea un objeto
     if (typeof data !== 'object' || data === null) {
       errors.push('❌ El JSON debe ser un objeto');
       return { errors, warnings, info };
     }
 
-    // Validar estructura básica
-    if (!data.m && !data.q) {
-      errors.push('❌ Formato incorrecto: debe tener campos "m" y "q"');
-      info.push('💡 Formato esperado: {"m": {...}, "q": [...]}');
-      return { errors, warnings, info };
-    }
+    // NUEVO FORMATO: {t, q}
+    if (data.t && data.q && !data.m) {
+      if (!Array.isArray(data.q)) {
+        errors.push('❌ "q" debe ser un array de preguntas');
+        return { errors, warnings, info };
+      }
+      if (data.q.length === 0) {
+        errors.push('❌ El array "q" está vacío');
+        return { errors, warnings, info };
+      }
 
-    // Validar metadatos (m)
-    if (!data.m) {
-      errors.push('❌ Falta el campo "m" (metadatos)');
-    } else {
-      if (!data.m.t) errors.push('❌ m.t: título obligatorio');
-      if (!data.m.v) errors.push('❌ m.v: versión obligatoria (ej: "cQ-v2")');
-      if (!data.m.c) warnings.push('⚠️ m.c: falta contador de preguntas (se calculará automático)');
-      if (data.m.s) info.push('✅ m.s: descripción presente');
-      if (data.m.f) info.push('✅ m.f: tema/foco presente');
-    }
-
-    // Validar preguntas (q)
-    if (!data.q) {
-      errors.push('❌ Falta el campo "q" (array de preguntas)');
-    } else if (!Array.isArray(data.q)) {
-      errors.push('❌ "q" debe ser un array de preguntas');
-    } else if (data.q.length === 0) {
-      errors.push('❌ El array "q" está vacío');
-    } else {
-      info.push(`📊 Total de preguntas: ${data.q.length}`);
+      info.push(`✅ Formato nuevo detectado: ${data.q.length} preguntas`);
 
       data.q.forEach((q, idx) => {
         const qNum = idx + 1;
+        if (!q.x || q.x.trim() === '') errors.push(`❌ Q${qNum}: falta "x" (texto)`);
+        if (!q.dif || q.dif < 1 || q.dif > 3) warnings.push(`⚠️ Q${qNum}: "dif" debe ser 1-3`);
+        if (!q.id) warnings.push(`⚠️ Q${qNum}: falta "id"`);
 
-        // Campos obligatorios
-        if (!q.i) errors.push(`❌ Q${qNum}: falta "i" (ID, ej: "Q001")`);
-        if (!q.x || q.x.trim() === '') errors.push(`❌ Q${qNum}: falta "x" (texto de pregunta)`);
-
-        // Dificultad
-        if (!q.d) {
-          errors.push(`❌ Q${qNum}: falta "d" (dificultad: 1=fácil, 2=moderado, 3=difícil)`);
-        } else if (q.d < 1 || q.d > 3) {
-          errors.push(`❌ Q${qNum}: "d" debe ser 1, 2 o 3 (actual: ${q.d})`);
-        }
-
-        // Campos opcionales informativos
-        if (!q.n) warnings.push(`⚠️ Q${qNum}: falta "n" (feedback para respuestas incorrectas)`);
-        if (!q.h) info.push(`💡 Q${qNum}: sin "h" (pista/hint)`);
-        if (!q.b) info.push(`💡 Q${qNum}: sin "b" (nivel Bloom 1-6)`);
-
-        // Opciones
-        if (!q.o) {
-          errors.push(`❌ Q${qNum}: falta "o" (array de opciones)`);
-        } else if (!Array.isArray(q.o)) {
-          errors.push(`❌ Q${qNum}: "o" debe ser un array`);
-        } else if (q.o.length === 0) {
-          errors.push(`❌ Q${qNum}: "o" está vacío (debe tener al menos 2 opciones)`);
-        } else if (q.o.length < 2) {
-          warnings.push(`⚠️ Q${qNum}: solo tiene ${q.o.length} opción (se recomiendan 2+)`);
+        if (!q.o || !Array.isArray(q.o)) {
+          errors.push(`❌ Q${qNum}: falta "o" (opciones)`);
         } else {
-          const correctCount = q.o.filter(opt => opt.c === 1).length;
-          if (correctCount === 0) {
-            errors.push(`❌ Q${qNum}: ninguna opción marcada como correcta (c: 1)`);
-          } else if (correctCount > 1) {
-            warnings.push(`⚠️ Q${qNum}: ${correctCount} opciones correctas (quiz es de opción única)`);
-          }
+          const correctCount = q.o.filter(opt => opt.c === true).length;
+          if (correctCount === 0) errors.push(`❌ Q${qNum}: ninguna opción correcta`);
+          if (correctCount > 1) warnings.push(`⚠️ Q${qNum}: múltiples correctas`);
 
           q.o.forEach((opt, optIdx) => {
-            const optLetter = String.fromCharCode(65 + optIdx);
-
-            if (!opt.k) errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "k" (letra, ej: "${optLetter}")`);
-            else if (opt.k !== optLetter) warnings.push(`⚠️ Q${qNum} Op${optIdx + 1}: "k" debería ser "${optLetter}" (actual: "${opt.k}")`);
-
-            if (!opt.v || opt.v.trim() === '') errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "v" (texto de opción)`);
-
-            if (opt.c !== 0 && opt.c !== 1) errors.push(`❌ Q${qNum} Op${optIdx + 1}: "c" debe ser 0 o 1 (actual: ${opt.c})`);
-
-            if (!opt.f) info.push(`💡 Q${qNum} Op${optIdx + 1}: sin "f" (rationale/explicación)`);
+            if (!opt.text || opt.text.trim() === '') errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "text"`);
+            if (typeof opt.c !== 'boolean') errors.push(`❌ Q${qNum} Op${optIdx + 1}: "c" debe ser boolean`);
           });
         }
       });
+
+      return { errors, warnings, info };
+    }
+
+    // FORMATO VIEJO: {m, q}
+    if (!data.m && !data.q) {
+      errors.push('❌ Formato incorrecto: debe tener {t, q} o {m, q}');
+      return { errors, warnings, info };
+    }
+
+    if (!data.m) errors.push('❌ Falta el campo "m"');
+    else {
+      if (!data.m.t) errors.push('❌ m.t: título obligatorio');
+      if (!data.m.v) errors.push('❌ m.v: versión obligatoria');
+    }
+
+    if (!data.q || !Array.isArray(data.q) || data.q.length === 0) {
+      errors.push('❌ Falta o está vacío "q"');
     }
 
     return { errors, warnings, info };
