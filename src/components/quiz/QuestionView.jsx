@@ -428,6 +428,19 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                     </div>
                   )}
 
+                  {/* Análisis de error con IA */}
+                  {!selectedOption.isCorrect && showErrorAnalysis && (
+                    <ErrorAnalysis
+                      question={question}
+                      selectedAnswer={selectedOption.text}
+                      correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
+                      responseTime={responseTime}
+                      userEmail={userEmail}
+                      quizId={quizId}
+                      previousAttempts={previousAttempts}
+                    />
+                  )}
+
                   {/* Botón siguiente */}
                   <div className="pointer-events-auto">
                     <Button
@@ -448,19 +461,6 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
-
-                {/* Análisis de error con IA */}
-                {!selectedOption.isCorrect && showErrorAnalysis && (
-                  <ErrorAnalysis
-                    question={question}
-                    selectedAnswer={selectedOption.text}
-                    correctAnswer={question.answerOptions.find(opt => opt.isCorrect)?.text}
-                    responseTime={responseTime}
-                    userEmail={userEmail}
-                    quizId={quizId}
-                    previousAttempts={previousAttempts}
-                  />
-                )}
 
                 {/* Herramientas adicionales para incorrectas */}
                 {!selectedOption.isCorrect && (showSchema || showNotes) && (
