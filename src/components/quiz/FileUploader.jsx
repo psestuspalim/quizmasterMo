@@ -395,9 +395,12 @@ export default function FileUploader({ onUploadSuccess }) {
 
       const fileName = data.t || data.m?.t || 'Quiz cargado';
       await processJsonData(data, fileName);
+      
+      // Limpiar estado después del éxito
       setJsonText('');
       setJsonErrors([]);
       setError(null);
+      setIsProcessing(false);
     } catch (err) {
       console.error('Error procesando JSON:', err);
       if (err instanceof SyntaxError) {
@@ -406,7 +409,6 @@ export default function FileUploader({ onUploadSuccess }) {
       } else {
         setError(`Error al procesar: ${err.message}`);
       }
-    } finally {
       setIsProcessing(false);
     }
   };
