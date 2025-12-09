@@ -45,6 +45,29 @@ export default function FileUploader({ onUploadSuccess }) {
       5: 'Evaluar'
     };
 
+    // ARRAY DIRECTO DE PREGUNTAS cQ-v2 (sin wrapper m/q)
+    if (Array.isArray(data) && data.length > 0 && data[0].i && data[0].x && data[0].o) {
+      // Es un array directo de preguntas en formato cQ-v2
+      const compactData = {
+        m: {
+          t: title,
+          s: description,
+          v: 'cQ-v2',
+          c: data.length
+        },
+        q: data
+      };
+      
+      // Procesar usando fromCompactFormat
+      const expandedQuiz = fromCompactFormat(compactData);
+      await onUploadSuccess({
+        ...toCompactFormat(expandedQuiz),
+        file_name: fileName,
+        is_hidden: false
+      });
+      return;
+    }
+
     // FORMATO COMPACTO MÁXIMO (m + q con array p)
     if (data.m && data.q && Array.isArray(data.q)) {
       title = data.m.title || title;
