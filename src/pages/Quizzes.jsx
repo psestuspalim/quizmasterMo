@@ -90,6 +90,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [movingQuiz, setMovingQuiz] = useState(null);
   const [showQuizExporter, setShowQuizExporter] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
+  const [selectedQuizzes, setSelectedQuizzes] = useState([]);
 
   const queryClient = useQueryClient();
 
@@ -294,7 +295,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     const destParts = destination.droppableId.split('-');
-    const destType = destParts[0]; // 'course', 'folder', 'root'
+    const destType = destParts[0]; // 'course', 'folder', 'root', 'subject'
     const destId = destParts[1] || null;
 
     if (type === 'COURSE') {
@@ -309,11 +310,19 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         if (destType === 'course') {
           newData.course_id = destId;
           newData.parent_id = null;
+          newData.subject_id = null;
         } else if (destType === 'folder') {
           newData.parent_id = destId;
+          newData.course_id = null;
+          newData.subject_id = null;
+        } else if (destType === 'subject') {
+          newData.subject_id = destId;
+          newData.course_id = null;
+          newData.parent_id = null;
         } else if (destType === 'root') {
           newData.course_id = null;
           newData.parent_id = null;
+          newData.subject_id = null;
         }
         await updateFolderMutation.mutateAsync({ id: folder.id, data: newData });
       }
@@ -332,11 +341,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         }
         await updateSubjectMutation.mutateAsync({ id: subject.id, data: newData });
       }
+    } else if (type === 'QUIZ') {
+      const quiz = quizzes.find(q => q.id === draggableId);
+      if (quiz) {
+        const newData = {};
+        if (destType === 'folder') {
+          newData.folder_id = destId;
+          newData.subject_id = null;
+        } else if (destType === 'subject') {
+          newData.subject_id = destId;
+          newData.folder_id = null;
+        }
+        await updateQuizMutation.mutateAsync({ id: quiz.id, data: newData });
+      }
     }
 
     queryClient.invalidateQueries(['courses']);
     queryClient.invalidateQueries(['folders']);
     queryClient.invalidateQueries(['subjects']);
+    queryClient.invalidateQueries(['quizzes']);
   };
 
   const saveAttemptMutation = useMutation({
@@ -1372,19 +1395,20 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                       )}
                           </div>
 
-              {/* Carpetas dentro de la materia */}
+              {/* Carpetas dentro de la materia con droppable */}
                               {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                   {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).map((folder) => (
-                                    <FolderCard
-                                      key={folder.id}
-                                      folder={folder}
-                                      itemCount={quizzes.filter(q => q.folder_id === folder.id).length}
-                                      isAdmin={isAdmin}
-                                      onDelete={(id) => deleteFolderMutation.mutate(id)}
-                                      onEdit={setEditingFolder}
-                                      onClick={() => setCurrentFolderId(folder.id)}
-                                    />
+                                    <DroppableArea key={folder.id} droppableId={`folder-${folder.id}`} type="QUIZ" className="h-full">
+                                      <FolderCard
+                                        folder={folder}
+                                        itemCount={quizzes.filter(q => q.folder_id === folder.id).length}
+                                        isAdmin={isAdmin}
+                                        onDelete={(id) => deleteFolderMutation.mutate(id)}
+                                        onEdit={setEditingFolder}
+                                        onClick={() => setCurrentFolderId(folder.id)}
+                                      />
+                                    </DroppableArea>
                                   ))}
                                 </div>
                               )}
@@ -1400,6 +1424,19 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                 </TabsList>
 
                                 <TabsContent value="quizzes">
+                                  {selectedQuizzes.length > 0 && isAdmin && (
+                                    <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+                                      <span className="text-sm font-medium text-indigo-900">
+                                        {selectedQuizzes.length} cuestionario{selectedQuizzes.length > 1 ? 's' : ''} seleccionado{selectedQuizzes.length > 1 ? 's' : ''}
+                                      </span>
+                                      <div className="flex gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => setSelectedQuizzes([])}>
+                                          Cancelar
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
                                   {subjectQuizzes.filter(q => !q.folder_id).length === 0 ? (
                     <div className="text-center py-12">
                       <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -1412,21 +1449,30 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                       )}
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {subjectQuizzes.filter(q => !q.folder_id).map((quiz) => (
-                        <QuizListItem
-                          key={quiz.id}
-                          quiz={quiz}
-                          attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-                          isAdmin={isAdmin}
-                          onStart={handleStartQuiz}
-                          onEdit={setEditingQuiz}
-                          onDelete={(id) => deleteQuizMutation.mutate(id)}
-                          onStartSwipe={handleStartSwipeMode}
-                          onMove={setMovingQuiz}
-                        />
+                    <DroppableArea droppableId={`subject-${selectedSubject.id}`} type="QUIZ" className="space-y-2">
+                      {subjectQuizzes.filter(q => !q.folder_id).map((quiz, index) => (
+                        <DraggableItem key={quiz.id} id={quiz.id} index={index} isAdmin={isAdmin}>
+                          <QuizListItem
+                            quiz={quiz}
+                            attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                            isAdmin={isAdmin}
+                            onStart={handleStartQuiz}
+                            onEdit={setEditingQuiz}
+                            onDelete={(id) => deleteQuizMutation.mutate(id)}
+                            onStartSwipe={handleStartSwipeMode}
+                            onMove={setMovingQuiz}
+                            isSelected={selectedQuizzes.includes(quiz.id)}
+                            onSelect={(id) => {
+                              if (selectedQuizzes.includes(id)) {
+                                setSelectedQuizzes(selectedQuizzes.filter(qId => qId !== id));
+                              } else {
+                                setSelectedQuizzes([...selectedQuizzes, id]);
+                              }
+                            }}
+                          />
+                        </DraggableItem>
                       ))}
-                    </div>
+                    </DroppableArea>
                   )}
                 </TabsContent>
 
