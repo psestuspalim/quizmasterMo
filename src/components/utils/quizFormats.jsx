@@ -85,19 +85,27 @@ export function fromCompactFormat(compactData) {
     description: m.s || '',
     total_questions: m.c || q.length,
     questions: q.map(question => {
-      console.log(`Pregunta ${question.i}: campo n =`, question.n);
+      // Si no hay campo 'n', buscar el 'r' de las opciones incorrectas como feedback general
+      let generalFeedback = question.n || '';
+      if (!generalFeedback && question.o) {
+        const incorrectOpts = question.o.filter(opt => opt.c !== 1);
+        if (incorrectOpts.length > 0 && incorrectOpts[0].r) {
+          generalFeedback = incorrectOpts[0].r;
+        }
+      }
+
       return {
         type: 'text',
         question: question.x,
         difficulty: numberToDifficulty[question.d] || 'moderado',
         bloomLevel: question.b || null,
-        feedback: question.n || '',
+        feedback: generalFeedback,
         hint: question.h || '',
         answerOptions: (question.o || []).map(opt => ({
-          text: opt.v,
-          isCorrect: opt.c === 1,
-          errorType: opt.e || '',
-          rationale: opt.f || ''
+          text: opt.text || opt.v,
+          isCorrect: opt.c === true || opt.c === 1,
+          errorType: opt.et || opt.e || '',
+          rationale: opt.r || opt.f || ''
         }))
       };
     })
