@@ -608,7 +608,7 @@ export default function FileUploader({ onUploadSuccess }) {
             <div className="flex gap-3">
               <Button
                 onClick={handlePasteSubmit}
-                disabled={isProcessing || !jsonText.trim() || error}
+                disabled={isProcessing || !jsonText.trim() || (jsonErrors.length > 0 && jsonErrors.some(e => e.startsWith('❌')))}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
