@@ -282,10 +282,12 @@ export default function FileUploader({ onUploadSuccess }) {
 
         try {
           const data = JSON.parse(jsonText);
-          await processJsonData(data, data.quizMetadata?.title || 'Quiz pegado');
+          const fileName = data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
+          await processJsonData(data, fileName);
           setJsonText('');
           setShowPasteArea(false);
         } catch (err) {
+          console.error('Error procesando JSON:', err);
           setError('JSON inválido. Usa "Reparar JSON" para intentar corregirlo automáticamente.');
         } finally {
           setIsProcessing(false);
