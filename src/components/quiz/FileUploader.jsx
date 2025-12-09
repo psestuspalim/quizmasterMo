@@ -59,7 +59,7 @@ export default function FileUploader({ onUploadSuccess }) {
         total_questions: data.q.length,
         questions: expandedQuiz.questions,
         t: data.t,
-        q: data.q,
+        q: data.q.map(q => typeof q === 'string' ? q : JSON.stringify(q)),
         file_name: fileName,
         is_hidden: false
       };
