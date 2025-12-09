@@ -18,7 +18,9 @@ export default function QuizListItem({
   onEdit, 
   onDelete,
   onStartSwipe,
-  onMove
+  onMove,
+  isSelected = false,
+  onSelect
 }) {
   const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
   const hasAttempts = attempts.length > 0;
@@ -72,9 +74,20 @@ export default function QuizListItem({
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`group flex items-center gap-3 p-3 rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${getBorderColor()}`}
+      className={`group flex items-center gap-3 p-3 rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${getBorderColor()} ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50/50' : ''}`}
       onClick={() => onStart(quiz, totalQuestions, 'all', attempts)}
     >
+      {/* Checkbox para selección múltiple */}
+      {isAdmin && onSelect && (
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(quiz.id)}
+          className="w-4 h-4 text-indigo-600 rounded cursor-pointer flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
+      
       {/* Indicador de progreso circular */}
       <div className="relative flex-shrink-0">
         <svg className="w-12 h-12 transform -rotate-90">
