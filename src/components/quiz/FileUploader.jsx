@@ -556,13 +556,15 @@ export default function FileUploader({ onUploadSuccess }) {
             </div>
             
             <Textarea
+              id="quiz-json-input"
+              name="quiz-json"
               value={jsonText}
               onChange={(e) => {
                 const text = e.target.value;
                 setJsonText(text);
                 setJsonErrors([]);
                 setError(null);
-                
+
                 // Validación en tiempo real
                 if (text.trim()) {
                   try {
