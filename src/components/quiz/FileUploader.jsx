@@ -281,36 +281,96 @@ export default function FileUploader({ onUploadSuccess }) {
 
   const validateJsonSchema = (data) => {
     const errors = [];
+    const warnings = [];
+    const info = [];
 
-    // Validar formato cQ-v2
-    if (data.m && data.q) {
-      if (!data.m.t) errors.push('❌ Falta m.t (título)');
-      if (!data.m.v) errors.push('❌ Falta m.v (versión)');
-      if (!data.m.c) errors.push('⚠️ Falta m.c (contador de preguntas)');
-
-      if (!Array.isArray(data.q)) {
-        errors.push('❌ q debe ser un array de preguntas');
-      } else {
-        data.q.forEach((q, idx) => {
-          if (!q.i) errors.push(`❌ Q${idx + 1}: falta campo i (ID)`);
-          if (!q.d || q.d < 1 || q.d > 3) errors.push(`❌ Q${idx + 1}: d debe ser 1-3 (dificultad)`);
-          if (!q.x) errors.push(`❌ Q${idx + 1}: falta campo x (pregunta)`);
-          if (!Array.isArray(q.o) || q.o.length === 0) {
-            errors.push(`❌ Q${idx + 1}: falta array o (opciones)`);
-          } else {
-            const hasCorrect = q.o.some(opt => opt.c === 1);
-            if (!hasCorrect) errors.push(`⚠️ Q${idx + 1}: ninguna opción marcada como correcta`);
-            q.o.forEach((opt, optIdx) => {
-              if (!opt.k) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: falta k (letra)`);
-              if (!opt.v) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: falta v (texto)`);
-              if (opt.c !== 0 && opt.c !== 1) errors.push(`❌ Q${idx + 1} Opción ${optIdx + 1}: c debe ser 0 o 1`);
-            });
-          }
-        });
-      }
+    // Validar que sea un objeto
+    if (typeof data !== 'object' || data === null) {
+      errors.push('❌ El JSON debe ser un objeto');
+      return { errors, warnings, info };
     }
 
-    return errors;
+    // Validar estructura básica
+    if (!data.m && !data.q) {
+      errors.push('❌ Formato incorrecto: debe tener campos "m" y "q"');
+      info.push('💡 Formato esperado: {"m": {...}, "q": [...]}');
+      return { errors, warnings, info };
+    }
+
+    // Validar metadatos (m)
+    if (!data.m) {
+      errors.push('❌ Falta el campo "m" (metadatos)');
+    } else {
+      if (!data.m.t) errors.push('❌ m.t: título obligatorio');
+      if (!data.m.v) errors.push('❌ m.v: versión obligatoria (ej: "cQ-v2")');
+      if (!data.m.c) warnings.push('⚠️ m.c: falta contador de preguntas (se calculará automático)');
+      if (data.m.s) info.push('✅ m.s: descripción presente');
+      if (data.m.f) info.push('✅ m.f: tema/foco presente');
+    }
+
+    // Validar preguntas (q)
+    if (!data.q) {
+      errors.push('❌ Falta el campo "q" (array de preguntas)');
+    } else if (!Array.isArray(data.q)) {
+      errors.push('❌ "q" debe ser un array de preguntas');
+    } else if (data.q.length === 0) {
+      errors.push('❌ El array "q" está vacío');
+    } else {
+      info.push(`📊 Total de preguntas: ${data.q.length}`);
+
+      data.q.forEach((q, idx) => {
+        const qNum = idx + 1;
+
+        // Campos obligatorios
+        if (!q.i) errors.push(`❌ Q${qNum}: falta "i" (ID, ej: "Q001")`);
+        if (!q.x || q.x.trim() === '') errors.push(`❌ Q${qNum}: falta "x" (texto de pregunta)`);
+
+        // Dificultad
+        if (!q.d) {
+          errors.push(`❌ Q${qNum}: falta "d" (dificultad: 1=fácil, 2=moderado, 3=difícil)`);
+        } else if (q.d < 1 || q.d > 3) {
+          errors.push(`❌ Q${qNum}: "d" debe ser 1, 2 o 3 (actual: ${q.d})`);
+        }
+
+        // Campos opcionales informativos
+        if (!q.n) warnings.push(`⚠️ Q${qNum}: falta "n" (feedback para respuestas incorrectas)`);
+        if (!q.h) info.push(`💡 Q${qNum}: sin "h" (pista/hint)`);
+        if (!q.b) info.push(`💡 Q${qNum}: sin "b" (nivel Bloom 1-6)`);
+
+        // Opciones
+        if (!q.o) {
+          errors.push(`❌ Q${qNum}: falta "o" (array de opciones)`);
+        } else if (!Array.isArray(q.o)) {
+          errors.push(`❌ Q${qNum}: "o" debe ser un array`);
+        } else if (q.o.length === 0) {
+          errors.push(`❌ Q${qNum}: "o" está vacío (debe tener al menos 2 opciones)`);
+        } else if (q.o.length < 2) {
+          warnings.push(`⚠️ Q${qNum}: solo tiene ${q.o.length} opción (se recomiendan 2+)`);
+        } else {
+          const correctCount = q.o.filter(opt => opt.c === 1).length;
+          if (correctCount === 0) {
+            errors.push(`❌ Q${qNum}: ninguna opción marcada como correcta (c: 1)`);
+          } else if (correctCount > 1) {
+            warnings.push(`⚠️ Q${qNum}: ${correctCount} opciones correctas (quiz es de opción única)`);
+          }
+
+          q.o.forEach((opt, optIdx) => {
+            const optLetter = String.fromCharCode(65 + optIdx);
+
+            if (!opt.k) errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "k" (letra, ej: "${optLetter}")`);
+            else if (opt.k !== optLetter) warnings.push(`⚠️ Q${qNum} Op${optIdx + 1}: "k" debería ser "${optLetter}" (actual: "${opt.k}")`);
+
+            if (!opt.v || opt.v.trim() === '') errors.push(`❌ Q${qNum} Op${optIdx + 1}: falta "v" (texto de opción)`);
+
+            if (opt.c !== 0 && opt.c !== 1) errors.push(`❌ Q${qNum} Op${optIdx + 1}: "c" debe ser 0 o 1 (actual: ${opt.c})`);
+
+            if (!opt.f) info.push(`💡 Q${qNum} Op${optIdx + 1}: sin "f" (rationale/explicación)`);
+          });
+        }
+      });
+    }
+
+    return { errors, warnings, info };
   };
 
   const handlePasteSubmit = async () => {
@@ -327,12 +387,18 @@ export default function FileUploader({ onUploadSuccess }) {
       const data = JSON.parse(jsonText);
 
       // Validar esquema
-      const schemaErrors = validateJsonSchema(data);
-      if (schemaErrors.length > 0) {
-        setJsonErrors(schemaErrors);
-        setError(`Se encontraron ${schemaErrors.length} problema(s) en el formato`);
+      const validation = validateJsonSchema(data);
+      const allIssues = [...validation.errors, ...validation.warnings];
+
+      if (validation.errors.length > 0) {
+        setJsonErrors(allIssues);
+        setError(`❌ ${validation.errors.length} error(es) crítico(s) encontrado(s)`);
         setIsProcessing(false);
         return;
+      }
+
+      if (validation.warnings.length > 0) {
+        setJsonErrors([...validation.warnings, ...validation.info]);
       }
 
       const fileName = data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
@@ -343,9 +409,10 @@ export default function FileUploader({ onUploadSuccess }) {
     } catch (err) {
       console.error('Error procesando JSON:', err);
       if (err instanceof SyntaxError) {
-        setError(`Error de sintaxis JSON en línea ${err.message.match(/position (\d+)/)?.[1] || 'desconocida'}`);
+        setError(`❌ Error de sintaxis JSON: ${err.message}`);
+        setJsonErrors(['💡 Revisa comillas, comas y llaves faltantes']);
       } else {
-        setError('JSON inválido. Usa "Reparar JSON" para intentar corregirlo automáticamente.');
+        setError('❌ JSON inválido. Usa "Reparar JSON" para intentar corregirlo.');
       }
     } finally {
       setIsProcessing(false);
@@ -576,11 +643,17 @@ export default function FileUploader({ onUploadSuccess }) {
                 rows={10}
               />
               {jsonErrors.length > 0 && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg max-h-40 overflow-y-auto">
-                  <p className="text-xs font-semibold text-red-800 mb-2">Errores de validación:</p>
-                  <ul className="text-xs text-red-700 space-y-1">
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg max-h-60 overflow-y-auto">
+                  <p className="text-xs font-semibold text-amber-900 mb-2">
+                    {jsonErrors.some(e => e.startsWith('❌')) ? '⚠️ Problemas encontrados:' : '💡 Sugerencias:'}
+                  </p>
+                  <ul className="text-xs space-y-0.5">
                     {jsonErrors.map((err, idx) => (
-                      <li key={idx}>• {err}</li>
+                      <li key={idx} className={
+                        err.startsWith('❌') ? 'text-red-700' :
+                        err.startsWith('⚠️') ? 'text-amber-700' :
+                        'text-blue-600'
+                      }>{err}</li>
                     ))}
                   </ul>
                 </div>
