@@ -396,6 +396,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     : currentFolderId 
     ? folders.filter(f => f.parent_id === currentFolderId && canUserAccess(f))
     : [];
+
+  const currentFolderQuizzes = currentFolderId
+    ? quizzes.filter(q => q.folder_id === currentFolderId && (isAdmin || !q.is_hidden))
+    : [];
   const currentFolderSubjects = currentFolderId
     ? subjects.filter(s => s.folder_id === currentFolderId && canUserAccess(s))
     : currentCourseSubjects.filter(s => !s.folder_id);
@@ -1214,15 +1218,39 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 ))}
               </DroppableArea>
 
-              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
-                                    <div className="text-center py-16">
-                                      <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Curso vacío</h3>
-                                      <p className="text-gray-500">Agrega carpetas o materias</p>
-                                    </div>
-                                  )}
-                                  </motion.div>
-                                  )}
+              {/* Quizzes dentro de carpeta */}
+              {currentFolderId && currentFolderQuizzes.length > 0 && (
+              <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <BookOpen className="w-5 h-5" /> Cuestionarios
+              </h3>
+              <div className="space-y-2">
+              {currentFolderQuizzes.map((quiz) => (
+              <QuizListItem
+              key={quiz.id}
+              quiz={quiz}
+              attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+              isAdmin={isAdmin}
+              onStart={handleStartQuiz}
+              onEdit={setEditingQuiz}
+              onDelete={(id) => deleteQuizMutation.mutate(id)}
+              onStartSwipe={handleStartSwipeMode}
+              onMove={setMovingQuiz}
+              />
+              ))}
+              </div>
+              </div>
+              )}
+
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && currentFolderQuizzes.length === 0 && (
+                <div className="text-center py-16">
+                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Carpeta vacía</h3>
+                  <p className="text-gray-500">Agrega contenido a esta carpeta</p>
+                </div>
+              )}
+              </motion.div>
+              )}
 
 
 
@@ -1315,6 +1343,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                               <FolderInput className="w-4 h-4 mr-2" /> 
                                                               Explorador
                                                             </Button>
+                                          <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                                            <DialogTrigger asChild>
+                                              <Button variant="outline" className="text-xs sm:text-sm h-9">
+                                                <FolderPlus className="w-4 h-4 mr-2" /> Nueva carpeta
+                                              </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                              <DialogHeader><DialogTitle>Crear carpeta en {selectedSubject.name}</DialogTitle></DialogHeader>
+                                              <div className="space-y-4 mt-4">
+                                                <div>
+                                                  <Label>Nombre</Label>
+                                                  <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
+                                                </div>
+                                                <Button onClick={() => createFolderMutation.mutate({ ...newItem, subject_id: selectedSubject.id })} className="w-full bg-amber-500 hover:bg-amber-600">
+                                                  Crear carpeta
+                                                </Button>
+                                              </div>
+                                            </DialogContent>
+                                          </Dialog>
                                           <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
                                             <Sparkles className="w-4 h-4 mr-2" /> Generar con IA
                                           </Button>
@@ -1323,20 +1370,37 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                           </Button>
                                         </div>
                                       )}
-              </div>
+                          </div>
 
-              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="audios" className="flex items-center gap-2">
-                    <Music className="w-4 h-4" /> Audios
-                  </TabsTrigger>
-                </TabsList>
+              {/* Carpetas dentro de la materia */}
+                              {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                  {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).map((folder) => (
+                                    <FolderCard
+                                      key={folder.id}
+                                      folder={folder}
+                                      itemCount={quizzes.filter(q => q.folder_id === folder.id).length}
+                                      isAdmin={isAdmin}
+                                      onDelete={(id) => deleteFolderMutation.mutate(id)}
+                                      onEdit={setEditingFolder}
+                                      onClick={() => setCurrentFolderId(folder.id)}
+                                    />
+                                  ))}
+                                </div>
+                              )}
 
-                <TabsContent value="quizzes">
-                  {subjectQuizzes.length === 0 ? (
+                              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
+                                <TabsList className="mb-4">
+                                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.filter(q => !q.folder_id).length})
+                                  </TabsTrigger>
+                                  <TabsTrigger value="audios" className="flex items-center gap-2">
+                                    <Music className="w-4 h-4" /> Audios
+                                  </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="quizzes">
+                                  {subjectQuizzes.filter(q => !q.folder_id).length === 0 ? (
                     <div className="text-center py-12">
                       <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
@@ -1349,7 +1413,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {subjectQuizzes.map((quiz) => (
+                      {subjectQuizzes.filter(q => !q.folder_id).map((quiz) => (
                         <QuizListItem
                           key={quiz.id}
                           quiz={quiz}
