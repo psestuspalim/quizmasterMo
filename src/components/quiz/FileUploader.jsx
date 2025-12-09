@@ -383,7 +383,7 @@ export default function FileUploader({ onUploadSuccess }) {
         setJsonErrors([...validation.warnings, ...validation.info]);
       }
 
-      const fileName = data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
+      const fileName = data.t || data.m?.t || data.quizMetadata?.title || data.title || 'Quiz pegado';
       await processJsonData(data, fileName);
       setJsonText('');
       setShowPasteArea(false);
