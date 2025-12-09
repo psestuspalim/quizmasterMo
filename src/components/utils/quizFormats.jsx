@@ -91,23 +91,24 @@ export function fromCompactFormat(compactData) {
         
         // Si la pregunta es un string JSON, parsearla
         const parsedQuestion = typeof question === 'string' ? JSON.parse(question) : question;
+        
         // Buscar feedback general de opciones incorrectas
         let generalFeedback = '';
-        if (question.o) {
-          const incorrectOpts = question.o.filter(opt => opt.c === false || opt.c === 0);
+        if (parsedQuestion.o) {
+          const incorrectOpts = parsedQuestion.o.filter(opt => opt.c === false || opt.c === 0);
           if (incorrectOpts.length > 0 && incorrectOpts[0].r) {
             generalFeedback = incorrectOpts[0].r;
           }
         }
 
         return {
-          type: question.qt || 'text',
-          question: question.x || '',
-          difficulty: numberToDifficulty[question.dif] || 'moderado',
+          type: parsedQuestion.qt || 'text',
+          question: parsedQuestion.x || '',
+          difficulty: numberToDifficulty[parsedQuestion.dif] || 'moderado',
           bloomLevel: null,
           feedback: generalFeedback,
-          hint: question.h || '',
-          answerOptions: (question.o || []).map(opt => ({
+          hint: parsedQuestion.h || '',
+          answerOptions: (parsedQuestion.o || []).map(opt => ({
             text: opt.text || '',
             isCorrect: opt.c === true,
             errorType: opt.et || '',
