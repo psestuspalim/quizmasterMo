@@ -400,10 +400,20 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                       <p className={`font-semibold text-sm ${selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
                         {selectedOption.isCorrect ? '¡Correcto!' : 'Incorrecto'}
                       </p>
-                      {/* Siempre mostrar feedback general para incorrectas, rationale para correctas */}
-                      {(selectedOption.rationale || question.feedback) && (
-                        <p className={`text-xs mt-1 leading-relaxed ${selectedOption.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                          <MathText text={!selectedOption.isCorrect ? (question.feedback || selectedOption.rationale) : selectedOption.rationale} />
+                      {/* Para incorrectas: priorizar feedback general (n), para correctas: rationale (f) */}
+                      {(!selectedOption.isCorrect && question.feedback) && (
+                        <p className="text-xs mt-1 leading-relaxed text-red-700">
+                          <MathText text={question.feedback} />
+                        </p>
+                      )}
+                      {(selectedOption.isCorrect && selectedOption.rationale) && (
+                        <p className="text-xs mt-1 leading-relaxed text-green-700">
+                          <MathText text={selectedOption.rationale} />
+                        </p>
+                      )}
+                      {(!selectedOption.isCorrect && !question.feedback && selectedOption.rationale) && (
+                        <p className="text-xs mt-1 leading-relaxed text-red-700">
+                          <MathText text={selectedOption.rationale} />
                         </p>
                       )}
                     </div>
