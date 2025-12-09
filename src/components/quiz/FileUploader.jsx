@@ -527,36 +527,70 @@ export default function FileUploader({ onUploadSuccess }) {
                 Pegar JSON del quiz
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Formato esperado: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"{"}"t": "Título", "q": [...]{"}"}</code>
+                Formato: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"{"}"t": "Título", "q": [{"{"}"x": "...", "dif": 1-3, "o": [...]{"}"}, ...]{"}"}</code>
               </p>
             </div>
             
             <Textarea
               value={jsonText}
               onChange={(e) => {
-                setJsonText(e.target.value);
+                const text = e.target.value;
+                setJsonText(text);
                 setJsonErrors([]);
                 setError(null);
+                
+                // Validación en tiempo real
+                if (text.trim()) {
+                  try {
+                    const parsed = JSON.parse(text);
+                    const validation = validateJsonSchema(parsed);
+                    if (validation.errors.length > 0) {
+                      setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
+                      setError(`${validation.errors.length} error(es) encontrado(s)`);
+                    } else if (validation.warnings.length > 0 || validation.info.length > 0) {
+                      setJsonErrors([...validation.info, ...validation.warnings]);
+                    }
+                  } catch (err) {
+                    if (err instanceof SyntaxError) {
+                      setError(`Sintaxis JSON inválida: ${err.message}`);
+                    }
+                  }
+                }
               }}
-              placeholder='{"t": "Título del quiz", "q": [{"x": "Pregunta...", "dif": 2, "o": [...]}]}'
+              placeholder='{"t": "Título del quiz", "q": [{"x": "Pregunta...", "dif": 2, "qt": "mcq", "id": "Q001", "o": [{"text": "Opción", "c": true, "r": "Explicación"}]}]}'
               className="min-h-[300px] max-h-[500px] font-mono text-xs mb-4 resize-y"
               rows={15}
             />
 
             {jsonErrors.length > 0 && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg max-h-60 overflow-y-auto">
-                <p className="text-xs font-semibold text-amber-900 mb-2">
-                  ⚠️ Problemas encontrados:
+              <div className={`mb-4 p-3 rounded-lg max-h-60 overflow-y-auto border ${
+                error ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'
+              }`}>
+                <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                  {error ? (
+                    <>
+                      <AlertCircle className="w-3 h-3 text-red-600" />
+                      <span className="text-red-900">Errores de validación:</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-blue-900">✓ Información:</span>
+                    </>
+                  )}
                 </p>
-                <ul className="text-xs space-y-0.5">
+                <ul className="text-xs space-y-1">
                   {jsonErrors.map((err, idx) => (
-                    <li key={idx} className="text-amber-700">{err}</li>
+                    <li key={idx} className={
+                      err.startsWith('❌') ? 'text-red-700 font-medium' :
+                      err.startsWith('⚠️') ? 'text-amber-700' :
+                      'text-blue-700'
+                    }>{err}</li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {error && (
+            {error && !jsonErrors.length && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
@@ -566,7 +600,7 @@ export default function FileUploader({ onUploadSuccess }) {
             <div className="flex gap-3">
               <Button
                 onClick={handlePasteSubmit}
-                disabled={isProcessing || !jsonText.trim()}
+                disabled={isProcessing || !jsonText.trim() || error}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
