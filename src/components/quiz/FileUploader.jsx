@@ -48,11 +48,12 @@ export default function FileUploader({ onUploadSuccess }) {
 
     // FORMATO NUEVO {t, q} con estructura compacta
     if (data.t && data.q && Array.isArray(data.q) && !data.m) {
+      console.log('📦 Formato detectado: {t, q} compacto');
       // Expandir el formato compacto
       const expandedQuiz = fromCompactFormat(data);
+      console.log('📦 Quiz expandido:', expandedQuiz);
 
-      // Guardar tanto el formato expandido como el compacto
-      await onUploadSuccess({
+      const quizData = {
         title: data.t,
         description: '',
         total_questions: data.q.length,
@@ -61,7 +62,12 @@ export default function FileUploader({ onUploadSuccess }) {
         q: data.q,
         file_name: fileName,
         is_hidden: false
-      });
+      };
+
+      console.log('💾 Guardando quiz:', quizData);
+      // Guardar tanto el formato expandido como el compacto
+      await onUploadSuccess(quizData);
+      console.log('✅ Quiz guardado exitosamente');
       return;
     }
 
@@ -377,13 +383,17 @@ export default function FileUploader({ onUploadSuccess }) {
     setJsonErrors([]);
 
     try {
+      console.log('🔍 Parseando JSON...');
       const data = JSON.parse(jsonText);
+      console.log('✅ JSON parseado:', data);
 
       // Validar esquema solo si el formato es el esperado
       if (data.t && data.q) {
+        console.log('🔍 Validando esquema formato {t, q}...');
         const validation = validateJsonSchema(data);
 
         if (validation.errors.length > 0) {
+          console.log('❌ Errores de validación:', validation.errors);
           setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
           setError(`Se encontraron ${validation.errors.length} error(es) crítico(s)`);
           setIsProcessing(false);
@@ -391,24 +401,28 @@ export default function FileUploader({ onUploadSuccess }) {
         }
 
         if (validation.warnings.length > 0 || validation.info.length > 0) {
+          console.log('⚠️ Advertencias:', validation.warnings);
           setJsonErrors([...validation.info, ...validation.warnings]);
         }
       }
 
       const fileName = data.t || data.m?.t || 'Quiz cargado';
+      console.log('📝 Procesando quiz:', fileName);
       await processJsonData(data, fileName);
+      console.log('✅ Quiz procesado exitosamente');
+
       setJsonText('');
       setJsonErrors([]);
       setError(null);
+      setIsProcessing(false);
     } catch (err) {
-      console.error('Error procesando JSON:', err);
+      console.error('❌ Error procesando JSON:', err);
       if (err instanceof SyntaxError) {
         setError(`Error de sintaxis JSON: ${err.message}`);
         setJsonErrors(['💡 Verifica comillas, comas y llaves. Cada línea excepto la última debe terminar en coma.']);
       } else {
         setError(`Error al procesar: ${err.message}`);
       }
-    } finally {
       setIsProcessing(false);
     }
   };
