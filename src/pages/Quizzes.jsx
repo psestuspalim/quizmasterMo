@@ -1314,7 +1314,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                   </div>
                                                   {selectedSubject ? (
                                                     <FileUploader onUploadSuccess={(data) => {
-                                                      createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id });
+                                                      createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id, folder_id: currentFolderId });
                                                       setShowUploader(false);
                                                       setSelectedSubject(null);
                                                     }} />
@@ -1508,7 +1508,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Cargar nuevo cuestionario</h2>
                 <p className="text-gray-600">Sube un archivo JSON con el formato de preguntas</p>
               </div>
-              <FileUploader onUploadSuccess={(data) => createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id })} />
+              <FileUploader onUploadSuccess={(data) => createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id, folder_id: currentFolderId })} />
             </motion.div>
           )}
 
