@@ -1419,7 +1419,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                         isAdmin={isAdmin}
                                         onDelete={(id) => deleteFolderMutation.mutate(id)}
                                         onEdit={setEditingFolder}
-                                        onClick={() => setCurrentFolderId(folder.id)}
+                                        onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
                                       />
                                     </DroppableArea>
                                   ))}
