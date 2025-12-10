@@ -777,7 +777,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const Breadcrumb = () => {
     const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
     const folderParentSubject = currentFolder?.subject_id ? subjects.find(s => s.id === currentFolder.subject_id) : null;
-    const folderParentCourse = currentFolder?.course_id ? courses.find(c => c.id === currentFolder.course_id) : null;
     
     return (
       <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
@@ -798,26 +797,17 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             </Button>
           </>
         )}
-        {folderParentCourse && !selectedCourse && (
-          <>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => { setSelectedCourse(folderParentCourse); setCurrentFolderId(null); setView('subjects'); }}
-              className="px-2 text-gray-600"
-            >
-              {folderParentCourse.icon} {folderParentCourse.name}
-            </Button>
-          </>
-        )}
         {folderParentSubject && (
           <>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setSelectedSubject(folderParentSubject); setCurrentFolderId(null); setView('list'); }}
+              onClick={() => { 
+                setSelectedSubject(folderParentSubject); 
+                setCurrentFolderId(null); 
+                setView('list'); 
+              }}
               className="px-2 text-gray-600"
             >
               {folderParentSubject.name}
@@ -1346,7 +1336,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                   </div>
                                                   {selectedSubject ? (
                                                     <FileUploader onUploadSuccess={(data) => {
-                                                      createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id, folder_id: currentFolderId });
+                                                      createQuizMutation.mutate({ 
+                                                        ...data, 
+                                                        subject_id: selectedSubject.id, 
+                                                        folder_id: currentFolderId || null 
+                                                      });
                                                       setShowUploader(false);
                                                       setSelectedSubject(null);
                                                     }} />
@@ -1540,7 +1534,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Cargar nuevo cuestionario</h2>
                 <p className="text-gray-600">Sube un archivo JSON con el formato de preguntas</p>
               </div>
-              <FileUploader onUploadSuccess={(data) => createQuizMutation.mutate({ ...data, subject_id: selectedSubject.id, folder_id: currentFolderId })} />
+              <FileUploader onUploadSuccess={(data) => createQuizMutation.mutate({ 
+                ...data, 
+                subject_id: selectedSubject.id, 
+                folder_id: currentFolderId || null 
+              })} />
             </motion.div>
           )}
 
