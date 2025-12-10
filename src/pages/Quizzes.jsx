@@ -774,41 +774,73 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   }
 
   // Breadcrumb
-  const Breadcrumb = () => (
-    <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
-      <Button variant="ghost" size="sm" onClick={handleHome} className="text-gray-600 hover:text-gray-900 px-2">
-        <Home className="w-4 h-4 mr-1" />
-        Inicio
-      </Button>
-      {selectedCourse && (
-        <>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setSelectedSubject(null); setCurrentFolderId(null); setView('subjects'); }}
-            className={`px-2 ${!selectedSubject ? 'font-medium text-gray-900' : 'text-gray-600'}`}
-          >
-            {selectedCourse.icon} {selectedCourse.name}
-          </Button>
-        </>
-      )}
-      {currentFolderId && (
-        <>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <span className="font-medium text-gray-900">
-            {folders.find(f => f.id === currentFolderId)?.name}
-          </span>
-        </>
-      )}
-      {selectedSubject && (
-        <>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <span className="font-medium text-gray-900">{selectedSubject.name}</span>
-        </>
-      )}
-    </div>
-  );
+  const Breadcrumb = () => {
+    const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
+    const folderParentSubject = currentFolder?.subject_id ? subjects.find(s => s.id === currentFolder.subject_id) : null;
+    const folderParentCourse = currentFolder?.course_id ? courses.find(c => c.id === currentFolder.course_id) : null;
+    
+    return (
+      <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
+        <Button variant="ghost" size="sm" onClick={handleHome} className="text-gray-600 hover:text-gray-900 px-2">
+          <Home className="w-4 h-4 mr-1" />
+          Inicio
+        </Button>
+        {selectedCourse && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSelectedSubject(null); setCurrentFolderId(null); setView('subjects'); }}
+              className={`px-2 ${!selectedSubject && !currentFolderId ? 'font-medium text-gray-900' : 'text-gray-600'}`}
+            >
+              {selectedCourse.icon} {selectedCourse.name}
+            </Button>
+          </>
+        )}
+        {folderParentCourse && !selectedCourse && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSelectedCourse(folderParentCourse); setCurrentFolderId(null); setView('subjects'); }}
+              className="px-2 text-gray-600"
+            >
+              {folderParentCourse.icon} {folderParentCourse.name}
+            </Button>
+          </>
+        )}
+        {folderParentSubject && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSelectedSubject(folderParentSubject); setCurrentFolderId(null); setView('list'); }}
+              className="px-2 text-gray-600"
+            >
+              {folderParentSubject.name}
+            </Button>
+          </>
+        )}
+        {selectedSubject && !currentFolderId && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="font-medium text-gray-900">{selectedSubject.name}</span>
+          </>
+        )}
+        {currentFolderId && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="font-medium text-gray-900">
+              {currentFolder?.name}
+            </span>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
