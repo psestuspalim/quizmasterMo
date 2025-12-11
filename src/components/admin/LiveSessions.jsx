@@ -22,17 +22,24 @@ export default function LiveSessions() {
   const { data: sessions = [], refetch } = useQuery({
     queryKey: ['quiz-sessions'],
     queryFn: async () => {
-      const allSessions = await base44.entities.QuizSession.list('-last_activity');
-      // Filtrar sesiones activas en los últimos 10 minutos
-      const now = new Date();
-      return allSessions.filter(s => {
-        const lastActivity = new Date(s.last_activity);
-        const diffMinutes = (now - lastActivity) / 1000 / 60;
-        return diffMinutes < 10 && s.is_active;
-      });
+      try {
+        const allSessions = await base44.entities.QuizSession.filter({ is_active: true }, '-last_activity');
+        console.log('📡 Sesiones encontradas:', allSessions);
+        // Filtrar sesiones activas en los últimos 10 minutos
+        const now = new Date();
+        return allSessions.filter(s => {
+          if (!s.last_activity) return true;
+          const lastActivity = new Date(s.last_activity);
+          const diffMinutes = (now - lastActivity) / 1000 / 60;
+          return diffMinutes < 10;
+        });
+      } catch (error) {
+        console.error('Error fetching sessions:', error);
+        return [];
+      }
     },
-    refetchInterval: 3000, // Refetch cada 3 segundos
-    enabled: currentUser?.role === 'admin'
+    refetchInterval: 3000,
+    enabled: !!currentUser && currentUser.role === 'admin'
   });
 
   const { data: subjects = [] } = useQuery({

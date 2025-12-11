@@ -504,23 +504,28 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     });
 
     // Crear sesión en vivo
-    const session = await base44.entities.QuizSession.create({
-      user_email: currentUser.email,
-      username: currentUser.username,
-      quiz_id: quiz.id,
-      quiz_title: expandedQuiz.title,
-      subject_id: quiz.subject_id || expandedQuiz.subject_id,
-      current_question: 0,
-      total_questions: shuffledQuestions.length,
-      score: 0,
-      wrong_count: 0,
-      started_at: new Date().toISOString(),
-      last_activity: new Date().toISOString(),
-      is_active: true
-    });
+    try {
+      const session = await base44.entities.QuizSession.create({
+        user_email: currentUser.email,
+        username: currentUser.username,
+        quiz_id: quiz.id,
+        quiz_title: expandedQuiz.title,
+        subject_id: quiz.subject_id || expandedQuiz.subject_id,
+        current_question: 0,
+        total_questions: shuffledQuestions.length,
+        score: 0,
+        wrong_count: 0,
+        started_at: new Date().toISOString(),
+        last_activity: new Date().toISOString(),
+        is_active: true
+      });
+      console.log('✅ Sesión creada:', session.id);
+      setCurrentSessionId(session.id);
+    } catch (error) {
+      console.error('❌ Error creando sesión:', error);
+    }
 
     setCurrentAttemptId(attempt.id);
-    setCurrentSessionId(session.id);
     setSelectedQuiz({ ...quiz, id: quiz.id, subject_id: quiz.subject_id, title: expandedQuiz.title, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setScore(0);
