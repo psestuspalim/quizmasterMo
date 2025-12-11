@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -25,6 +25,12 @@ export default function AdminMenu({
   compact = false 
 }) {
   const menuItems = [
+    {
+      label: 'Sesiones en Vivo',
+      icon: Activity,
+      href: 'LiveSessions',
+      description: 'Ver estudiantes en tiempo real'
+    },
     {
       label: 'Progreso Estudiantes',
       icon: BarChart3,

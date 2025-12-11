@@ -11,6 +11,7 @@ import AdminTasks from './pages/AdminTasks';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
+import LiveSessions from './pages/LiveSessions';
 
 
 export const PAGES = {
@@ -27,6 +28,7 @@ export const PAGES = {
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
+    "LiveSessions": LiveSessions,
 }
 
 export const pagesConfig = {

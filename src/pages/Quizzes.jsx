@@ -79,6 +79,7 @@ export default function QuizzesPage() {
   const [swipeMode, setSwipeMode] = useState(false);
     const [responseTimes, setResponseTimes] = useState([]);
     const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [currentSessionId, setCurrentSessionId] = useState(null);
   
   // Dialogs
   const [showCourseDialog, setShowCourseDialog] = useState(false);
@@ -502,7 +503,24 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       wrong_questions: []
     });
 
+    // Crear sesión en vivo
+    const session = await base44.entities.QuizSession.create({
+      user_email: currentUser.email,
+      username: currentUser.username,
+      quiz_id: quiz.id,
+      quiz_title: expandedQuiz.title,
+      subject_id: quiz.subject_id || expandedQuiz.subject_id,
+      current_question: 0,
+      total_questions: shuffledQuestions.length,
+      score: 0,
+      wrong_count: 0,
+      started_at: new Date().toISOString(),
+      last_activity: new Date().toISOString(),
+      is_active: true
+    });
+
     setCurrentAttemptId(attempt.id);
+    setCurrentSessionId(session.id);
     setSelectedQuiz({ ...quiz, id: quiz.id, subject_id: quiz.subject_id, title: expandedQuiz.title, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -561,6 +579,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setQuestionStartTime(Date.now());
     } else {
+      // Marcar sesión como completa
+      if (currentSessionId) {
+        try {
+          await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
+        } catch (error) {
+          console.error('Error marking session complete:', error);
+        }
+      }
       queryClient.invalidateQueries(['attempts']);
       setView('results');
     }
@@ -638,8 +664,17 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           });
           queryClient.invalidateQueries(['attempts']);
         }
+        // Marcar sesión como inactiva
+        if (currentSessionId) {
+          try {
+            await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
+          } catch (error) {
+            console.error('Error marking session inactive:', error);
+          }
+        }
         setSelectedQuiz(null);
         setSwipeMode(false);
+        setCurrentSessionId(null);
         setView('list');
       };
 
@@ -1560,6 +1595,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 quizId={selectedQuiz.id}
                 userEmail={currentUser?.email}
                 settings={quizSettings}
+                quizTitle={selectedQuiz.title}
+                subjectId={selectedQuiz.subject_id}
+                sessionId={currentSessionId}
               />
             </motion.div>
           )}
