@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,10 @@ export default function QuestionView({
   previousAttempts = [],
   quizId,
   userEmail,
-  settings = {}
+  settings = {},
+  quizTitle = '',
+  subjectId = null,
+  sessionId = null
 }) {
   // Configuraciones con valores por defecto
   const showFeedbackSetting = settings.show_feedback !== false;
@@ -45,6 +48,25 @@ export default function QuestionView({
   const [schema, setSchema] = useState(null);
   const [showNotesField, setShowNotesField] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState(Date.now());
+
+  // Actualizar sesión cuando cambia la pregunta
+  useEffect(() => {
+    const updateSession = async () => {
+      if (sessionId) {
+        try {
+          await base44.entities.QuizSession.update(sessionId, {
+            current_question: questionNumber,
+            score: correctAnswers,
+            wrong_count: wrongAnswers,
+            last_activity: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error('Error updating session:', error);
+        }
+      }
+    };
+    updateSession();
+  }, [sessionId, questionNumber, correctAnswers, wrongAnswers]);
 
   const handleRephrase = async () => {
     setRephrasing(true);
