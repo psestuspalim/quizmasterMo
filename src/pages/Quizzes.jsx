@@ -53,6 +53,7 @@ import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 import FileExplorer from '../components/explorer/FileExplorer';
 import MoveQuizModal from '../components/quiz/MoveQuizModal';
 import QuizExporter from '../components/admin/QuizExporter';
+import CourseJoinModal from '../components/course/CourseJoinModal';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -92,6 +93,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showQuizExporter, setShowQuizExporter] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -119,6 +121,15 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const { data: courses = [] } = useQuery({
     queryKey: ['courses'],
     queryFn: () => base44.entities.Course.list('order'),
+  });
+
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ['enrollments', currentUser?.email],
+    queryFn: () => base44.entities.CourseEnrollment.filter({ 
+      user_email: currentUser?.email, 
+      status: 'approved' 
+    }),
+    enabled: !!currentUser?.email && currentUser?.role !== 'admin'
   });
 
   const { data: subjects = [] } = useQuery({
@@ -409,7 +420,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   // Filtered data
-  const visibleCourses = courses.filter(c => c && c.id && canUserAccess(c));
+  const visibleCourses = isAdmin 
+    ? courses.filter(c => c && c.id && canUserAccess(c))
+    : courses.filter(c => c && c.id && canUserAccess(c) && enrollments.some(e => e.course_id === c.id));
   const unassignedSubjects = subjects.filter(s => s && s.id && !s.course_id && canUserAccess(s));
   const unassignedFolders = folders.filter(f => f && f.id && !f.course_id && !f.parent_id && canUserAccess(f));
   const currentCourseSubjects = selectedCourse 
@@ -959,6 +972,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <p className="text-gray-600">Selecciona un curso para ver sus materias</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {!isAdmin && (
+                    <Button 
+                      onClick={() => setShowJoinModal(true)} 
+                      variant="outline"
+                      className="text-xs sm:text-sm h-9 border-green-300 text-green-600 hover:bg-green-50"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> 
+                      Unirse a Curso
+                    </Button>
+                  )}
                   {isAdmin && (
                     <Button 
                       onClick={() => setExplorerMode(true)} 
@@ -1679,8 +1702,15 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             <QuizExporter onClose={() => setShowQuizExporter(false)} />
           </div>
         )}
-      </div>
-    </div>
-    </DragDropContext>
-  );
-}
+
+        {/* Course Join Modal */}
+        <CourseJoinModal 
+          open={showJoinModal} 
+          onClose={() => setShowJoinModal(false)}
+          currentUser={currentUser}
+        />
+        </div>
+        </div>
+        </DragDropContext>
+        );
+        }

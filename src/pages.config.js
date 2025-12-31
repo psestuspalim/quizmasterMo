@@ -1,34 +1,38 @@
-import Quizzes from './pages/Quizzes';
 import AdminProgress from './pages/AdminProgress';
-import Progress from './pages/Progress';
-import Leaderboard from './pages/Leaderboard';
+import AdminTasks from './pages/AdminTasks';
 import Badges from './pages/Badges';
 import ChallengePlay from './pages/ChallengePlay';
 import GameLobby from './pages/GameLobby';
 import GamePlay from './pages/GamePlay';
+import Home from './pages/Home';
+import Leaderboard from './pages/Leaderboard';
+import LiveSessions from './pages/LiveSessions';
 import MyTasks from './pages/MyTasks';
-import AdminTasks from './pages/AdminTasks';
+import Progress from './pages/Progress';
+import Quizzes from './pages/Quizzes';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
-import LiveSessions from './pages/LiveSessions';
+import CourseManagement from './pages/CourseManagement';
 
 
 export const PAGES = {
-    "Quizzes": Quizzes,
     "AdminProgress": AdminProgress,
-    "Progress": Progress,
-    "Leaderboard": Leaderboard,
+    "AdminTasks": AdminTasks,
     "Badges": Badges,
     "ChallengePlay": ChallengePlay,
     "GameLobby": GameLobby,
     "GamePlay": GamePlay,
+    "Home": Home,
+    "Leaderboard": Leaderboard,
+    "LiveSessions": LiveSessions,
     "MyTasks": MyTasks,
-    "AdminTasks": AdminTasks,
+    "Progress": Progress,
+    "Quizzes": Quizzes,
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
-    "LiveSessions": LiveSessions,
+    "CourseManagement": CourseManagement,
 }
 
 export const pagesConfig = {

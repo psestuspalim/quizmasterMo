@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -25,6 +25,12 @@ export default function AdminMenu({
   compact = false 
 }) {
   const menuItems = [
+    {
+      label: 'Gestión de Cursos',
+      icon: Key,
+      href: 'CourseManagement',
+      description: 'Códigos y solicitudes'
+    },
     {
       label: 'Sesiones en Vivo',
       icon: Activity,
