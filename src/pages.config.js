@@ -14,6 +14,10 @@ import Quizzes from './pages/Quizzes';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
+import AdminHome from './pages/AdminHome';
+import AdminStudents from './pages/AdminStudents';
+import AdminStudentDetail from './pages/AdminStudentDetail';
+import AdminJsonManager from './pages/AdminJsonManager';
 
 
 export const PAGES = {
@@ -33,6 +37,10 @@ export const PAGES = {
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
+    "AdminHome": AdminHome,
+    "AdminStudents": AdminStudents,
+    "AdminStudentDetail": AdminStudentDetail,
+    "AdminJsonManager": AdminJsonManager,
 }
 
 export const pagesConfig = {
