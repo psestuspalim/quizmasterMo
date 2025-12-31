@@ -54,6 +54,8 @@ import FileExplorer from '../components/explorer/FileExplorer';
 import MoveQuizModal from '../components/quiz/MoveQuizModal';
 import QuizExporter from '../components/admin/QuizExporter';
 import CourseJoinModal from '../components/course/CourseJoinModal';
+import FeatureAnalytics from '../components/admin/FeatureAnalytics';
+import FeatureTracker from '../components/admin/FeatureTracker';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -94,6 +96,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showFeatureAnalytics, setShowFeatureAnalytics] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -1018,6 +1021,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                         compact 
                         onOpenContentManager={() => setShowContentManager(true)}
                         onOpenQuizExporter={() => setShowQuizExporter(true)}
+                        onOpenFeatureAnalytics={() => setShowFeatureAnalytics(true)}
                       />
                       <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
                         <DialogTrigger asChild>
@@ -1707,6 +1711,18 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         <CourseJoinModal 
           open={showJoinModal} 
           onClose={() => setShowJoinModal(false)}
+          currentUser={currentUser}
+        />
+
+        {/* Feature Analytics Modal */}
+        {showFeatureAnalytics && (
+          <FeatureAnalytics onClose={() => setShowFeatureAnalytics(false)} />
+        )}
+
+        {/* Track page view */}
+        <FeatureTracker 
+          featureName="Página Principal Quizzes" 
+          category="general"
           currentUser={currentUser}
         />
         </div>

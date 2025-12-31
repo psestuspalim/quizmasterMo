@@ -2,6 +2,7 @@ import AdminProgress from './pages/AdminProgress';
 import AdminTasks from './pages/AdminTasks';
 import Badges from './pages/Badges';
 import ChallengePlay from './pages/ChallengePlay';
+import CourseManagement from './pages/CourseManagement';
 import GameLobby from './pages/GameLobby';
 import GamePlay from './pages/GamePlay';
 import Home from './pages/Home';
@@ -13,7 +14,6 @@ import Quizzes from './pages/Quizzes';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
-import CourseManagement from './pages/CourseManagement';
 
 
 export const PAGES = {
@@ -21,6 +21,7 @@ export const PAGES = {
     "AdminTasks": AdminTasks,
     "Badges": Badges,
     "ChallengePlay": ChallengePlay,
+    "CourseManagement": CourseManagement,
     "GameLobby": GameLobby,
     "GamePlay": GamePlay,
     "Home": Home,
@@ -32,7 +33,6 @@ export const PAGES = {
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
-    "CourseManagement": CourseManagement,
 }
 
 export const pagesConfig = {

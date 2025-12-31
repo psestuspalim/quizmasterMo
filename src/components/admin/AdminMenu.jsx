@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key, TrendingUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -22,6 +22,7 @@ export default function AdminMenu({
   onOpenContentManager,
   onOpenQuizSettings,
   onOpenQuizExporter,
+  onOpenFeatureAnalytics,
   compact = false 
 }) {
   const menuItems = [
@@ -52,6 +53,12 @@ export default function AdminMenu({
   ];
 
   const actions = [
+    {
+      label: 'Analytics de Funcionalidades',
+      icon: TrendingUp,
+      onClick: onOpenFeatureAnalytics,
+      description: 'Ver estadísticas de uso'
+    },
     {
       label: 'Gestionar Contenido',
       icon: Trash2,
