@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Clock, TrendingUp, Brain, Zap } from 'lucide-react';
-import moment from 'moment';
+import { format } from 'date-fns';
 
 export default function TimeVsPerformance({ attempts, sessionLogs = [] }) {
   const analysis = useMemo(() => {
@@ -11,7 +11,7 @@ export default function TimeVsPerformance({ attempts, sessionLogs = [] }) {
     // Agrupar intentos por día
     const attemptsByDay = {};
     attempts.forEach(attempt => {
-      const day = moment(attempt.created_date).format('YYYY-MM-DD');
+      const day = format(new Date(attempt.created_date), 'yyyy-MM-dd');
       if (!attemptsByDay[day]) {
         attemptsByDay[day] = {
           attempts: [],
@@ -36,7 +36,7 @@ export default function TimeVsPerformance({ attempts, sessionLogs = [] }) {
         
         return {
           date,
-          displayDate: moment(date).format('DD/MM'),
+          displayDate: format(new Date(date), 'dd/MM'),
           avgScore,
           questionsAnswered: data.totalQuestions,
           attemptsCount: data.attempts.length,
