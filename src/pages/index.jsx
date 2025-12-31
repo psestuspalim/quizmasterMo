@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -27,7 +28,9 @@ function FullPageFallback() {
   );
 }
 
-export default function Pages() {
+// The original Pages component is now a named export.
+// This preserves its functionality for routing.
+export function Pages() {
   return (
     <Suspense fallback={<FullPageFallback />}>
       <Routes>
@@ -48,3 +51,6 @@ export default function Pages() {
     </Suspense>
   );
 }
+
+// The default export for this file is now the default export from Quizzes.
+export { default } from './Quizzes';
