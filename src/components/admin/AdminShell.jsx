@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
   LayoutDashboard, BookOpen, Users, FileJson, Activity, 
-  BarChart3, ClipboardList, Menu, X, ArrowLeft, Shield, FolderTree
+  BarChart3, ClipboardList, Menu, X, ArrowLeft, Shield, FolderTree, Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ const sidebarItems = [
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: 'AdminHome' },
       { label: 'Contenido', icon: FolderTree, href: 'AdminContent' },
+      { label: 'Papelera', icon: Trash2, href: 'AdminTrash' },
       { label: 'Estudiantes', icon: Users, href: 'AdminStudents' },
       { label: 'JSON Manager', icon: FileJson, href: 'AdminJsonManager' }
     ]

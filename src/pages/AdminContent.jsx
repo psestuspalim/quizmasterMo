@@ -158,19 +158,41 @@ export default function AdminContent() {
   const confirmDelete = async () => {
     try {
       for (const item of deleteDialog.items) {
-        if (item.type === 'course') await base44.entities.Course.delete(item.id);
-        if (item.type === 'folder') await base44.entities.Folder.delete(item.id);
-        if (item.type === 'subject') await base44.entities.Subject.delete(item.id);
-        if (item.type === 'quiz') await base44.entities.Quiz.delete(item.id);
+        let itemData = null;
+        
+        if (item.type === 'course') {
+          itemData = courses.find(c => c.id === item.id);
+          await base44.entities.Course.delete(item.id);
+        } else if (item.type === 'folder') {
+          itemData = folders.find(f => f.id === item.id);
+          await base44.entities.Folder.delete(item.id);
+        } else if (item.type === 'subject') {
+          itemData = subjects.find(s => s.id === item.id);
+          await base44.entities.Subject.delete(item.id);
+        } else if (item.type === 'quiz') {
+          itemData = quizzes.find(q => q.id === item.id);
+          await base44.entities.Quiz.delete(item.id);
+        }
+        
+        if (itemData) {
+          await base44.entities.DeletedItem.create({
+            item_type: item.type,
+            item_id: item.id,
+            item_data: itemData,
+            deleted_by: currentUser.email,
+            deleted_at: new Date().toISOString()
+          });
+        }
       }
 
       queryClient.invalidateQueries(['courses']);
       queryClient.invalidateQueries(['folders']);
       queryClient.invalidateQueries(['subjects']);
       queryClient.invalidateQueries(['quizzes']);
+      queryClient.invalidateQueries(['deleted-items']);
 
       setSelectedItems(new Set());
-      toast.success('Elementos eliminados');
+      toast.success('Elementos movidos a la papelera');
     } catch (error) {
       toast.error('Error al eliminar');
     }
@@ -326,15 +348,15 @@ export default function AdminContent() {
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, items: [] })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+            <AlertDialogTitle>Mover a papelera</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de eliminar {deleteDialog.items.length} elemento(s)? Esta acción no se puede deshacer.
+              ¿Estás seguro de mover {deleteDialog.items.length} elemento(s) a la papelera? Podrás restaurarlos después.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-              Eliminar
+              Mover a papelera
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,9 @@
+import AdminContent from './pages/AdminContent';
+import AdminHome from './pages/AdminHome';
+import AdminJsonManager from './pages/AdminJsonManager';
 import AdminProgress from './pages/AdminProgress';
+import AdminStudentDetail from './pages/AdminStudentDetail';
+import AdminStudents from './pages/AdminStudents';
 import AdminTasks from './pages/AdminTasks';
 import Badges from './pages/Badges';
 import ChallengePlay from './pages/ChallengePlay';
@@ -14,15 +19,16 @@ import Quizzes from './pages/Quizzes';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
-import AdminHome from './pages/AdminHome';
-import AdminStudents from './pages/AdminStudents';
-import AdminStudentDetail from './pages/AdminStudentDetail';
-import AdminJsonManager from './pages/AdminJsonManager';
-import AdminContent from './pages/AdminContent';
+import AdminTrash from './pages/AdminTrash';
 
 
 export const PAGES = {
+    "AdminContent": AdminContent,
+    "AdminHome": AdminHome,
+    "AdminJsonManager": AdminJsonManager,
     "AdminProgress": AdminProgress,
+    "AdminStudentDetail": AdminStudentDetail,
+    "AdminStudents": AdminStudents,
     "AdminTasks": AdminTasks,
     "Badges": Badges,
     "ChallengePlay": ChallengePlay,
@@ -38,11 +44,7 @@ export const PAGES = {
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
-    "AdminHome": AdminHome,
-    "AdminStudents": AdminStudents,
-    "AdminStudentDetail": AdminStudentDetail,
-    "AdminJsonManager": AdminJsonManager,
-    "AdminContent": AdminContent,
+    "AdminTrash": AdminTrash,
 }
 
 export const pagesConfig = {
