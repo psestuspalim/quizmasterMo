@@ -18,6 +18,7 @@ import AdminHome from './pages/AdminHome';
 import AdminStudents from './pages/AdminStudents';
 import AdminStudentDetail from './pages/AdminStudentDetail';
 import AdminJsonManager from './pages/AdminJsonManager';
+import AdminContent from './pages/AdminContent';
 
 
 export const PAGES = {
@@ -41,6 +42,7 @@ export const PAGES = {
     "AdminStudents": AdminStudents,
     "AdminStudentDetail": AdminStudentDetail,
     "AdminJsonManager": AdminJsonManager,
+    "AdminContent": AdminContent,
 }
 
 export const pagesConfig = {

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileJson, Upload, CheckCircle2, XCircle, 
-  Code, Download, AlertCircle, Sparkles
+  Code, Download, AlertCircle, Sparkles, FolderDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toCompactFormat, fromCompactFormat, isCompactFormat } from '../components/utils/quizFormats';
@@ -17,6 +19,18 @@ export default function AdminJsonManager() {
   const [validationResult, setValidationResult] = useState(null);
   const [formattedJson, setFormattedJson] = useState('');
   const [convertedJson, setConvertedJson] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportedCount, setExportedCount] = useState(0);
+
+  const { data: quizzes = [], isLoading } = useQuery({
+    queryKey: ['all-quizzes'],
+    queryFn: () => base44.entities.Quiz.list('-created_date'),
+  });
+
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: () => base44.entities.Subject.list(),
+  });
 
   const validateJson = () => {
     try {
@@ -52,14 +66,12 @@ export default function AdminJsonManager() {
     try {
       const parsed = JSON.parse(jsonInput);
       
-      // Verificar si ya es compacto
       if (isCompactFormat(parsed)) {
         toast.info('El JSON ya está en formato compacto');
         setConvertedJson(JSON.stringify(parsed, null, 2));
         return;
       }
 
-      // Convertir a compacto
       const compact = toCompactFormat(parsed);
       setConvertedJson(JSON.stringify(compact, null, 2));
       toast.success('Convertido a formato compacto');
@@ -72,14 +84,12 @@ export default function AdminJsonManager() {
     try {
       const parsed = JSON.parse(jsonInput);
       
-      // Verificar si es compacto
       if (!isCompactFormat(parsed)) {
         toast.info('El JSON no está en formato compacto');
         setConvertedJson(JSON.stringify(parsed, null, 2));
         return;
       }
 
-      // Expandir
       const full = fromCompactFormat(parsed);
       setConvertedJson(JSON.stringify(full, null, 2));
       toast.success('Convertido a formato completo');
@@ -88,8 +98,8 @@ export default function AdminJsonManager() {
     }
   };
 
-  const downloadJson = (content, filename) => {
-    const blob = new Blob([content], { type: 'application/json' });
+  const downloadJSON = (data, filename) => {
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -111,215 +121,279 @@ export default function AdminJsonManager() {
     reader.readAsText(file);
   };
 
+  const handleExportAll = async () => {
+    setExporting(true);
+    setExportedCount(0);
+
+    try {
+      for (const quiz of quizzes) {
+        const subject = subjects.find(s => s.id === quiz.subject_id);
+        const subjectName = subject?.name || 'Sin_Materia';
+        const safeName = quiz.title.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, '').replace(/\s+/g, '_');
+        const filename = `${subjectName}_${safeName}.json`;
+
+        const exportData = {
+          title: quiz.title,
+          description: quiz.description,
+          questions: quiz.questions,
+          total_questions: quiz.total_questions,
+          metadata: {
+            subject: subjectName,
+            created_date: quiz.created_date,
+            file_name: quiz.file_name
+          }
+        };
+
+        downloadJSON(JSON.stringify(exportData, null, 2), filename);
+        setExportedCount(prev => prev + 1);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      toast.success(`${quizzes.length} quizzes exportados`);
+    } catch (error) {
+      console.error('Error exportando:', error);
+      toast.error('Error al exportar');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportSingle = (quiz) => {
+    const subject = subjects.find(s => s.id === quiz.subject_id);
+    const subjectName = subject?.name || 'Sin_Materia';
+    const safeName = quiz.title.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, '').replace(/\s+/g, '_');
+    const filename = `${subjectName}_${safeName}.json`;
+
+    const exportData = {
+      title: quiz.title,
+      description: quiz.description,
+      questions: quiz.questions,
+      total_questions: quiz.total_questions,
+      metadata: {
+        subject: subjectName,
+        created_date: quiz.created_date,
+        file_name: quiz.file_name
+      }
+    };
+
+    downloadJSON(JSON.stringify(exportData, null, 2), filename);
+    toast.success('Quiz exportado');
+  };
+
   return (
     <AdminShell>
       <AdminPageHeader
         icon={FileJson}
         title="JSON Manager"
-        subtitle="Validar, formatear y convertir archivos JSON"
+        subtitle="Importar, validar, convertir y exportar archivos JSON"
       />
 
-      <Tabs defaultValue="validate" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+      <Tabs defaultValue="import" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsTrigger value="import">
+            <Upload className="w-4 h-4 mr-2" />
+            Importar
+          </TabsTrigger>
           <TabsTrigger value="validate">
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Validar
-          </TabsTrigger>
-          <TabsTrigger value="format">
-            <Code className="w-4 h-4 mr-2" />
-            Formatear
           </TabsTrigger>
           <TabsTrigger value="convert">
             <Sparkles className="w-4 h-4 mr-2" />
             Convertir
           </TabsTrigger>
+          <TabsTrigger value="export">
+            <FolderDown className="w-4 h-4 mr-2" />
+            Exportar
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="import" className="space-y-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Subir Archivo JSON</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed border-muted rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="json-upload"
+                />
+                <label htmlFor="json-upload" className="cursor-pointer">
+                  <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="font-medium">Click para subir archivo JSON</p>
+                  <p className="text-sm text-muted-foreground mt-1">o pega el contenido abajo</p>
+                </label>
+              </div>
+
+              <Textarea
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder='{"title": "Mi Quiz", "questions": [...]}'
+                className="min-h-[300px] font-mono text-sm"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="validate" className="space-y-6">
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">Subir y Validar JSON</CardTitle>
+              <CardTitle className="text-lg font-semibold">Validar JSON</CardTitle>
             </CardHeader>
-              <CardContent className="space-y-4">
-                {/* File upload */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-all">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="json-upload"
-                  />
-                  <label htmlFor="json-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 font-medium">Click para subir archivo JSON</p>
-                    <p className="text-gray-400 text-sm mt-1">o pega el contenido abajo</p>
-                  </label>
-                </div>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder='Pega tu JSON aquí...'
+                className="min-h-[200px] font-mono text-sm"
+              />
 
-                {/* JSON Input */}
-                <Textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder='{"title": "Mi Quiz", "questions": [...]}'
-                  className="min-h-[300px] font-mono text-sm"
-                />
+              <Button onClick={validateJson} className="w-full">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Validar JSON
+              </Button>
 
-                {/* Validate button */}
-                <Button onClick={validateJson} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Validar JSON
-                </Button>
-
-                {/* Validation result */}
-                {validationResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <Card className={validationResult.valid ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          {validationResult.valid ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                          )}
-                          <div className="flex-1">
-                            <p className={`font-semibold ${validationResult.valid ? 'text-green-800' : 'text-red-800'}`}>
-                              {validationResult.message}
-                            </p>
-                            {validationResult.valid && validationResult.data && (
-                              <div className="mt-2 text-sm text-green-700">
-                                <p>Propiedades detectadas: {Object.keys(validationResult.data).join(', ')}</p>
-                              </div>
-                            )}
-                            {!validationResult.valid && validationResult.line && (
-                              <p className="text-sm text-red-600 mt-1">
-                                Posición: {validationResult.line}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-        <TabsContent value="format" className="space-y-6">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Formatear JSON</CardTitle>
-            </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder='{"title":"Mi Quiz","questions":[...]}'
-                  className="min-h-[200px] font-mono text-sm"
-                />
-
-                <Button onClick={formatJson} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                  <Code className="w-4 h-4 mr-2" />
-                  Formatear con indentación
-                </Button>
-
-                {formattedJson && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-700">JSON Formateado:</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => downloadJson(formattedJson, 'formatted.json')}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Descargar
-                        </Button>
+              {validationResult && (
+                <Card className={validationResult.valid ? 'border-green-500 bg-green-50' : 'border-destructive bg-destructive/10'}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      {validationResult.valid ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                      )}
+                      <div>
+                        <p className="font-semibold">{validationResult.message}</p>
+                        {validationResult.valid && validationResult.data && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Propiedades: {Object.keys(validationResult.data).join(', ')}
+                          </p>
+                        )}
                       </div>
-                      <Textarea
-                        value={formattedJson}
-                        readOnly
-                        className="min-h-[300px] font-mono text-sm bg-gray-50"
-                      />
                     </div>
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="convert" className="space-y-6">
           <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Convertir Formatos</CardTitle>
             </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800">
-                      <p className="font-medium mb-1">Formatos soportados:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li><strong>Compacto:</strong> Formato optimizado con claves cortas (t, q, o, c)</li>
-                        <li><strong>Completo:</strong> Formato legible con claves descriptivas</li>
-                      </ul>
-                    </div>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder='Pega tu JSON aquí...'
+                className="min-h-[200px] font-mono text-sm"
+              />
+
+              <div className="grid grid-cols-3 gap-3">
+                <Button onClick={formatJson} variant="outline">
+                  <Code className="w-4 h-4 mr-2" />
+                  Formatear
+                </Button>
+                <Button onClick={convertToCompact} variant="outline">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  A Compacto
+                </Button>
+                <Button onClick={convertToFull} variant="outline">
+                  <Code className="w-4 h-4 mr-2" />
+                  A Completo
+                </Button>
+              </div>
+
+              {(formattedJson || convertedJson) && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Resultado:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadJSON(formattedJson || convertedJson, 'converted.json')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Descargar
+                    </Button>
                   </div>
+                  <Textarea
+                    value={formattedJson || convertedJson}
+                    readOnly
+                    className="min-h-[300px] font-mono text-sm bg-muted"
+                  />
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <Textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder='Pega tu JSON aquí...'
-                  className="min-h-[200px] font-mono text-sm"
-                />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={convertToCompact} variant="outline">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    A Compacto
-                  </Button>
-                  <Button onClick={convertToFull} variant="outline">
-                    <Code className="w-4 h-4 mr-2" />
-                    A Completo
-                  </Button>
-                </div>
-
-                {convertedJson && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+        <TabsContent value="export" className="space-y-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Exportar Quizzes</CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Descarga todos los quizzes como archivos JSON
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted rounded-xl p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium">{quizzes.length} quizzes disponibles</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Cada quiz se descargará como archivo JSON independiente
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleExportAll}
+                    disabled={exporting || quizzes.length === 0}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-700">JSON Convertido:</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => downloadJson(convertedJson, 'converted.json')}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Descargar
-                        </Button>
+                    {exporting ? (
+                      <>Exportando {exportedCount}/{quizzes.length}</>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Exportar todos
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border rounded-xl divide-y max-h-96 overflow-y-auto">
+                {quizzes.map((quiz) => {
+                  const subject = subjects.find(s => s.id === quiz.subject_id);
+                  return (
+                    <div key={quiz.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{quiz.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {subject?.name || 'Sin materia'} • {quiz.total_questions || quiz.questions?.length || 0} preguntas
+                        </p>
                       </div>
-                      <Textarea
-                        value={convertedJson}
-                        readOnly
-                        className="min-h-[300px] font-mono text-sm bg-gray-50"
-                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleExportSingle(quiz)}
+                        disabled={exporting}
+                      >
+                        <FileJson className="w-4 h-4 mr-1" />
+                        Descargar
+                      </Button>
                     </div>
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </AdminShell>

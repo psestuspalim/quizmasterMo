@@ -120,12 +120,12 @@ export default function AdminHome() {
             transition={{ delay: 0.5 }}
           >
             <AdminDashboardCard
-              title="Cursos"
-              description="Gestiona cursos y materias"
-              count={courses.length}
+              title="Contenido"
+              description="Gestiona cursos, materias y quizzes"
+              count={courses.length + subjects.length}
               items={recentCourses}
-              primaryActionLabel="Gestionar cursos"
-              primaryActionTo="CourseManagement"
+              primaryActionLabel="Gestionar contenido"
+              primaryActionTo="AdminContent"
               icon={BookOpen}
               iconColor="text-blue-600"
               countColor="text-blue-600"

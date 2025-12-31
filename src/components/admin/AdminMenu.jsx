@@ -65,18 +65,6 @@ export default function AdminMenu({
       onClick: onOpenFeatureAnalytics,
       description: 'Ver estadísticas de uso'
     },
-    {
-      label: 'Gestionar Contenido',
-      icon: Trash2,
-      onClick: onOpenContentManager,
-      description: 'Eliminar cursos, carpetas, materias'
-    },
-    {
-      label: 'Exportar Quizzes',
-      icon: Download,
-      onClick: onOpenQuizExporter,
-      description: 'Descargar todos los JSON'
-    },
   ];
 
   const specialActions = [
