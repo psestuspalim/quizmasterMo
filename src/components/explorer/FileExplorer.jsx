@@ -1,39 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Folder, BookOpen, FileText, FolderInput, Scissors, Copy, Clipboard,
-  CheckSquare, X, ChevronRight, GraduationCap, MoreVertical, Sparkles, ChevronDown
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { canMoveItemToTarget } from '../utils/contentTree';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const typeIcons = {
-  course: GraduationCap,
-  folder: Folder,
-  subject: BookOpen,
-  quiz: FileText
-};
+import ExplorerNode from './ExplorerNode';
 
 export default function FileExplorer({ 
   containers = [],
@@ -46,47 +18,85 @@ export default function FileExplorer({
   isAdmin = false,
   currentContainerId = null
 }) {
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState(new Set());
   const [clipboard, setClipboard] = useState(null);
-  const [moveDialog, setMoveDialog] = useState({ open: false, targetId: null, targetType: null });
-  const [instructionsDialog, setInstructionsDialog] = useState(false);
-  const [instructions, setInstructions] = useState('');
   const [expandedContainers, setExpandedContainers] = useState(new Set());
   const [dragOverContainer, setDragOverContainer] = useState(null);
 
-  // Toggle selection
-  const toggleSelect = (type, id) => {
-    const key = `${type}-${id}`;
-    setSelectedItems(prev => 
-      prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
-    );
-  };
+  // Step 1: Build indexed maps (O(n) once)
+  const indices = useMemo(() => {
+    const childrenByParent = new Map();
+    const quizzesBySubject = new Map();
+    const rootContainers = [];
+    const rootQuizzes = [];
 
-  const selectAll = (items, type) => {
-    const keys = items.map(item => `${type}-${item.id}`);
-    setSelectedItems(prev => {
-      const allSelected = keys.every(k => prev.includes(k));
-      return allSelected ? prev.filter(k => !keys.includes(k)) : [...new Set([...prev, ...keys])];
+    // Index containers by parent_id
+    containers.forEach(c => {
+      const parentKey = c.parent_id || 'root';
+      if (!childrenByParent.has(parentKey)) {
+        childrenByParent.set(parentKey, []);
+      }
+      childrenByParent.get(parentKey).push(c);
+
+      // Root detection
+      if (c.type === 'course') {
+        rootContainers.push(c);
+      } else if (c.type === 'folder' && !c.course_id && !c.parent_id) {
+        rootContainers.push(c);
+      } else if (c.type === 'subject' && !c.course_id && !c.folder_id) {
+        rootContainers.push(c);
+      }
     });
-  };
 
-  const clearSelection = () => setSelectedItems([]);
+    // Index quizzes by subject_id
+    quizzes.forEach(q => {
+      const subjectId = q.subject_id || 'root';
+      if (!quizzesBySubject.has(subjectId)) {
+        quizzesBySubject.set(subjectId, []);
+      }
+      quizzesBySubject.get(subjectId).push(q);
 
-  // Cut/Copy operations
-  const cutItems = () => {
-    if (selectedItems.length === 0) return;
-    setClipboard({ items: selectedItems, operation: 'cut' });
-    toast.info(`${selectedItems.length} elementos cortados`);
-  };
+      if (!q.subject_id) {
+        rootQuizzes.push(q);
+      }
+    });
 
-  const copyItems = () => {
-    if (selectedItems.length === 0) return;
-    setClipboard({ items: selectedItems, operation: 'copy' });
-    toast.info(`${selectedItems.length} elementos copiados`);
-  };
+    return { childrenByParent, quizzesBySubject, rootContainers, rootQuizzes };
+  }, [containers, quizzes]);
 
-  // Paste operation
-  const pasteItems = async (targetId, targetType) => {
+  // Step 2: Selection helpers using Set
+  const isSelected = useCallback((key) => selectedKeys.has(key), [selectedKeys]);
+
+  const toggleSelect = useCallback((key) => {
+    setSelectedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedKeys(new Set());
+  }, []);
+
+  // Step 4: Stabilize callbacks
+  const cutItems = useCallback(() => {
+    if (selectedKeys.size === 0) return;
+    setClipboard({ items: Array.from(selectedKeys), operation: 'cut' });
+    toast.info(`${selectedKeys.size} elementos cortados`);
+  }, [selectedKeys]);
+
+  const copyItems = useCallback(() => {
+    if (selectedKeys.size === 0) return;
+    setClipboard({ items: Array.from(selectedKeys), operation: 'copy' });
+    toast.info(`${selectedKeys.size} elementos copiados`);
+  }, [selectedKeys]);
+
+  const pasteItems = useCallback(async (targetId, targetType) => {
     if (!clipboard) return;
     
     try {
@@ -95,7 +105,6 @@ export default function FileExplorer({
         return { type, id };
       });
 
-      // Validar movimientos
       const invalidMoves = itemsToProcess.filter(item => 
         !canMoveItemToTarget(item.type, targetType)
       );
@@ -109,7 +118,6 @@ export default function FileExplorer({
         await onMoveItems(itemsToProcess, targetId, targetType);
         toast.success('Elementos movidos correctamente');
       } else {
-        // Copy operation - only for quizzes
         const quizzesToCopy = itemsToProcess.filter(item => item.type === 'quiz');
         if (quizzesToCopy.length > 0) {
           await onCopyItems(quizzesToCopy, targetId);
@@ -121,46 +129,12 @@ export default function FileExplorer({
         setClipboard(null);
       }
       clearSelection();
-      
-      setMoveDialog({ open: false, targetId: null, targetType: null });
     } catch (error) {
       toast.error(`Error al ${clipboard.operation === 'cut' ? 'mover' : 'copiar'} elementos`);
     }
-  };
+  }, [clipboard, onMoveItems, onCopyItems, clearSelection]);
 
-  // Process instructions
-  const processInstructions = async () => {
-    if (!instructions.trim() || !clipboard) return;
-    
-    try {
-      // Parse instructions like "move quiz-abc123 to subject-xyz789"
-      const lines = instructions.trim().split('\n');
-      
-      for (const line of lines) {
-        const match = line.match(/mover?\s+(.+?)\s+a\s+(.+)/i);
-        if (match) {
-          const itemKey = match[1].trim();
-          const targetId = match[2].trim().replace(/^(course|folder|subject)-/, '');
-          
-          if (clipboard.items.includes(itemKey)) {
-            const [type, id] = itemKey.split('-');
-            await onMoveItems([{ type, id }], targetId);
-          }
-        }
-      }
-      
-      toast.success('Instrucciones procesadas');
-      setClipboard(null);
-      clearSelection();
-      setInstructions('');
-      setInstructionsDialog(false);
-    } catch (error) {
-      toast.error('Error al procesar instrucciones');
-    }
-  };
-
-  // Toggle expand
-  const toggleExpand = (containerId) => {
+  const toggleExpand = useCallback((containerId) => {
     setExpandedContainers(prev => {
       const next = new Set(prev);
       if (next.has(containerId)) {
@@ -170,28 +144,21 @@ export default function FileExplorer({
       }
       return next;
     });
-  };
+  }, []);
 
-  // Get children of a container usando el modelo unificado
-  const getChildren = (containerId, containerType) => {
-    // 1) Hijos contenedores (course/folder/subject) por parent_id
-    const childContainers = containers.filter(
-      (c) => c.parent_id === containerId
-    );
-
-    // 2) Quizzes SOLO cuelgan de subject
-    if (containerType === "subject") {
-      const childQuizzes = quizzes.filter((q) => q.subject_id === containerId);
-      // devolvemos mezcla: primero folders/subjects (en la práctica no habrá), luego quizzes
+  // O(1) lookup for children
+  const getChildren = useCallback((containerId, containerType) => {
+    const childContainers = indices.childrenByParent.get(containerId) || [];
+    
+    if (containerType === 'subject') {
+      const childQuizzes = indices.quizzesBySubject.get(containerId) || [];
       return [...childContainers, ...childQuizzes];
     }
-
-    // Courses y folders NO tienen quizzes directos, solo contenedores hijos
+    
     return childContainers;
-  };
+  }, [indices]);
 
-  // Drag and drop handler
-  const handleDragEnd = async (result) => {
+  const handleDragEnd = useCallback(async (result) => {
     const { draggableId, destination, source } = result;
     setDragOverContainer(null);
     
@@ -201,9 +168,8 @@ export default function FileExplorer({
     const [dragType, dragId] = draggableId.split('-');
     const [destType, destId] = destination.droppableId.split('-');
 
-    // Si hay múltiples seleccionados y el item dragged es uno de ellos, mover todos
-    const itemsToMove = selectedItems.includes(draggableId) 
-      ? selectedItems.map(key => {
+    const itemsToMove = selectedKeys.has(draggableId) 
+      ? Array.from(selectedKeys).map(key => {
           const [type, id] = key.split('-');
           return { type, id };
         })
@@ -211,10 +177,8 @@ export default function FileExplorer({
 
     try {
       if (destType === 'root') {
-        // Mover a raíz (sin contenedor padre)
         await onMoveItems(itemsToMove, null, null);
       } else {
-        // Determinar el tipo correcto del destino
         const targetContainer = containers.find(c => c.id === destId);
         const targetType = targetContainer ? targetContainer.type : destType;
         await onMoveItems(itemsToMove, destId, targetType);
@@ -225,186 +189,61 @@ export default function FileExplorer({
       console.error('Error al mover:', error);
       toast.error('Error al mover elementos');
     }
-  };
+  }, [selectedKeys, onMoveItems, containers, clearSelection]);
 
-  const handleDragUpdate = (update) => {
+  // Step 6: Reduce drag-over re-renders
+  const handleDragUpdate = useCallback((update) => {
     if (update.destination) {
       const [destType, destId] = update.destination.droppableId.split('-');
       if (destType !== 'root' && destId) {
-        setDragOverContainer(destId);
-        // Auto-expandir inmediatamente
-        setExpandedContainers(prev => new Set([...prev, destId]));
+        setDragOverContainer(prev => prev === destId ? prev : destId);
+        setExpandedContainers(prev => {
+          if (prev.has(destId)) return prev;
+          return new Set([...prev, destId]);
+        });
       }
     } else {
       setDragOverContainer(null);
     }
-  };
+  }, []);
 
-  // Render draggable item
-  const renderItem = (item, type, index) => {
-    const Icon = typeIcons[type] || FileText;
+  // Step 3 & 5: Recursive render using memoized node
+  const renderNode = useCallback((item, type, index) => {
     const key = `${type}-${item.id}`;
-    const isSelected = selectedItems.includes(key);
-    const isExpanded = expandedContainers.has(item.id);
-    const children = type !== 'quiz' ? getChildren(item.id, type) : [];
-    const hasChildren = children.length > 0;
+    const isExp = expandedContainers.has(item.id);
     const isDragOver = dragOverContainer === item.id;
+    
+    // O(1) check for children
+    const childContainers = indices.childrenByParent.get(item.id) || [];
+    const childQuizzes = type === 'subject' ? (indices.quizzesBySubject.get(item.id) || []) : [];
+    const hasChildren = childContainers.length > 0 || childQuizzes.length > 0;
 
     return (
-      <Draggable draggableId={key} index={index} key={key} isDragDisabled={!isAdmin}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-          >
-            <div
-              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all group ${
-                isSelected 
-                  ? 'bg-indigo-50 border-indigo-400' 
-                  : isDragOver
-                  ? 'bg-amber-50 border-amber-400 shadow-lg'
-                  : 'bg-white border-gray-200 hover:border-gray-300'
-              } ${snapshot.isDragging ? 'shadow-2xl opacity-90' : ''}`}
-            >
-              {isAdmin && (
-                <Checkbox 
-                  checked={isSelected}
-                  onCheckedChange={() => toggleSelect(type, item.id)}
-                  className="shrink-0"
-                />
-              )}
-              
-              {type !== 'quiz' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleExpand(item.id);
-                  }}
-                  className="h-6 w-6 p-0"
-                >
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'} ${!hasChildren ? 'opacity-30' : ''}`} />
-                </Button>
-              )}
-              
-              <div 
-                className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-                onClick={() => !hasChildren && onItemClick && onItemClick(type, item)}
-              >
-                <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${item.color || '#6366f1'}20` }}
-                >
-                  {item.icon ? (
-                    <span className="text-sm">{item.icon}</span>
-                  ) : (
-                    <Icon className="w-4 h-4" style={{ color: item.color || '#6366f1' }} />
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{item.name || item.title}</p>
-                  {item.description && (
-                    <p className="text-xs text-gray-500 truncate">{item.description}</p>
-                  )}
-                </div>
-
-                {item.is_hidden && (
-                  <Badge variant="outline" className="text-xs">Oculto</Badge>
-                )}
-                
-                {isAdmin && type !== 'quiz' && (
-                  <Badge variant="outline" className="text-xs font-mono bg-gray-50 text-gray-600">
-                    ID: {item.id.slice(0, 8)}
-                  </Badge>
-                )}
-              </div>
-
-              {isAdmin && type !== 'quiz' && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                      className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
-                      onChangeType && onChangeType(item.id, type, 'course');
-                    }} disabled={type === 'course'}>
-                      <GraduationCap className="w-4 h-4 mr-2" />
-                      Convertir a Curso
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
-                      onChangeType && onChangeType(item.id, type, 'folder');
-                    }} disabled={type === 'folder'}>
-                      <Folder className="w-4 h-4 mr-2" />
-                      Convertir a Carpeta
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
-                      onChangeType && onChangeType(item.id, type, 'subject');
-                    }} disabled={type === 'subject'}>
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Convertir a Materia
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-
-            {/* Children expandidos con droppable */}
-            <AnimatePresence>
-              {isExpanded && hasChildren && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="ml-8 mt-2"
-                >
-                  <Droppable droppableId={`${type}-${item.id}`} type="ITEM">
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`space-y-2 p-2 rounded-lg border-2 border-dashed min-h-[60px] ${
-                          snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
-                        }`}
-                      >
-                        {children.map((child, idx) => {
-                          const childType = child.subject_id !== undefined ? 'quiz' : child.type;
-                          return renderItem(child, childType, idx);
-                        })}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+      <ExplorerNode
+        key={key}
+        item={item}
+        type={type}
+        index={index}
+        isAdmin={isAdmin}
+        isSelected={isSelected(key)}
+        isExpanded={isExp}
+        isDragOver={isDragOver}
+        hasChildren={hasChildren}
+        onToggleSelect={toggleSelect}
+        onToggleExpand={toggleExpand}
+        onItemClick={onItemClick}
+        onChangeType={onChangeType}
+      >
+        {/* Render children only if expanded */}
+        {isExp && hasChildren && (
+          <>
+            {childContainers.map((child, idx) => renderNode(child, child.type, idx))}
+            {childQuizzes.map((child, idx) => renderNode(child, 'quiz', childContainers.length + idx))}
+          </>
         )}
-      </Draggable>
+      </ExplorerNode>
     );
-  };
-
-  // Obtener todos los contenedores de nivel raíz (sin padres)
-  const rootContainers = containers.filter(c => {
-    if (c.type === 'course') return true;
-    if (c.type === 'folder') return !c.course_id && !c.parent_id;
-    if (c.type === 'subject') return !c.course_id && !c.folder_id;
-    return false;
-  });
-
-  const rootQuizzes = quizzes.filter(q => !q.subject_id);
+  }, [expandedContainers, dragOverContainer, indices, isAdmin, isSelected, toggleSelect, toggleExpand, onItemClick, onChangeType]);
 
   return (
     <DragDropContext onDragEnd={handleDragEnd} onDragUpdate={handleDragUpdate}>
@@ -412,9 +251,9 @@ export default function FileExplorer({
         {/* Toolbar */}
         {isAdmin && (
           <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
-            {selectedItems.length > 0 ? (
+            {selectedKeys.size > 0 ? (
               <>
-                <Badge className="bg-indigo-600">{selectedItems.length} seleccionados</Badge>
+                <Badge className="bg-indigo-600">{selectedKeys.size} seleccionados</Badge>
                 <Button variant="outline" size="sm" onClick={clearSelection}>
                   <X className="w-4 h-4 mr-2" />
                   Limpiar selección
@@ -436,21 +275,20 @@ export default function FileExplorer({
                 snapshot.isDraggingOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'
               }`}
             >
-              {rootContainers.length === 0 && rootQuizzes.length === 0 ? (
+              {indices.rootContainers.length === 0 && indices.rootQuizzes.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <p>No hay contenido en el nivel raíz</p>
                 </div>
               ) : (
                 <>
-                  {rootContainers.map((item, idx) => renderItem(item, item.type, idx))}
-                  {rootQuizzes.map((item, idx) => renderItem(item, 'quiz', rootContainers.length + idx))}
+                  {indices.rootContainers.map((item, idx) => renderNode(item, item.type, idx))}
+                  {indices.rootQuizzes.map((item, idx) => renderNode(item, 'quiz', indices.rootContainers.length + idx))}
                 </>
               )}
               {provided.placeholder}
             </div>
           )}
         </Droppable>
-
       </div>
     </DragDropContext>
   );
