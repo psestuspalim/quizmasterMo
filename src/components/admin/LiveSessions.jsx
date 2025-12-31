@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Activity, User, BookOpen, Clock, CheckCircle2, XCircle, TrendingUp, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
-import moment from 'moment';
+import { formatDistanceToNow, differenceInMinutes, differenceInSeconds } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function LiveSessions() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -70,11 +71,11 @@ export default function LiveSessions() {
   };
 
   const getTimeElapsed = (startedAt) => {
-    const start = moment(startedAt);
-    const now = moment();
-    const duration = moment.duration(now.diff(start));
-    const minutes = Math.floor(duration.asMinutes());
-    const seconds = duration.seconds();
+    const start = new Date(startedAt);
+    const now = new Date();
+    const minutes = differenceInMinutes(now, start);
+    const totalSeconds = differenceInSeconds(now, start);
+    const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
@@ -194,7 +195,7 @@ export default function LiveSessions() {
                         <Clock className="w-3 h-3" />
                         <span>Tiempo: {getTimeElapsed(session.started_at)}</span>
                       </div>
-                      <span>Actualizado {moment(session.last_activity).fromNow()}</span>
+                      <span>{formatDistanceToNow(new Date(session.last_activity), { addSuffix: true, locale: es })}</span>
                     </div>
                   </CardContent>
                 </Card>
