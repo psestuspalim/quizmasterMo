@@ -5,6 +5,7 @@ import AdminProgress from './pages/AdminProgress';
 import AdminStudentDetail from './pages/AdminStudentDetail';
 import AdminStudents from './pages/AdminStudents';
 import AdminTasks from './pages/AdminTasks';
+import AdminTrash from './pages/AdminTrash';
 import Badges from './pages/Badges';
 import ChallengePlay from './pages/ChallengePlay';
 import CourseManagement from './pages/CourseManagement';
@@ -19,7 +20,6 @@ import Quizzes from './pages/Quizzes';
 import TournamentLobby from './pages/TournamentLobby';
 import TournamentPlay from './pages/TournamentPlay';
 import index from './pages/index';
-import AdminTrash from './pages/AdminTrash';
 
 
 export const PAGES = {
@@ -30,6 +30,7 @@ export const PAGES = {
     "AdminStudentDetail": AdminStudentDetail,
     "AdminStudents": AdminStudents,
     "AdminTasks": AdminTasks,
+    "AdminTrash": AdminTrash,
     "Badges": Badges,
     "ChallengePlay": ChallengePlay,
     "CourseManagement": CourseManagement,
@@ -44,7 +45,6 @@ export const PAGES = {
     "TournamentLobby": TournamentLobby,
     "TournamentPlay": TournamentPlay,
     "index": index,
-    "AdminTrash": AdminTrash,
 }
 
 export const pagesConfig = {

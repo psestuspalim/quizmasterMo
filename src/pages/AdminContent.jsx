@@ -271,6 +271,15 @@ export default function AdminContent() {
                     window.location.href = `/Quizzes`;
                   }
                 }}
+                onDeleteItems={(items) => {
+                  const itemsToDelete = items.map(item => ({
+                    type: item.type,
+                    id: item.id
+                  }));
+                  setDeleteDialog({ open: true, items: itemsToDelete });
+                }}
+                selectedItems={selectedItems}
+                onSelectionChange={setSelectedItems}
               />
             </CardContent>
           </Card>

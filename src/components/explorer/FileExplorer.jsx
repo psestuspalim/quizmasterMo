@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { canMoveItemToTarget } from '../utils/contentTree';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
@@ -15,10 +15,16 @@ export default function FileExplorer({
   onItemClick,
   onChangeType,
   onGetContainerType,
+  onDeleteItems,
   isAdmin = false,
-  currentContainerId = null
+  currentContainerId = null,
+  selectedItems: externalSelectedItems,
+  onSelectionChange
 }) {
-  const [selectedKeys, setSelectedKeys] = useState(new Set());
+  const [internalSelectedKeys, setInternalSelectedKeys] = useState(new Set());
+  const selectedKeys = externalSelectedItems !== undefined ? externalSelectedItems : internalSelectedKeys;
+  const setSelectedKeys = onSelectionChange || setInternalSelectedKeys;
+  
   const [clipboard, setClipboard] = useState(null);
   const [expandedContainers, setExpandedContainers] = useState(new Set());
   const [dragOverContainer, setDragOverContainer] = useState(null);
@@ -254,6 +260,22 @@ export default function FileExplorer({
             {selectedKeys.size > 0 ? (
               <>
                 <Badge className="bg-indigo-600">{selectedKeys.size} seleccionados</Badge>
+                {onDeleteItems && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => {
+                      const items = Array.from(selectedKeys).map(key => {
+                        const [type, id] = key.split('-');
+                        return { type, id };
+                      });
+                      onDeleteItems(items);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={clearSelection}>
                   <X className="w-4 h-4 mr-2" />
                   Limpiar selección
