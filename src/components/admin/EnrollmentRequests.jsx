@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, XCircle, Clock, User, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import moment from 'moment';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function EnrollmentRequests({ currentUser }) {
   const [rejectionReason, setRejectionReason] = useState('');
@@ -104,7 +105,7 @@ export default function EnrollmentRequests({ currentUser }) {
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
                             Código: <code className="bg-gray-100 px-1 rounded">{request.access_code}</code> • 
-                            Hace {moment(request.created_date).fromNow()}
+                            {formatDistanceToNow(new Date(request.created_date), { addSuffix: true, locale: es })}
                           </p>
                         </div>
                       </div>
