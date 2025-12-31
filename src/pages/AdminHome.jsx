@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  BookOpen, Users, FileJson, Activity, TrendingUp, 
-  Settings, Shield, BarChart3
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { BookOpen, Users, FileJson, Activity, LayoutDashboard } from 'lucide-react';
+import AdminShell from '../components/admin/AdminShell';
+import AdminPageHeader from '../components/admin/AdminPageHeader';
+import AdminKpiCard from '../components/admin/AdminKpiCard';
 import AdminDashboardCard from '../components/admin/AdminDashboardCard';
 import { motion } from 'framer-motion';
 
@@ -85,100 +81,39 @@ export default function AdminHome() {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Panel de Administrador</h1>
-              <p className="text-gray-600">Bienvenido, {currentUser.full_name || currentUser.email}</p>
-            </div>
-          </div>
-        </motion.div>
+    <AdminShell>
+      <AdminPageHeader
+        icon={LayoutDashboard}
+        title="Dashboard"
+        subtitle={`Bienvenido, ${currentUser.full_name || currentUser.email}`}
+      />
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
-                <p className="text-xs text-gray-500">Cursos</p>
-              </div>
-            </div>
-          </motion.div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <AdminKpiCard
+          icon={BookOpen}
+          label="Cursos"
+          value={courses.length}
+        />
+        <AdminKpiCard
+          icon={Users}
+          label="Estudiantes"
+          value={allUsers.filter(u => u.role === 'user').length}
+        />
+        <AdminKpiCard
+          icon={FileJson}
+          label="Quizzes"
+          value={quizzes.length}
+        />
+        <AdminKpiCard
+          icon={Activity}
+          label="Sesiones Activas"
+          value={sessions.length}
+        />
+      </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl shadow-sm border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                <Users className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter(u => u.role === 'user').length}
-                </p>
-                <p className="text-xs text-gray-500">Estudiantes</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl shadow-sm border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <FileJson className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
-                <p className="text-xs text-gray-500">Quizzes</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl shadow-sm border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{sessions.length}</p>
-                <p className="text-xs text-gray-500">En vivo</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Main Dashboard Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Main Feature Blocks */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -234,45 +169,7 @@ export default function AdminHome() {
           </motion.div>
         </div>
 
-        {/* Quick Access */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white rounded-xl shadow-sm border p-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-gray-600" />
-            Acceso Rápido
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Link to={createPageUrl('LiveSessions')}>
-              <Button variant="outline" className="w-full justify-start">
-                <Activity className="w-4 h-4 mr-2" />
-                Sesiones en vivo
-              </Button>
-            </Link>
-            <Link to={createPageUrl('AdminProgress')}>
-              <Button variant="outline" className="w-full justify-start">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Progreso
-              </Button>
-            </Link>
-            <Link to={createPageUrl('AdminTasks')}>
-              <Button variant="outline" className="w-full justify-start">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Tareas
-              </Button>
-            </Link>
-            <Link to={createPageUrl('Quizzes')}>
-              <Button variant="outline" className="w-full justify-start">
-                <BookOpen className="w-4 h-4 mr-2" />
-                Quizzes
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
       </div>
-    </div>
+    </AdminShell>
   );
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key, TrendingUp
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key, TrendingUp, LayoutDashboard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -26,6 +26,12 @@ export default function AdminMenu({
   compact = false 
 }) {
   const menuItems = [
+    {
+      label: 'Dashboard Admin',
+      icon: LayoutDashboard,
+      href: 'AdminHome',
+      description: 'Panel principal'
+    },
     {
       label: 'Gestión de Cursos',
       icon: Key,

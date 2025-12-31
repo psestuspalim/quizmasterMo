@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  FileJson, Upload, CheckCircle2, XCircle, ArrowLeft, 
+  FileJson, Upload, CheckCircle2, XCircle, 
   Code, Download, AlertCircle, Sparkles
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { toCompactFormat, fromCompactFormat, isCompactFormat } from '../components/utils/quizFormats';
+import AdminShell from '../components/admin/AdminShell';
+import AdminPageHeader from '../components/admin/AdminPageHeader';
 
 export default function AdminJsonManager() {
   const [jsonInput, setJsonInput] = useState('');
@@ -114,48 +112,34 @@ export default function AdminJsonManager() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Link to={createPageUrl('AdminHome')}>
-            <Button variant="ghost" size="sm" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al panel
-            </Button>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-              <FileJson className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">JSON Manager</h1>
-              <p className="text-gray-600">Validar, formatear y convertir archivos JSON</p>
-            </div>
-          </div>
-        </div>
+    <AdminShell>
+      <AdminPageHeader
+        icon={FileJson}
+        title="JSON Manager"
+        subtitle="Validar, formatear y convertir archivos JSON"
+      />
 
-        <Tabs defaultValue="validate" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="validate">
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Validar
-            </TabsTrigger>
-            <TabsTrigger value="format">
-              <Code className="w-4 h-4 mr-2" />
-              Formatear
-            </TabsTrigger>
-            <TabsTrigger value="convert">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Convertir
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="validate" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="validate">
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Validar
+          </TabsTrigger>
+          <TabsTrigger value="format">
+            <Code className="w-4 h-4 mr-2" />
+            Formatear
+          </TabsTrigger>
+          <TabsTrigger value="convert">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Convertir
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="validate" className="mt-6 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Subir y Validar JSON</CardTitle>
-              </CardHeader>
+        <TabsContent value="validate" className="space-y-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Subir y Validar JSON</CardTitle>
+            </CardHeader>
               <CardContent className="space-y-4">
                 {/* File upload */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-all">
@@ -225,11 +209,11 @@ export default function AdminJsonManager() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="format" className="mt-6 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Formatear JSON</CardTitle>
-              </CardHeader>
+        <TabsContent value="format" className="space-y-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Formatear JSON</CardTitle>
+            </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
                   value={jsonInput}
@@ -272,11 +256,11 @@ export default function AdminJsonManager() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="convert" className="mt-6 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Convertir Formatos</CardTitle>
-              </CardHeader>
+        <TabsContent value="convert" className="space-y-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Convertir Formatos</CardTitle>
+            </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start gap-2">
@@ -336,9 +320,8 @@ export default function AdminJsonManager() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+        </TabsContent>
+      </Tabs>
+    </AdminShell>
   );
 }

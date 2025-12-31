@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft, User, Mail, Calendar, Award, BookOpen, 
+  User, Mail, Calendar, Award, BookOpen, 
   TrendingUp, Activity, Code, CheckCircle2, XCircle 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import AdminShell from '../components/admin/AdminShell';
+import AdminPageHeader from '../components/admin/AdminPageHeader';
 
 export default function AdminStudentDetail() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -86,34 +84,26 @@ export default function AdminStudentDetail() {
   const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Back button */}
-        <Link to={createPageUrl('AdminStudents')}>
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a estudiantes
-          </Button>
-        </Link>
+    <AdminShell>
+      <AdminPageHeader
+        icon={User}
+        title={student.username || student.full_name || 'Estudiante'}
+        subtitle={student.email}
+        badge={<Badge variant="outline">{student.role}</Badge>}
+      />
 
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border p-6 mb-6"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+      {/* Profile Card with KPIs */}
+      <Card className="mb-8 rounded-2xl">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-6 mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-bold text-3xl flex-shrink-0">
               {(student.username || student.full_name || student.email)[0].toUpperCase()}
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {student.username || student.full_name || 'Sin nombre'}
-                </h1>
-                <Badge variant="outline">{student.role}</Badge>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <h2 className="text-xl font-semibold mb-2">
+                {student.username || student.full_name || 'Sin nombre'}
+              </h2>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Mail className="w-4 h-4" />
                   {student.email}
@@ -128,26 +118,26 @@ export default function AdminStudentDetail() {
             </div>
           </div>
 
-          {/* Quick stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-            <div className="bg-indigo-50 rounded-lg p-3">
-              <p className="text-xs text-indigo-600 mb-1">Cursos</p>
-              <p className="text-2xl font-bold text-indigo-900">{enrollments.length}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-muted rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-1">Cursos</p>
+              <p className="text-2xl font-semibold">{enrollments.length}</p>
             </div>
-            <div className="bg-green-50 rounded-lg p-3">
-              <p className="text-xs text-green-600 mb-1">Intentos</p>
-              <p className="text-2xl font-bold text-green-900">{attempts.length}</p>
+            <div className="bg-muted rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-1">Intentos</p>
+              <p className="text-2xl font-semibold">{attempts.length}</p>
             </div>
-            <div className="bg-purple-50 rounded-lg p-3">
-              <p className="text-xs text-purple-600 mb-1">Precisión</p>
-              <p className="text-2xl font-bold text-purple-900">{accuracy}%</p>
+            <div className="bg-muted rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-1">Precisión</p>
+              <p className="text-2xl font-semibold">{accuracy}%</p>
             </div>
-            <div className="bg-amber-50 rounded-lg p-3">
-              <p className="text-xs text-amber-600 mb-1">Nivel</p>
-              <p className="text-2xl font-bold text-amber-900">{userStats?.level || 1}</p>
+            <div className="bg-muted rounded-xl p-4">
+              <p className="text-xs text-muted-foreground mb-1">Nivel</p>
+              <p className="text-2xl font-semibold">{userStats?.level || 1}</p>
             </div>
           </div>
-        </motion.div>
+        </CardContent>
+      </Card>
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="w-full">
@@ -175,34 +165,34 @@ export default function AdminStudentDetail() {
           </TabsList>
 
           <TabsContent value="profile" className="mt-6">
-            <Card>
+            <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Información del Perfil</CardTitle>
+                <CardTitle className="text-lg font-semibold">Información del Perfil</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm text-gray-500">Nombre completo</p>
+                    <p className="text-xs text-muted-foreground mb-1">Nombre completo</p>
                     <p className="font-medium">{student.full_name || 'No especificado'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Username</p>
+                    <p className="text-xs text-muted-foreground mb-1">Username</p>
                     <p className="font-medium">{student.username || 'No especificado'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="text-xs text-muted-foreground mb-1">Email</p>
                     <p className="font-medium">{student.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Rol</p>
+                    <p className="text-xs text-muted-foreground mb-1">Rol</p>
                     <Badge>{student.role}</Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">ID</p>
-                    <p className="font-mono text-xs text-gray-600">{student.id}</p>
+                    <p className="text-xs text-muted-foreground mb-1">ID</p>
+                    <p className="font-mono text-xs">{student.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Fecha de registro</p>
+                    <p className="text-xs text-muted-foreground mb-1">Fecha de registro</p>
                     <p className="font-medium">
                       {student.created_date ? new Date(student.created_date).toLocaleDateString('es-ES') : 'N/A'}
                     </p>
@@ -213,24 +203,24 @@ export default function AdminStudentDetail() {
           </TabsContent>
 
           <TabsContent value="enrollments" className="mt-6">
-            <Card>
+            <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Cursos Inscritos ({enrollments.length})</CardTitle>
+                <CardTitle className="text-lg font-semibold">Cursos Inscritos ({enrollments.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {enrollments.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No hay inscripciones</p>
+                  <p className="text-center text-muted-foreground py-8">No hay inscripciones</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {enrollments.map((enrollment) => (
-                      <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={enrollment.id} className="flex items-center justify-between p-3 border-b last:border-0">
                         <div>
-                          <p className="font-medium text-gray-900">{enrollment.course_name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium">{enrollment.course_name}</p>
+                          <p className="text-xs text-muted-foreground">
                             Código: {enrollment.access_code}
                           </p>
                         </div>
-                        <Badge className="bg-green-100 text-green-800">Aprobado</Badge>
+                        <Badge variant="secondary">Aprobado</Badge>
                       </div>
                     ))}
                   </div>
@@ -241,9 +231,9 @@ export default function AdminStudentDetail() {
 
           <TabsContent value="performance" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="rounded-2xl">
                 <CardHeader>
-                  <CardTitle>Estadísticas Generales</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Estadísticas Generales</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -275,9 +265,9 @@ export default function AdminStudentDetail() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="rounded-2xl">
                 <CardHeader>
-                  <CardTitle>Gamificación</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Gamificación</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -303,9 +293,9 @@ export default function AdminStudentDetail() {
           </TabsContent>
 
           <TabsContent value="activity" className="mt-6">
-            <Card>
+            <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Últimos Intentos ({attempts.slice(0, 10).length})</CardTitle>
+                <CardTitle className="text-lg font-semibold">Últimos Intentos ({attempts.slice(0, 10).length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {attempts.length === 0 ? (
@@ -337,9 +327,9 @@ export default function AdminStudentDetail() {
           </TabsContent>
 
           <TabsContent value="raw" className="mt-6">
-            <Card>
+            <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Datos Completos (JSON)</CardTitle>
+                <CardTitle className="text-lg font-semibold">Datos Completos (JSON)</CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs">
@@ -349,7 +339,6 @@ export default function AdminStudentDetail() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

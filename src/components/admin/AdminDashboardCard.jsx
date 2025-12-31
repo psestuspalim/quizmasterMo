@@ -14,41 +14,38 @@ export default function AdminDashboardCard({
   primaryActionLabel, 
   primaryActionTo,
   icon: Icon,
-  countColor = 'text-indigo-600',
-  iconColor = 'text-indigo-600'
+  countColor = 'text-primary',
+  iconColor = 'text-primary'
 }) {
   return (
-    <Card className="border-2 hover:border-indigo-300 transition-all">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            {Icon && (
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <Icon className={`w-6 h-6 ${iconColor}`} />
-              </div>
-            )}
-            <div>
-              <CardTitle className="text-xl">{title}</CardTitle>
-              <p className="text-sm text-gray-500 mt-1">{description}</p>
+    <Card className="hover:shadow-lg hover:border-primary/30 transition-all rounded-2xl">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between mb-3">
+          {Icon && (
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Icon className={`w-6 h-6 ${iconColor}`} />
             </div>
-          </div>
+          )}
           {count !== undefined && (
-            <Badge className={`text-2xl font-bold px-3 py-1 ${countColor} bg-indigo-50 border-indigo-200`}>
+            <Badge variant="secondary" className="text-lg font-semibold px-3 py-1">
               {count}
             </Badge>
           )}
         </div>
+        <div>
+          <CardTitle className="text-lg font-semibold mb-1">{title}</CardTitle>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Lista de items */}
         {items.length > 0 && (
           <div className="space-y-2">
             {items.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+              <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{item.primary}</p>
+                  <p className="font-medium text-foreground truncate">{item.primary}</p>
                   {item.secondary && (
-                    <p className="text-xs text-gray-500 truncate">{item.secondary}</p>
+                    <p className="text-xs text-muted-foreground truncate">{item.secondary}</p>
                   )}
                 </div>
                 {item.badge && (
@@ -62,14 +59,16 @@ export default function AdminDashboardCard({
         )}
 
         {items.length === 0 && (
-          <div className="text-center py-6 text-gray-400 text-sm">
-            No hay datos disponibles
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center">
+              {Icon && <Icon className="w-6 h-6 text-muted-foreground/50" />}
+            </div>
+            <p>No hay datos disponibles</p>
           </div>
         )}
 
-        {/* Botón principal */}
         <Link to={createPageUrl(primaryActionTo)}>
-          <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
+          <Button className="w-full h-10">
             {primaryActionLabel}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
