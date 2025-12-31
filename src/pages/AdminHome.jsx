@@ -167,8 +167,6 @@ export default function AdminHome() {
               countColor="text-purple-600"
             />
           </motion.div>
-        </div>
-
       </div>
     </AdminShell>
   );
