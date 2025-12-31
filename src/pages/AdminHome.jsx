@@ -35,6 +35,12 @@ export default function AdminHome() {
     queryFn: () => base44.entities.Quiz.list('-created_date', 100)
   });
 
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: () => base44.entities.Subject.list('order'),
+    enabled: currentUser?.role === 'admin'
+  });
+
   const { data: enrollments = [] } = useQuery({
     queryKey: ['all-enrollments'],
     queryFn: () => base44.entities.CourseEnrollment.filter({ status: 'pending' }),
