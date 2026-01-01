@@ -411,6 +411,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     if (isAdmin) return true;
     if (item.is_hidden) return false;
     
+    // Si es un curso y el usuario tiene enrollment aprobado, tiene acceso
+    if (!parentItem && enrollments.some(e => e.course_id === item.id)) {
+      return true;
+    }
+    
     if (item.visibility === 'inherit' && parentItem) {
       return canUserAccess(parentItem);
     }
