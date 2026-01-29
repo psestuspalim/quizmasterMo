@@ -320,8 +320,65 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
     const warnings = [];
     const info = [];
 
-    if (typeof data !== 'object' || data === null) {
-      errors.push('❌ El JSON debe ser un objeto');
+    if (typeof data !== 'object' || (data === null && !Array.isArray(data))) {
+      errors.push('❌ El JSON debe ser un objeto o array');
+      return { errors, warnings, info };
+    }
+
+    // FORMATO: Array directo con answerOptions
+    if (Array.isArray(data) && data.length > 0 && data[0].question && data[0].answerOptions) {
+      info.push(`✅ Formato válido: Array directo - ${data.length} pregunta${data.length > 1 ? 's' : ''} detectada${data.length > 1 ? 's' : ''}`);
+      
+      data.forEach((q, idx) => {
+        const qNum = idx + 1;
+        if (!q.question || q.question.trim() === '') errors.push(`❌ Pregunta ${qNum}: falta campo "question"`);
+        if (!q.answerOptions || !Array.isArray(q.answerOptions)) {
+          errors.push(`❌ Pregunta ${qNum}: falta "answerOptions" (debe ser un array)`);
+        } else {
+          if (q.answerOptions.length === 0) errors.push(`❌ Pregunta ${qNum}: array "answerOptions" está vacío`);
+          const correctCount = q.answerOptions.filter(opt => opt.isCorrect === true).length;
+          if (correctCount === 0) errors.push(`❌ Pregunta ${qNum}: ninguna opción marcada como correcta (isCorrect: true)`);
+          
+          q.answerOptions.forEach((opt, optIdx) => {
+            if (!opt.text || opt.text.trim() === '') errors.push(`❌ Pregunta ${qNum}, Opción ${optIdx + 1}: falta campo "text"`);
+            if (typeof opt.isCorrect !== 'boolean') errors.push(`❌ Pregunta ${qNum}, Opción ${optIdx + 1}: "isCorrect" debe ser true o false`);
+          });
+        }
+      });
+      
+      return { errors, warnings, info };
+    }
+
+    // FORMATO: {quiz: [...]}
+    if (data.quiz && Array.isArray(data.quiz)) {
+      info.push(`✅ Formato válido: Wrapper "quiz" - ${data.quiz.length} pregunta${data.quiz.length > 1 ? 's' : ''}`);
+      
+      data.quiz.forEach((q, idx) => {
+        const qNum = idx + 1;
+        if (!q.question && !q.questionText) errors.push(`❌ Pregunta ${qNum}: falta campo "question" o "questionText"`);
+        if (!q.answerOptions || !Array.isArray(q.answerOptions)) {
+          errors.push(`❌ Pregunta ${qNum}: falta "answerOptions" (debe ser un array)`);
+        } else {
+          const correctCount = q.answerOptions.filter(opt => opt.isCorrect === true).length;
+          if (correctCount === 0) errors.push(`❌ Pregunta ${qNum}: ninguna opción correcta`);
+        }
+      });
+      
+      return { errors, warnings, info };
+    }
+
+    // FORMATO: {questions: [...]}
+    if (data.questions && Array.isArray(data.questions)) {
+      info.push(`✅ Formato válido: Wrapper "questions" - ${data.questions.length} pregunta${data.questions.length > 1 ? 's' : ''}`);
+      
+      data.questions.forEach((q, idx) => {
+        const qNum = idx + 1;
+        if (!q.question && !q.questionText) errors.push(`❌ Pregunta ${qNum}: falta campo "question" o "questionText"`);
+        if (!q.answerOptions || !Array.isArray(q.answerOptions)) {
+          errors.push(`❌ Pregunta ${qNum}: falta "answerOptions"`);
+        }
+      });
+      
       return { errors, warnings, info };
     }
 
@@ -379,7 +436,11 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
     }
 
     // Formato no reconocido
-    errors.push('❌ Formato incorrecto: debe tener la estructura {"t": "Título", "q": [...]}');
+    errors.push('❌ Formato no reconocido. Estructuras aceptadas:');
+    errors.push('   1. Array directo: [{"question": "...", "answerOptions": [...]}]');
+    errors.push('   2. Wrapper "quiz": {"quiz": [...]}');
+    errors.push('   3. Wrapper "questions": {"questions": [...]}');
+    errors.push('   4. Formato longitudinal: {"t": "Título", "q": [...]}');
     return { errors, warnings, info };
   };
 
