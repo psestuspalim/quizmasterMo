@@ -1380,12 +1380,13 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                     <ArrowLeft className="w-4 h-4 mr-2" /> Volver
                                                   </Button>
                                                   <FileUploader 
-                                                    onUploadSuccess={(data) => {
-                                                      createQuizMutation.mutate({ 
+                                                    onUploadSuccess={async (data) => {
+                                                      await createQuizMutation.mutateAsync({ 
                                                         ...data, 
                                                         folder_id: currentFolderId || null 
                                                       });
                                                       setShowUploader(false);
+                                                      queryClient.invalidateQueries(['quizzes']);
                                                     }} 
                                                     jsonOnly={true}
                                                   />
