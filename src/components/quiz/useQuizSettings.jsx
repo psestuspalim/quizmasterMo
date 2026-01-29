@@ -4,11 +4,11 @@ import { base44 } from '@/api/base44Client';
 const DEFAULT_SETTINGS = {
   show_options: true,
   show_feedback: true,
-  show_reflection: true,
-  show_error_analysis: true,
-  show_schema: true,
-  show_notes: true,
-  show_hint: true
+  show_reflection: false,
+  show_error_analysis: false,
+  show_schema: false,
+  show_notes: false,
+  show_hint: false
 };
 
 export default function useQuizSettings(quizId, subjectId, folderId, courseId) {
