@@ -29,7 +29,8 @@ const bloomTextToNumber = {
 };
 
 /**
- * Convierte cualquier formato de quiz a formato compacto
+ * Convierte cualquier formato de quiz a formato compacto longitudinal
+ * Estructura: {t: "título", q: [{x, dif, qt, id, sj, tp, sb, o}]}
  */
 export function toCompactFormat(quizData) {
   const { title, description, questions = [], total_questions } = quizData;
@@ -38,17 +39,19 @@ export function toCompactFormat(quizData) {
     t: title || 'Quiz sin título',
     q: questions.map((q, idx) => {
       const diffNum = typeof q.difficulty === 'string'
-        ? difficultyToNumber[q.difficulty.toLowerCase()] || 1
-        : q.difficulty || 1;
+        ? difficultyToNumber[q.difficulty.toLowerCase()] || 2
+        : q.difficulty || 2;
 
       return {
         x: q.question || q.questionText || q.text || '',
         dif: diffNum,
         qt: q.type || 'mcq',
-        id: q.id || `Q${String(idx + 1).padStart(3, '0')}`,
+        id: q.id || q.questionId || `Q${String(idx + 1).padStart(3, '0')}`,
         sj: q.subject || '',
         tp: q.topic || '',
         sb: q.subtopic || '',
+        img: q.imageUrl || undefined,
+        hint: q.hint || undefined,
         o: (q.answerOptions || q.options || []).map((opt) => ({
           text: opt.text || opt,
           c: opt.isCorrect === true,
@@ -62,64 +65,50 @@ export function toCompactFormat(quizData) {
 
 /**
  * Convierte de formato compacto a formato expandido para uso en componentes
+ * Soporta: formato longitudinal {t, q:[{x, dif, qt...}]}, formato viejo {m, q}
  */
 export function fromCompactFormat(compactData) {
-  // Detectar formato nuevo (t, q) vs viejo (m, q)
-  const isNewFormat = compactData && compactData.t && compactData.q && !compactData.m;
+  // Detectar formato longitudinal (tiene t, q, y primer elemento de q tiene propiedad x)
+  const isLongitudinalFormat = compactData && compactData.t && Array.isArray(compactData.q) && 
+                                compactData.q.length > 0 && compactData.q[0].x;
+  
+  // Detectar formato viejo (m, q)
   const isOldFormat = compactData && compactData.m && compactData.q;
 
-  if (!isNewFormat && !isOldFormat) {
+  if (!isLongitudinalFormat && !isOldFormat) {
     // Ya está expandido
     return compactData;
   }
 
-  // Formato nuevo
-  if (isNewFormat) {
+  // Formato longitudinal: {t: "título", q: [{x, dif, qt, id, sj, tp, sb, o}]}
+  if (isLongitudinalFormat) {
     const { t, q } = compactData;
-    
-    console.log('🔍 Expandiendo formato nuevo {t, q}');
-    console.log('- Array q:', q);
-    console.log('- Primera pregunta:', q[0]);
-    console.log('- Tipo de primera pregunta:', typeof q[0]);
 
     return {
       title: t || 'Quiz sin título',
       description: '',
       total_questions: q.length,
-      questions: q.map((question, idx) => {
-        console.log(`📝 Pregunta ${idx + 1}:`, question);
-        
-        // Si la pregunta es un string JSON, parsearla
-        const parsedQuestion = typeof question === 'string' ? JSON.parse(question) : question;
-        
-        // Buscar feedback general de opciones incorrectas
-        let generalFeedback = '';
-        if (parsedQuestion.o) {
-          const incorrectOpts = parsedQuestion.o.filter(opt => opt.c === false || opt.c === 0);
-          if (incorrectOpts.length > 0 && incorrectOpts[0].r) {
-            generalFeedback = incorrectOpts[0].r;
-          }
-        }
-
-        return {
-          type: parsedQuestion.qt || 'text',
-          question: parsedQuestion.x || '',
-          difficulty: numberToDifficulty[parsedQuestion.dif] || 'moderado',
-          bloomLevel: null,
-          feedback: generalFeedback,
-          hint: parsedQuestion.h || '',
-          answerOptions: (parsedQuestion.o || []).map(opt => ({
-            text: opt.text || '',
-            isCorrect: opt.c === true,
-            errorType: opt.et || '',
-            rationale: opt.r || ''
-          }))
-        };
-      })
+      questions: q.map(question => ({
+        type: question.qt === 'image' ? 'image' : 'text',
+        question: question.x || '',
+        imageUrl: question.img || null,
+        difficulty: numberToDifficulty[question.dif] || 'moderado',
+        questionId: question.id || '',
+        subject: question.sj || '',
+        topic: question.tp || '',
+        subtopic: question.sb || '',
+        hint: question.hint || '',
+        answerOptions: (question.o || []).map(opt => ({
+          text: opt.text || '',
+          isCorrect: opt.c === true,
+          rationale: opt.r || '',
+          errorType: opt.et || ''
+        }))
+      }))
     };
   }
 
-  // Formato viejo (cQ-v2)
+  // Formato viejo (cQ-v2): {m, q}
   const { m, q } = compactData;
 
   return {
@@ -157,10 +146,11 @@ export function fromCompactFormat(compactData) {
  * Detecta si un quiz está en formato compacto
  */
 export function isCompactFormat(data) {
-  // Formato nuevo: {t, q}
-  const isNewFormat = data && data.t && data.q && !data.m;
+  // Formato longitudinal: {t, q: [{x, ...}]}
+  const isLongitudinalFormat = data && data.t && Array.isArray(data.q) && 
+                                data.q.length > 0 && data.q[0].x;
   // Formato viejo: {m, q}
   const isOldFormat = data && data.m && data.q && data.m.v === 'cQ-v2';
   
-  return isNewFormat || isOldFormat;
+  return isLongitudinalFormat || isOldFormat;
 }
