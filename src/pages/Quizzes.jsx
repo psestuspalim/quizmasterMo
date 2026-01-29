@@ -460,11 +460,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     // Expandir desde formato compacto solo si existe q Y tiene contenido
     let expandedQuiz;
     if (quiz.q && Array.isArray(quiz.q) && quiz.q.length > 0) {
+      // Parsear strings JSON de vuelta a objetos
+      const parsedQ = quiz.q.map(q => typeof q === 'string' ? JSON.parse(q) : q);
+      
       // Detectar formato nuevo {t, q} vs viejo {m, q}
       if (quiz.t && !quiz.m) {
-        expandedQuiz = fromCompactFormat({ t: quiz.t, q: quiz.q });
+        expandedQuiz = fromCompactFormat({ t: quiz.t, q: parsedQ });
       } else {
-        expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: quiz.q.length }, q: quiz.q });
+        expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: parsedQ.length }, q: parsedQ });
       }
     } else if (quiz.questions && quiz.questions.length > 0) {
       // Usar questions si no hay formato compacto válido
