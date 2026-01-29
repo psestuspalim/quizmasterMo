@@ -242,6 +242,20 @@ export default function FileUploader({ onUploadSuccess }) {
         };
       });
     }
+    // Formato sin wrapper - array directo de preguntas con answerOptions
+    else if (Array.isArray(data) && data.length > 0 && data[0].question && data[0].answerOptions) {
+      questions = data.map((q) => ({
+        type: q.type || 'text',
+        question: q.question,
+        hint: q.hint || '',
+        difficulty: difficultyMap[q.difficulty] || 'moderado',
+        answerOptions: q.answerOptions.map(opt => ({
+          text: opt.text,
+          isCorrect: opt.isCorrect === true,
+          rationale: opt.rationale || ''
+        }))
+      }));
+    }
     else {
       throw new Error('Formato de archivo inválido. Debe contener "m/q", "meta/q", "qm/q", "quiz" o "questions"');
     }
