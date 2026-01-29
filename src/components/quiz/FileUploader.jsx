@@ -260,7 +260,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       throw new Error('Formato de archivo inválido. Debe contener "m/q", "meta/q", "qm/q", "quiz" o "questions"');
     }
 
-    // Convertir a formato compacto cQ-v2 antes de guardar
+    // Convertir a formato compacto antes de guardar
     const compactQuiz = toCompactFormat({
       title,
       description: description || `Cuestionario con ${questions.length} preguntas`,
@@ -269,7 +269,11 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
     });
 
     await onUploadSuccess({
-      ...compactQuiz,
+      title: compactQuiz.t,
+      t: compactQuiz.t,
+      q: compactQuiz.q.map(q => JSON.stringify(q)),
+      total_questions: compactQuiz.q.length,
+      questions: questions,
       file_name: fileName,
       is_hidden: false
     });
