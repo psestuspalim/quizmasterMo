@@ -1245,19 +1245,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                   </div>
                                   {isAdmin && (
                                                           <div className="flex flex-wrap gap-2">
-                                                            <Button 
-                                                              onClick={() => setExplorerMode(true)} 
-                                                              variant="outline"
-                                                              className="text-xs sm:text-sm h-9 border-purple-300 text-purple-600 hover:bg-purple-50"
-                                                            >
-                                                              <FolderInput className="w-4 h-4 mr-2" /> 
-                                                              Explorador
-                                                            </Button>
-                                                            <Button onClick={() => setShowAIGenerator(true)} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
-                                                              <Sparkles className="w-4 h-4 mr-2" /> Subir JSON
-                                                            </Button>
                                                             <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
-                                                              <Upload className="w-4 h-4 mr-2" /> Subir archivo
+                                                              <Upload className="w-4 h-4 mr-2" /> Subir JSON
                                                             </Button>
                                                           <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
                                       <DialogTrigger asChild>
@@ -1390,35 +1379,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                   <Button onClick={() => setShowUploader(false)} variant="ghost" className="mb-6">
                                                     <ArrowLeft className="w-4 h-4 mr-2" /> Volver
                                                   </Button>
-                                                  <div className="mb-6">
-                                                    <Label>Materia destino *</Label>
-                                                    <select
-                                                      className="w-full mt-1 p-2 border rounded-md"
-                                                      value={selectedSubject?.id || ''}
-                                                      onChange={(e) => {
-                                                        const subject = currentFolderSubjects.find(s => s.id === e.target.value);
-                                                        setSelectedSubject(subject);
-                                                      }}
-                                                    >
-                                                      <option value="">Selecciona una materia</option>
-                                                      {currentFolderSubjects.map(s => (
-                                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                                      ))}
-                                                    </select>
-                                                  </div>
-                                                  {selectedSubject ? (
-                                                    <FileUploader onUploadSuccess={(data) => {
+                                                  <FileUploader 
+                                                    onUploadSuccess={(data) => {
                                                       createQuizMutation.mutate({ 
                                                         ...data, 
-                                                        subject_id: selectedSubject.id, 
                                                         folder_id: currentFolderId || null 
                                                       });
                                                       setShowUploader(false);
-                                                      setSelectedSubject(null);
-                                                    }} />
-                                                  ) : (
-                                                    <p className="text-center text-gray-500 py-8">Selecciona una materia para continuar</p>
-                                                  )}
+                                                    }} 
+                                                    jsonOnly={true}
+                                                  />
                                                 </motion.div>
                                               )}
 

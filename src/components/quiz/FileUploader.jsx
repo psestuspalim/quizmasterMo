@@ -11,7 +11,7 @@ import TissueQuizCreator from './TissueQuizCreator';
 import TextQuizCreator from './TextQuizCreator';
 import { toCompactFormat, fromCompactFormat } from '../utils/quizFormats';
 
-export default function FileUploader({ onUploadSuccess }) {
+export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -523,6 +523,120 @@ export default function FileUploader({ onUploadSuccess }) {
   const handleDragLeave = () => {
     setIsDragging(false);
   };
+
+  // Si jsonOnly, renderizar solo el contenido JSON
+  if (jsonOnly) {
+    return (
+      <div className="w-full max-w-3xl mx-auto">
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Pegar JSON del quiz
+            </h3>
+            <div className="text-sm text-gray-600 mb-4 space-y-2">
+              <p className="font-semibold">Estructuras aceptadas:</p>
+              <div className="bg-gray-50 p-3 rounded-md space-y-2 text-xs">
+                <div>
+                  <p className="font-medium text-gray-700">1. Formato longitudinal (recomendado):</p>
+                  <code className="block mt-1 text-[10px]">{"{"}"t": "Título", "q": [{"{"}"x": "pregunta", "dif": 1-3, "qt": "mcq", "id": "Q001", "o": [{"{"}"text": "opción", "c": true/false, "r": "razonamiento"{"}"}]{"}"}]{"}"}</code>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700">2. Array directo con answerOptions:</p>
+                  <code className="block mt-1 text-[10px]">[{"{"}"question": "...", "answerOptions": [{"{"}"text": "...", "isCorrect": true, "rationale": "..."{"}"}], "hint": "..."{"}"}]</code>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700">3. Formato con wrapper "quiz":</p>
+                  <code className="block mt-1 text-[10px]">{"{"}"quiz": [{"{"}"question": "...", "answerOptions": [...]{"}"}]{"}"}</code>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700">4. Formato con "questions":</p>
+                  <code className="block mt-1 text-[10px]">{"{"}"questions": [{"{"}"question": "...", "answerOptions": [...]{"}"}]{"}"}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <Textarea
+            id="quiz-json-input"
+            name="quiz-json"
+            value={jsonText}
+            onChange={(e) => {
+              const text = e.target.value;
+              setJsonText(text);
+              setJsonErrors([]);
+              setError(null);
+
+              if (text.trim()) {
+                try {
+                  const parsed = JSON.parse(text);
+                  const validation = validateJsonSchema(parsed);
+                  if (validation.errors.length > 0) {
+                    setJsonErrors([...validation.errors, ...validation.warnings, ...validation.info]);
+                    setError(`${validation.errors.length} error(es) encontrado(s)`);
+                  } else if (validation.warnings.length > 0 || validation.info.length > 0) {
+                    setJsonErrors([...validation.info, ...validation.warnings]);
+                  }
+                } catch (err) {
+                  if (err instanceof SyntaxError) {
+                    setError(`Sintaxis JSON inválida: ${err.message}`);
+                  }
+                }
+              }
+            }}
+            placeholder='Pega aquí tu JSON en cualquiera de los formatos aceptados...'
+            className="min-h-[300px] max-h-[500px] font-mono text-xs mb-4 resize-y"
+            rows={15}
+          />
+
+          {jsonErrors.length > 0 && (
+            <div className={`mb-4 p-3 rounded-lg max-h-60 overflow-y-auto border ${
+              error ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'
+            }`}>
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                {error ? (
+                  <>
+                    <AlertCircle className="w-3 h-3 text-red-600" />
+                    <span className="text-red-900">Errores de validación:</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-blue-900">✓ Información:</span>
+                  </>
+                )}
+              </p>
+              <ul className="text-xs space-y-1">
+                {jsonErrors.map((err, idx) => (
+                  <li key={idx} className={
+                    err.startsWith('❌') ? 'text-red-700 font-medium' :
+                    err.startsWith('⚠️') ? 'text-amber-700' :
+                    'text-blue-700'
+                  }>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {error && !jsonErrors.length && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              onClick={handlePasteSubmit}
+              disabled={isProcessing || !jsonText.trim() || error}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
