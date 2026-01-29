@@ -671,26 +671,31 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   const handleExitQuiz = async () => {
-        if (currentAttemptId) {
-          await updateAttemptMutation.mutateAsync({
-            id: currentAttemptId,
-            data: { is_completed: false }
-          });
-          queryClient.invalidateQueries(['attempts']);
-        }
-        // Marcar sesión como inactiva
-        if (currentSessionId) {
-          try {
-            await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
-          } catch (error) {
-            console.error('Error marking session inactive:', error);
+          if (currentAttemptId) {
+            await updateAttemptMutation.mutateAsync({
+              id: currentAttemptId,
+              data: { is_completed: false }
+            });
+            queryClient.invalidateQueries(['attempts']);
           }
-        }
-        setSelectedQuiz(null);
-        setSwipeMode(false);
-        setCurrentSessionId(null);
-        setView('list');
-      };
+          // Marcar sesión como inactiva
+          if (currentSessionId) {
+            try {
+              await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
+            } catch (error) {
+              console.error('Error marking session inactive:', error);
+            }
+          }
+          setSelectedQuiz(null);
+          setSwipeMode(false);
+          setCurrentSessionId(null);
+          // Volver a la vista anterior (carpeta o materia)
+          if (currentFolderId) {
+            setView('subjects');
+          } else {
+            setView('list');
+          }
+        };
 
       const handleStartSwipeMode = (quiz) => {
         const expandedQuiz = isCompactFormat(quiz) ? fromCompactFormat(quiz) : quiz;
