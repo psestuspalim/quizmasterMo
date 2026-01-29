@@ -457,34 +457,19 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
-    console.log('🎮 Iniciando quiz:', quiz);
-    console.log('- Tiene q?', quiz.q ? 'Sí' : 'No');
-    console.log('- Tiene questions?', quiz.questions ? 'Sí' : 'No');
-    console.log('- Tiene t?', quiz.t ? 'Sí' : 'No');
-    console.log('- Tiene m?', quiz.m ? 'Sí' : 'No');
-    
-    // SIEMPRE expandir desde formato compacto si existe q
+    // Expandir desde formato compacto solo si existe q Y tiene contenido
     let expandedQuiz;
-    if (quiz.q && Array.isArray(quiz.q)) {
-      console.log('📦 Expandiendo desde formato compacto, q.length:', quiz.q.length);
+    if (quiz.q && Array.isArray(quiz.q) && quiz.q.length > 0) {
       // Detectar formato nuevo {t, q} vs viejo {m, q}
       if (quiz.t && !quiz.m) {
-        // Formato nuevo
-        console.log('✨ Usando formato nuevo {t, q}');
         expandedQuiz = fromCompactFormat({ t: quiz.t, q: quiz.q });
       } else {
-        // Formato viejo
-        console.log('📜 Usando formato viejo {m, q}');
         expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: quiz.q.length }, q: quiz.q });
       }
-      console.log('✅ Quiz expandido:', expandedQuiz);
-      console.log('- Preguntas expandidas:', expandedQuiz.questions?.length);
-    } else if (quiz.questions) {
-      // Usar questions si no hay formato compacto
-      console.log('📄 Usando questions directamente');
+    } else if (quiz.questions && quiz.questions.length > 0) {
+      // Usar questions si no hay formato compacto válido
       expandedQuiz = quiz;
     } else {
-      console.error('❌ Quiz sin datos:', quiz);
       alert('Este quiz no tiene preguntas');
       return;
     }
