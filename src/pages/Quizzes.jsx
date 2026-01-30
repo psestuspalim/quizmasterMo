@@ -56,6 +56,7 @@ import QuizExporter from '../components/admin/QuizExporter';
 import CourseJoinModal from '../components/course/CourseJoinModal';
 import FeatureAnalytics from '../components/admin/FeatureAnalytics';
 import FeatureTracker from '../components/admin/FeatureTracker';
+import ExamOverview from '../components/course/ExamOverview';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -1214,6 +1215,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                             {view === 'subjects' && (selectedCourse || currentFolderId) && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !showBulkUploader && !showAIGenerator && !showUploader && !explorerMode && (
                               <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                                 <Breadcrumb />
+
+                                {/* Exam Overview - Solo en cursos, no en carpetas */}
+                                {selectedCourse && !currentFolderId && (
+                                  <ExamOverview
+                                    courseId={selectedCourse.id}
+                                    subjects={currentCourseSubjects}
+                                    currentUser={currentUser}
+                                    isAdmin={isAdmin}
+                                  />
+                                )}
 
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                   <div>
