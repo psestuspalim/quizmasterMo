@@ -1076,6 +1076,29 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </div>
               )}
 
+              {/* Carpetas sin curso */}
+              {unassignedFolders.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Folder className="w-5 h-5" /> Carpetas
+                  </h2>
+                  <DroppableArea droppableId="root-folders" type="FOLDER" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unassignedFolders.map((folder, index) => (
+                      <DraggableItem key={folder.id} id={folder.id} index={index} isAdmin={isAdmin}>
+                        <FolderCard
+                          folder={folder}
+                          itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                          isAdmin={isAdmin}
+                          onDelete={(id) => deleteFolderMutation.mutate(id)}
+                          onEdit={setEditingFolder}
+                          onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
+                        />
+                      </DraggableItem>
+                    ))}
+                  </DroppableArea>
+                </div>
+              )}
+
               {/* Materias sin curso */}
               {unassignedSubjects.length > 0 && (
                 <div className="mb-8">
@@ -1101,7 +1124,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </div>
               )}
 
-              {visibleCourses.length === 0 && unassignedSubjects.length === 0 && (
+              {visibleCourses.length === 0 && unassignedFolders.length === 0 && unassignedSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -1322,7 +1345,31 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 ))}
               </DroppableArea>
 
-              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
+              {/* Quizzes dentro de carpeta */}
+              {currentFolderId && currentFolderQuizzes.length > 0 && (
+              <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <BookOpen className="w-5 h-5" /> Cuestionarios
+              </h3>
+              <div className="space-y-2">
+              {currentFolderQuizzes.map((quiz) => (
+              <QuizListItem
+              key={quiz.id}
+              quiz={quiz}
+              attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+              isAdmin={isAdmin}
+              onStart={handleStartQuiz}
+              onEdit={setEditingQuiz}
+              onDelete={(id) => deleteQuizMutation.mutate(id)}
+              onStartSwipe={handleStartSwipeMode}
+              onMove={setMovingQuiz}
+              />
+              ))}
+              </div>
+              </div>
+              )}
+
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && currentFolderQuizzes.length === 0 && (
                 <div className="text-center py-16">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Carpeta vacía</h3>
