@@ -57,6 +57,7 @@ import CourseJoinModal from '../components/course/CourseJoinModal';
 import FeatureAnalytics from '../components/admin/FeatureAnalytics';
 import FeatureTracker from '../components/admin/FeatureTracker';
 import ExamOverview from '../components/course/ExamOverview';
+import MainNav from '../components/navigation/MainNav';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
@@ -974,16 +975,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <p className="text-gray-600">Selecciona un curso para ver sus materias</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {!isAdmin && (
-                    <Button 
-                      onClick={() => setShowJoinModal(true)} 
-                      variant="outline"
-                      className="text-xs sm:text-sm h-9 border-green-300 text-green-600 hover:bg-green-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> 
-                      Unirse a Curso
-                    </Button>
-                  )}
                   {isAdmin && (
                     <Button 
                       onClick={() => setExplorerMode(true)} 
@@ -994,62 +985,44 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                       Explorador
                     </Button>
                   )}
-                  <Link to={createPageUrl('Leaderboard')}>
-                    <Button variant="outline" className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm h-9">
-                      <Crown className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Ranking</span>
-                    </Button>
-                  </Link>
-                  <Link to={createPageUrl('Progress')}>
-                    <Button variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm h-9">
-                      <TrendingUp className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Progreso</span>
-                    </Button>
-                  </Link>
-                  <Link to={createPageUrl('GameLobby')}>
-                      <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm h-9">
-                        <Swords className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Desafío</span>
-                      </Button>
-                    </Link>
-                    <Link to={createPageUrl('TournamentLobby')}>
-                      <Button variant="outline" className="border-amber-600 text-amber-600 hover:bg-amber-50 text-xs sm:text-sm h-9">
-                        <Trophy className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Torneo</span>
-                      </Button>
-                    </Link>
+
+                  <MainNav 
+                    isAdmin={isAdmin}
+                    onJoinCourse={() => setShowJoinModal(true)}
+                    onOpenContentManager={() => setShowContentManager(true)}
+                    onOpenQuizExporter={() => setShowQuizExporter(true)}
+                    onOpenFeatureAnalytics={() => setShowFeatureAnalytics(true)}
+                    compact
+                  />
+
                   {isAdmin && (
-                    <>
-                      <AdminMenu 
-                        compact 
-                        onOpenContentManager={() => setShowContentManager(true)}
-                        onOpenQuizExporter={() => setShowQuizExporter(true)}
-                        onOpenFeatureAnalytics={() => setShowFeatureAnalytics(true)}
-                      />
-                      <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
-                        <DialogTrigger asChild>
-                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
-                            <Plus className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Nuevo curso</span>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader><DialogTitle>Crear nuevo curso</DialogTitle></DialogHeader>
-                          <div className="space-y-4 mt-4">
-                            <div>
-                              <Label>Nombre</Label>
-                              <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Semestre Selectivo" />
-                            </div>
-                            <div>
-                              <Label>Descripción</Label>
-                              <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} placeholder="Descripción opcional" />
-                            </div>
-                            <div>
-                              <Label>Color</Label>
-                              <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
-                            </div>
-                            <Button onClick={() => createCourseMutation.mutate(newItem)} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                              Crear curso
-                            </Button>
+                    <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                          <Plus className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Nuevo curso</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Crear nuevo curso</DialogTitle></DialogHeader>
+                        <div className="space-y-4 mt-4">
+                          <div>
+                            <Label>Nombre</Label>
+                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Semestre Selectivo" />
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </>
+                          <div>
+                            <Label>Descripción</Label>
+                            <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} placeholder="Descripción opcional" />
+                          </div>
+                          <div>
+                            <Label>Color</Label>
+                            <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                          </div>
+                          <Button onClick={() => createCourseMutation.mutate(newItem)} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                            Crear curso
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               </div>
