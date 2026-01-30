@@ -1345,31 +1345,51 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 ))}
               </DroppableArea>
 
-              {/* Quizzes dentro de carpeta */}
-              {currentFolderId && currentFolderQuizzes.length > 0 && (
-              <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" /> Cuestionarios
-              </h3>
-              <div className="space-y-2">
-              {currentFolderQuizzes.map((quiz) => (
-              <QuizListItem
-              key={quiz.id}
-              quiz={quiz}
-              attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-              isAdmin={isAdmin}
-              onStart={handleStartQuiz}
-              onEdit={setEditingQuiz}
-              onDelete={(id) => deleteQuizMutation.mutate(id)}
-              onStartSwipe={handleStartSwipeMode}
-              onMove={setMovingQuiz}
-              />
-              ))}
-              </div>
-              </div>
+              {/* Tabs de cuestionarios y audios dentro de carpeta */}
+              {currentFolderId && (
+                <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full mt-6">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="quizzes" className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" /> Cuestionarios ({currentFolderQuizzes.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="audios" className="flex items-center gap-2">
+                      <Music className="w-4 h-4" /> Audios
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="quizzes">
+                    {currentFolderQuizzes.length === 0 ? (
+                      <div className="text-center py-12">
+                        <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
+                        <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {currentFolderQuizzes.map((quiz) => (
+                          <QuizListItem
+                            key={quiz.id}
+                            quiz={quiz}
+                            attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                            isAdmin={isAdmin}
+                            onStart={handleStartQuiz}
+                            onEdit={setEditingQuiz}
+                            onDelete={(id) => deleteQuizMutation.mutate(id)}
+                            onStartSwipe={handleStartSwipeMode}
+                            onMove={setMovingQuiz}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="audios">
+                    <AudioList subjectId={null} isAdmin={isAdmin} />
+                  </TabsContent>
+                </Tabs>
               )}
 
-              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && currentFolderQuizzes.length === 0 && (
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Carpeta vacía</h3>
@@ -1503,73 +1523,56 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                 </div>
                               )}
 
-                              <Tabs value={activeSubjectTab} onValueChange={setActiveSubjectTab} className="w-full">
-                                <TabsList className="mb-4">
-                                  <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                                    <BookOpen className="w-4 h-4" /> Cuestionarios ({subjectQuizzes.filter(q => !q.folder_id).length})
-                                  </TabsTrigger>
-                                  <TabsTrigger value="audios" className="flex items-center gap-2">
-                                    <Music className="w-4 h-4" /> Audios
-                                  </TabsTrigger>
-                                </TabsList>
+                              {selectedQuizzes.length > 0 && isAdmin && (
+                                <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+                                  <span className="text-sm font-medium text-indigo-900">
+                                    {selectedQuizzes.length} cuestionario{selectedQuizzes.length > 1 ? 's' : ''} seleccionado{selectedQuizzes.length > 1 ? 's' : ''}
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button size="sm" variant="outline" onClick={() => setSelectedQuizzes([])}>
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
 
-                                <TabsContent value="quizzes">
-                                  {selectedQuizzes.length > 0 && isAdmin && (
-                                    <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
-                                      <span className="text-sm font-medium text-indigo-900">
-                                        {selectedQuizzes.length} cuestionario{selectedQuizzes.length > 1 ? 's' : ''} seleccionado{selectedQuizzes.length > 1 ? 's' : ''}
-                                      </span>
-                                      <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => setSelectedQuizzes([])}>
-                                          Cancelar
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {subjectQuizzes.filter(q => !q.folder_id).length === 0 ? (
-                    <div className="text-center py-12">
-                      <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
-                      <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
-                      {isAdmin && (
-                        <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                          <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <DroppableArea droppableId={`subject-${selectedSubject.id}`} type="QUIZ" className="space-y-2">
-                      {subjectQuizzes.filter(q => !q.folder_id).map((quiz, index) => (
-                        <DraggableItem key={quiz.id} id={quiz.id} index={index} isAdmin={isAdmin}>
-                          <QuizListItem
-                            quiz={quiz}
-                            attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-                            isAdmin={isAdmin}
-                            onStart={handleStartQuiz}
-                            onEdit={setEditingQuiz}
-                            onDelete={(id) => deleteQuizMutation.mutate(id)}
-                            onStartSwipe={handleStartSwipeMode}
-                            onMove={setMovingQuiz}
-                            isSelected={selectedQuizzes.includes(quiz.id)}
-                            onSelect={(id) => {
+                              {subjectQuizzes.filter(q => !q.folder_id).length === 0 ? (
+                              <div className="text-center py-12">
+                              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cuestionarios</h3>
+                              <p className="text-gray-500 mb-4">Comienza cargando tu primer cuestionario</p>
+                              {isAdmin && (
+                              <Button onClick={() => setShowUploader(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                              <Plus className="w-4 h-4 mr-2" /> Cargar cuestionario
+                              </Button>
+                              )}
+                              </div>
+                              ) : (
+                              <DroppableArea droppableId={`subject-${selectedSubject.id}`} type="QUIZ" className="space-y-2">
+                              {subjectQuizzes.filter(q => !q.folder_id).map((quiz, index) => (
+                              <DraggableItem key={quiz.id} id={quiz.id} index={index} isAdmin={isAdmin}>
+                              <QuizListItem
+                              quiz={quiz}
+                              attempts={attempts.filter(a => a.quiz_id === quiz.id)}
+                              isAdmin={isAdmin}
+                              onStart={handleStartQuiz}
+                              onEdit={setEditingQuiz}
+                              onDelete={(id) => deleteQuizMutation.mutate(id)}
+                              onStartSwipe={handleStartSwipeMode}
+                              onMove={setMovingQuiz}
+                              isSelected={selectedQuizzes.includes(quiz.id)}
+                              onSelect={(id) => {
                               if (selectedQuizzes.includes(id)) {
-                                setSelectedQuizzes(selectedQuizzes.filter(qId => qId !== id));
+                              setSelectedQuizzes(selectedQuizzes.filter(qId => qId !== id));
                               } else {
-                                setSelectedQuizzes([...selectedQuizzes, id]);
+                              setSelectedQuizzes([...selectedQuizzes, id]);
                               }
-                            }}
-                          />
-                        </DraggableItem>
-                      ))}
-                    </DroppableArea>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="audios">
-                  <AudioList subjectId={selectedSubject.id} isAdmin={isAdmin} />
-                </TabsContent>
-              </Tabs>
+                              }}
+                              />
+                              </DraggableItem>
+                              ))}
+                              </DroppableArea>
+                              )}
             </motion.div>
           )}
 
