@@ -1322,31 +1322,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 ))}
               </DroppableArea>
 
-              {/* Quizzes dentro de carpeta */}
-              {currentFolderId && currentFolderQuizzes.length > 0 && (
-              <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" /> Cuestionarios
-              </h3>
-              <div className="space-y-2">
-              {currentFolderQuizzes.map((quiz) => (
-              <QuizListItem
-              key={quiz.id}
-              quiz={quiz}
-              attempts={attempts.filter(a => a.quiz_id === quiz.id)}
-              isAdmin={isAdmin}
-              onStart={handleStartQuiz}
-              onEdit={setEditingQuiz}
-              onDelete={(id) => deleteQuizMutation.mutate(id)}
-              onStartSwipe={handleStartSwipeMode}
-              onMove={setMovingQuiz}
-              />
-              ))}
-              </div>
-              </div>
-              )}
-
-              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && currentFolderQuizzes.length === 0 && (
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Carpeta vacía</h3>
