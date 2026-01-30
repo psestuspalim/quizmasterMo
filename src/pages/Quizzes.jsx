@@ -1101,7 +1101,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </div>
               )}
 
-              {visibleCourses.length === 0 && unassignedFolders.length === 0 && unassignedSubjects.length === 0 && (
+              {visibleCourses.length === 0 && unassignedSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
