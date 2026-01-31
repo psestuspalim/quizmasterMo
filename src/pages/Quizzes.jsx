@@ -412,27 +412,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const canUserAccess = (item, parentItem = null) => {
     if (isAdmin) return true;
     if (item.is_hidden) return false;
-    
-    // Si es un curso y el usuario tiene enrollment aprobado, tiene acceso
+
+    // Si es un curso y el usuario tiene enrollment aprobado, tiene acceso (prioridad máxima)
     if (!parentItem && enrollments.some(e => e.course_id === item.id)) {
       return true;
     }
-    
+
     if (item.visibility === 'inherit' && parentItem) {
       return canUserAccess(parentItem);
     }
-    
+
     if (item.visibility === 'specific') {
       return item.allowed_users?.includes(currentUser?.email);
     }
-    
-    return true;
+
+    return item.visibility === 'all' || !item.visibility;
   };
 
   // Filtered data
   const visibleCourses = isAdmin 
-    ? courses.filter(c => c && c.id && canUserAccess(c))
-    : courses.filter(c => c && c.id && canUserAccess(c) && enrollments.some(e => e.course_id === c.id));
+    ? courses.filter(c => c && c.id && !c.is_hidden)
+    : courses.filter(c => c && c.id && !c.is_hidden && enrollments.some(e => e.course_id === c.id && e.status === 'approved'));
   const unassignedSubjects = subjects.filter(s => s && s.id && !s.course_id && canUserAccess(s));
   const unassignedFolders = folders.filter(f => f && f.id && !f.course_id && !f.parent_id && canUserAccess(f));
   const currentCourseSubjects = selectedCourse 
