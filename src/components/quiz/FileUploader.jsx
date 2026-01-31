@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
 import TextQuizCreator from './TextQuizCreator';
+import JSONEditor from '../ui/JSONEditor';
+import ThemeToggle from '../ui/ThemeToggle';
 import { toCompactFormat, fromCompactFormat } from '../utils/quizFormats';
 
 export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
@@ -673,51 +674,59 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
 
   // Si jsonOnly, renderizar solo el contenido JSON
   if (jsonOnly) {
+    const validationErrors = [];
+    if (jsonText.trim()) {
+      try {
+        const parsed = JSON.parse(jsonText);
+        const validation = validateJsonSchema(parsed);
+        if (validation.errors.length > 0) {
+          validationErrors.push(...validation.errors);
+        }
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          validationErrors.push(`Sintaxis JSON inválida: ${err.message}`);
+        }
+      }
+    }
+
     return (
-      <div className="w-full max-w-3xl mx-auto">
-        <Card className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Pegar JSON del quiz
-            </h3>
-            <div className="text-sm text-gray-600 mb-4 space-y-2">
-              <p className="font-semibold">Estructuras aceptadas:</p>
-              <div className="bg-gray-50 p-3 rounded-md space-y-2 text-xs">
-                <div>
-                  <p className="font-medium text-gray-700">1. Formato longitudinal (recomendado):</p>
-                  <code className="block mt-1 text-[10px]">{"{"}"t": "Título", "q": [{"{"}"x": "pregunta", "dif": 1-3, "qt": "mcq", "id": "Q001", "o": [{"{"}"text": "opción", "c": true/false, "r": "razonamiento"{"}"}]{"}"}]{"}"}</code>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-700">2. Array directo con answerOptions:</p>
-                  <code className="block mt-1 text-[10px]">[{"{"}"question": "...", "answerOptions": [{"{"}"text": "...", "isCorrect": true, "rationale": "..."{"}"}], "hint": "..."{"}"}]</code>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-700">3. Formato con wrapper "quiz":</p>
-                  <code className="block mt-1 text-[10px]">{"{"}"quiz": [{"{"}"question": "...", "answerOptions": [...]{"}"}]{"}"}</code>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-700">4. Formato con "questions":</p>
-                  <code className="block mt-1 text-[10px]">{"{"}"questions": [{"{"}"question": "...", "answerOptions": [...]{"}"}]{"}"}</code>
+      <div className="w-full max-w-4xl mx-auto">
+        <Card className="p-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Editor de JSON del quiz
+              </h3>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-2">
+                <p className="font-semibold">Estructuras aceptadas:</p>
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md space-y-2 text-xs">
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300">1. Formato con metadata:</p>
+                    <code className="block mt-1 text-[10px] text-gray-600 dark:text-gray-400">{"{"}"metadata": {"{"}"title": "...", "total": 50{"}"},  "q": [{"{"}"x": "...", "o": [...]{"}"}, ...]{"}"}</code>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300">2. Formato longitudinal:</p>
+                    <code className="block mt-1 text-[10px] text-gray-600 dark:text-gray-400">{"{"}"t": "Título", "q": [{"{"}"x": "...", "dif": 1-3, "o": [...]{"}"}, ...]{"}"}</code>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="mb-4">
-              <Label>Título personalizado (opcional)</Label>
-              <Input 
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="Dejar vacío para usar el título del JSON"
-                className="mt-1"
-              />
-            </div>
+            <ThemeToggle />
+          </div>
+
+          <div className="mb-4">
+            <Label className="text-gray-700 dark:text-gray-300">Título personalizado (opcional)</Label>
+            <Input 
+              value={customTitle}
+              onChange={(e) => setCustomTitle(e.target.value)}
+              placeholder="Dejar vacío para usar el título del JSON"
+              className="mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+            />
           </div>
           
-          <Textarea
-            id="quiz-json-input"
-            name="quiz-json"
+          <JSONEditor
             value={jsonText}
-            onChange={(e) => {
-              const text = e.target.value;
+            onChange={(text) => {
               setJsonText(text);
               setJsonErrors([]);
               setError(null);
@@ -739,38 +748,9 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
                 }
               }
             }}
-            placeholder='Pega aquí tu JSON en cualquiera de los formatos aceptados...'
-            className="min-h-[300px] max-h-[500px] font-mono text-xs mb-4 resize-y"
-            rows={15}
+            errors={validationErrors}
+            className="mb-4"
           />
-
-          {jsonErrors.length > 0 && (
-            <div className={`mb-4 p-3 rounded-lg max-h-60 overflow-y-auto border ${
-              error ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'
-            }`}>
-              <p className="text-xs font-semibold mb-2 flex items-center gap-1">
-                {error ? (
-                  <>
-                    <AlertCircle className="w-3 h-3 text-red-600" />
-                    <span className="text-red-900">Errores de validación:</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-blue-900">✓ Información:</span>
-                  </>
-                )}
-              </p>
-              <ul className="text-xs space-y-1">
-                {jsonErrors.map((err, idx) => (
-                  <li key={idx} className={
-                    err.startsWith('❌') ? 'text-red-700 font-medium' :
-                    err.startsWith('⚠️') ? 'text-amber-700' :
-                    'text-blue-700'
-                  }>{err}</li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           {error && !jsonErrors.length && (
             <Alert variant="destructive" className="mb-4">
@@ -782,8 +762,8 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
           <div className="flex gap-3">
             <Button
               onClick={handlePasteSubmit}
-              disabled={isProcessing || !jsonText.trim() || error}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              disabled={isProcessing || !jsonText.trim() || validationErrors.length > 0}
+              className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
             >
               {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
@@ -826,36 +806,36 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
         </TabsContent>
 
         <TabsContent value="json">
-          <Card className="p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Pegar JSON del quiz
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Formato: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"{"}"t": "Título", "q": [{"{"}"x": "...", "dif": 1-3, "o": [...]{"}"}, ...]{"}"}</code>
-              </p>
-              <div className="mb-4">
-                <Label>Título personalizado (opcional)</Label>
-                <Input 
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="Dejar vacío para usar el título del JSON"
-                  className="mt-1"
-                />
+          <Card className="p-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Editor JSON
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Soporta formatos: metadata+q, longitudinal (t+q), array directo
+                </p>
               </div>
+              <ThemeToggle />
+            </div>
+
+            <div className="mb-4">
+              <Label className="text-gray-700 dark:text-gray-300">Título personalizado (opcional)</Label>
+              <Input 
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="Dejar vacío para usar el título del JSON"
+                className="mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+              />
             </div>
             
-            <Textarea
-              id="quiz-json-input"
-              name="quiz-json"
+            <JSONEditor
               value={jsonText}
-              onChange={(e) => {
-                const text = e.target.value;
+              onChange={(text) => {
                 setJsonText(text);
                 setJsonErrors([]);
                 setError(null);
 
-                // Validación en tiempo real
                 if (text.trim()) {
                   try {
                     const parsed = JSON.parse(text);
@@ -873,51 +853,22 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
                   }
                 }
               }}
-              placeholder='{"t": "Título del quiz", "q": [{"x": "Pregunta...", "dif": 2, "qt": "mcq", "id": "Q001", "o": [{"text": "Opción", "c": true, "r": "Explicación"}]}]}'
-              className="min-h-[300px] max-h-[500px] font-mono text-xs mb-4 resize-y"
-              rows={15}
+              errors={jsonErrors.filter(e => e.startsWith('❌'))}
+              className="mb-4"
             />
 
-            {jsonErrors.length > 0 && (
-              <div className={`mb-4 p-3 rounded-lg max-h-60 overflow-y-auto border ${
-                error ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'
-              }`}>
-                <p className="text-xs font-semibold mb-2 flex items-center gap-1">
-                  {error ? (
-                    <>
-                      <AlertCircle className="w-3 h-3 text-red-600" />
-                      <span className="text-red-900">Errores de validación:</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-blue-900">✓ Información:</span>
-                    </>
-                  )}
-                </p>
-                <ul className="text-xs space-y-1">
-                  {jsonErrors.map((err, idx) => (
-                    <li key={idx} className={
-                      err.startsWith('❌') ? 'text-red-700 font-medium' :
-                      err.startsWith('⚠️') ? 'text-amber-700' :
-                      'text-blue-700'
-                    }>{err}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             {error && !jsonErrors.length && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+              <Alert variant="destructive" className="mb-4 dark:bg-red-950/30 dark:border-red-800">
+                <AlertCircle className="h-4 h-4" />
+                <AlertDescription className="dark:text-red-300">{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="flex gap-3">
               <Button
                 onClick={handlePasteSubmit}
-                disabled={isProcessing || !jsonText.trim() || error}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                disabled={isProcessing || !jsonText.trim() || jsonErrors.some(e => e.startsWith('❌'))}
+                className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 {isProcessing ? 'Procesando...' : 'Cargar cuestionario'}
