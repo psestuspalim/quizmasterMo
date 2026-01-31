@@ -49,8 +49,21 @@ export default function QuestionView({
   const [showNotesField, setShowNotesField] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState(Date.now());
 
-  // Actualizar sesión cuando cambia la pregunta
+  // Resetear estados cuando cambia la pregunta
   useEffect(() => {
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setShowHint(false);
+    setIsMarked(false);
+    setUserNote('');
+    setReflectionText('');
+    setRephrasedQuestion(null);
+    setEtymology(null);
+    setSchema(null);
+    setShowNotesField(false);
+    setAnswerStartTime(Date.now());
+
+    // Actualizar sesión
     const updateSession = async () => {
       if (sessionId) {
         try {
@@ -66,7 +79,7 @@ export default function QuestionView({
       }
     };
     updateSession();
-  }, [sessionId, questionNumber, correctAnswers, wrongAnswers]);
+  }, [questionNumber]);
 
   const handleRephrase = async () => {
     setRephrasing(true);
@@ -187,8 +200,6 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   const handleNext = () => {
     const isCorrect = selectedOption.isCorrect;
     onAnswer(isCorrect, selectedOption, question);
-    setUserNote('');
-    setReflectionText('');
   };
 
   const canProceed = selectedOption?.isCorrect || !showReflection || reflectionText.trim().length >= 10;
