@@ -841,21 +841,26 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       };
 
   const getSubjectStats = (subjectId) => {
+    // Contar quizzes directos + quizzes en carpetas de la materia
     const subjectQuizzes = quizzes.filter(q => q.subject_id === subjectId);
-    const subjectQuizIds = subjectQuizzes.map(q => q.id);
+    const subjectFolderIds = folders.filter(f => f.subject_id === subjectId).map(f => f.id);
+    const folderQuizzes = quizzes.filter(q => subjectFolderIds.includes(q.folder_id));
+    const allSubjectQuizzes = [...subjectQuizzes, ...folderQuizzes];
+
+    const subjectQuizIds = allSubjectQuizzes.map(q => q.id);
     const subjectAttempts = attempts.filter(a => subjectQuizIds.includes(a.quiz_id));
-    
+
     if (subjectAttempts.length === 0) return { totalCorrect: 0, totalWrong: 0, totalAnswered: 0 };
-    
+
     const wrongQuestions = new Set();
     subjectAttempts.forEach(attempt => {
       attempt.wrong_questions?.forEach(wq => wrongQuestions.add(wq.question));
     });
-    
+
     const totalWrong = wrongQuestions.size;
     const totalCorrect = subjectAttempts.reduce((sum, a) => sum + a.score, 0);
     const totalAnswered = totalCorrect + totalWrong;
-    
+
     return { totalCorrect, totalWrong, totalAnswered };
   };
 
@@ -1092,20 +1097,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                     <BookOpen className="w-5 h-5" /> Materias
                   </h2>
                   <DroppableArea droppableId="root-subjects" type="SUBJECT" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {unassignedSubjects.map((subject, index) => (
-                      <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
-                        <SubjectCard
-                          subject={subject}
-                          quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                          stats={getSubjectStats(subject.id)}
-                          isAdmin={isAdmin}
-                          onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                          onEdit={setEditingSubject}
-                          onClick={() => { setSelectedSubject(subject); setView('list'); }}
-                          onReviewWrong={handleReviewWrongBySubject}
-                        />
-                      </DraggableItem>
-                    ))}
+                    {unassignedSubjects.map((subject, index) => {
+                      const directQuizzes = quizzes.filter(q => q.subject_id === subject.id);
+                      const subjectFolderIds = folders.filter(f => f.subject_id === subject.id).map(f => f.id);
+                      const folderQuizzes = quizzes.filter(q => subjectFolderIds.includes(q.folder_id));
+                      const totalQuizCount = directQuizzes.length + folderQuizzes.length;
+                      
+                      return (
+                        <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
+                          <SubjectCard
+                            subject={subject}
+                            quizCount={totalQuizCount}
+                            stats={getSubjectStats(subject.id)}
+                            isAdmin={isAdmin}
+                            onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                            onEdit={setEditingSubject}
+                            onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                            onReviewWrong={handleReviewWrongBySubject}
+                          />
+                        </DraggableItem>
+                      );
+                    })}
                   </DroppableArea>
                 </div>
               )}
@@ -1311,7 +1323,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                   <DraggableItem key={folder.id} id={folder.id} index={index} isAdmin={isAdmin}>
                     <FolderCard
                       folder={folder}
-                      itemCount={subjects.filter(s => s.folder_id === folder.id).length}
+                      itemCount={subjects.filter(s => s.folder_id === folder.id).length + quizzes.filter(q => q.folder_id === folder.id).length}
                       isAdmin={isAdmin}
                       onDelete={(id) => deleteFolderMutation.mutate(id)}
                       onEdit={setEditingFolder}
@@ -1325,20 +1337,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 type="SUBJECT" 
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
               >
-                {currentFolderSubjects.map((subject, index) => (
-                  <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
-                    <SubjectCard
-                      subject={subject}
-                      quizCount={quizzes.filter(q => q.subject_id === subject.id).length}
-                      stats={getSubjectStats(subject.id)}
-                      isAdmin={isAdmin}
-                      onDelete={(id) => deleteSubjectMutation.mutate(id)}
-                      onEdit={setEditingSubject}
-                      onClick={() => { setSelectedSubject(subject); setView('list'); }}
-                      onReviewWrong={handleReviewWrongBySubject}
-                    />
-                  </DraggableItem>
-                ))}
+                {currentFolderSubjects.map((subject, index) => {
+                  const directQuizzes = quizzes.filter(q => q.subject_id === subject.id);
+                  const subjectFolderIds = folders.filter(f => f.subject_id === subject.id).map(f => f.id);
+                  const folderQuizzes = quizzes.filter(q => subjectFolderIds.includes(q.folder_id));
+                  const totalQuizCount = directQuizzes.length + folderQuizzes.length;
+
+                  return (
+                    <DraggableItem key={subject.id} id={subject.id} index={index} isAdmin={isAdmin}>
+                      <SubjectCard
+                        subject={subject}
+                        quizCount={totalQuizCount}
+                        stats={getSubjectStats(subject.id)}
+                        isAdmin={isAdmin}
+                        onDelete={(id) => deleteSubjectMutation.mutate(id)}
+                        onEdit={setEditingSubject}
+                        onClick={() => { setSelectedSubject(subject); setView('list'); }}
+                        onReviewWrong={handleReviewWrongBySubject}
+                      />
+                    </DraggableItem>
+                  );
+                })}
               </DroppableArea>
 
               {/* Tabs de cuestionarios y audios dentro de carpeta */}
@@ -1504,18 +1523,23 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               {/* Carpetas dentro de la materia con droppable */}
                               {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                                  {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).map((folder) => (
-                                    <DroppableArea key={folder.id} droppableId={`folder-${folder.id}`} type="QUIZ" className="h-full">
-                                      <FolderCard
-                                        folder={folder}
-                                        itemCount={quizzes.filter(q => q.folder_id === folder.id).length}
-                                        isAdmin={isAdmin}
-                                        onDelete={(id) => deleteFolderMutation.mutate(id)}
-                                        onEdit={setEditingFolder}
-                                        onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
-                                      />
-                                    </DroppableArea>
-                                  ))}
+                                  {folders.filter(f => f.subject_id === selectedSubject.id && !f.parent_id).map((folder) => {
+                                    const folderQuizCount = quizzes.filter(q => q.folder_id === folder.id).length;
+                                    const subFolderCount = folders.filter(sf => sf.parent_id === folder.id).length;
+
+                                    return (
+                                      <DroppableArea key={folder.id} droppableId={`folder-${folder.id}`} type="QUIZ" className="h-full">
+                                        <FolderCard
+                                          folder={folder}
+                                          itemCount={folderQuizCount + subFolderCount}
+                                          isAdmin={isAdmin}
+                                          onDelete={(id) => deleteFolderMutation.mutate(id)}
+                                          onEdit={setEditingFolder}
+                                          onClick={() => { setCurrentFolderId(folder.id); setView('subjects'); }}
+                                        />
+                                      </DroppableArea>
+                                    );
+                                  })}
                                 </div>
                               )}
 

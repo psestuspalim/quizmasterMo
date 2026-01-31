@@ -81,7 +81,7 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
     });
   };
 
-  if (sortedExams.length === 0 && !isAdmin) return null;
+  // Mostrar siempre el componente si hay exámenes o si es admin
 
   return (
     <Card className="mb-6 overflow-hidden border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
@@ -95,7 +95,7 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
             <DialogTrigger asChild>
               <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar
+                {isAdmin ? 'Agregar' : 'Agregar examen'}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -173,10 +173,12 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
         </div>
 
         {sortedExams.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No hay exámenes programados</p>
-          </div>
+          isAdmin ? (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No hay exámenes programados</p>
+            </div>
+          ) : null
         ) : (
           <div className="space-y-2">
             {sortedExams.map((exam) => {
