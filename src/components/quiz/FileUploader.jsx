@@ -20,6 +20,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
   const [jsonErrors, setJsonErrors] = useState([]);
+  const [customTitle, setCustomTitle] = useState('');
 
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
@@ -482,13 +483,14 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
         }
       }
 
-      const fileName = data.t || data.m?.t || 'Quiz cargado';
+      const fileName = customTitle.trim() || data.t || data.m?.t || 'Quiz cargado';
       console.log('📝 Procesando quiz:', fileName);
       await processJsonData(data, fileName);
       console.log('✅ Quiz procesado exitosamente');
 
       setJsonText('');
       setJsonErrors([]);
+      setCustomTitle('');
       setError(null);
       setIsProcessing(false);
     } catch (err) {
@@ -619,6 +621,15 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
                 </div>
               </div>
             </div>
+            <div className="mb-4">
+              <Label>Título personalizado (opcional)</Label>
+              <Input 
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="Dejar vacío para usar el título del JSON"
+                className="mt-1"
+              />
+            </div>
           </div>
           
           <Textarea
@@ -743,6 +754,15 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
               <p className="text-sm text-gray-600 mb-4">
                 Formato: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"{"}"t": "Título", "q": [{"{"}"x": "...", "dif": 1-3, "o": [...]{"}"}, ...]{"}"}</code>
               </p>
+              <div className="mb-4">
+                <Label>Título personalizado (opcional)</Label>
+                <Input 
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="Dejar vacío para usar el título del JSON"
+                  className="mt-1"
+                />
+              </div>
             </div>
             
             <Textarea
