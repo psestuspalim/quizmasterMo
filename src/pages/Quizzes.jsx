@@ -549,6 +549,19 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     setView('quiz');
     };
 
+  const handleMarkQuestion = async (question, isMarked) => {
+    if (isMarked) {
+      setMarkedQuestions([...markedQuestions, {
+        question: question.question,
+        answerOptions: question.answerOptions,
+        hint: question.hint,
+        imageUrl: question.imageUrl
+      }]);
+    } else {
+      setMarkedQuestions(markedQuestions.filter(mq => mq.question !== question.question));
+    }
+  };
+
   const handleAnswer = async (isCorrect, selectedOption, question) => {
     const responseTime = Math.round((Date.now() - questionStartTime) / 1000);
     const newResponseTimes = [...responseTimes, responseTime];
@@ -585,6 +598,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         score: newScore,
         answered_questions: answeredCount,
         wrong_questions: newWrongAnswers,
+        marked_questions: markedQuestions,
         response_times: newResponseTimes,
         is_completed: isLastQuestion,
         completed_at: isLastQuestion ? new Date().toISOString() : undefined
@@ -1571,6 +1585,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 correctAnswers={score}
                 wrongAnswers={wrongAnswers.length}
                 onAnswer={handleAnswer}
+                onMarkForReview={handleMarkQuestion}
                 previousAttempts={attempts.filter(a => a.quiz_id === selectedQuiz.id)}
                 quizId={selectedQuiz.id}
                 userEmail={currentUser?.email}
