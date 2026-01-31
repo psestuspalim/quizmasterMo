@@ -26,9 +26,10 @@ export default function EnrollmentRequests({ currentUser }) {
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.CourseEnrollment.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['enrollment-requests']);
-      queryClient.invalidateQueries(['enrollments']);
-      queryClient.invalidateQueries(['all-enrollments']);
+      queryClient.invalidateQueries({ queryKey: ['enrollment-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollments'] });
+      queryClient.invalidateQueries({ queryKey: ['all-enrollments'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
       toast.success('Solicitud actualizada');
       setRejectingId(null);
       setRejectionReason('');
