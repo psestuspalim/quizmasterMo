@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import ImageQuizCreator from './ImageQuizCreator';
 import TissueQuizCreator from './TissueQuizCreator';
 import TextQuizCreator from './TextQuizCreator';
