@@ -1264,54 +1264,39 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                             <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
                                                               <Upload className="w-4 h-4 mr-2" /> Subir JSON
                                                             </Button>
-                                                          <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-                                      <DialogTrigger asChild>
-                                        <Button variant="outline" className="text-xs sm:text-sm h-9">
-                                          <Folder className="w-4 h-4 mr-2" /> Nueva carpeta
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader><DialogTitle>Crear carpeta (parcial)</DialogTitle></DialogHeader>
-                                        <div className="space-y-4 mt-4">
-                                          <div>
-                                            <Label>Nombre</Label>
-                                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Parcial 1" />
-                                          </div>
-                                          <Button onClick={() => createFolderMutation.mutate({ ...newItem, course_id: selectedCourse?.id, parent_id: currentFolderId })} className="w-full bg-amber-500 hover:bg-amber-600">
-                                            Crear carpeta
-                                          </Button>
-                                        </div>
-                                      </DialogContent>
-                                    </Dialog>
-                                    <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
-                                      <DialogTrigger asChild>
-                                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
-                                          <Plus className="w-4 h-4 mr-2" /> Nueva materia
-                                        </Button>
-                                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
-                        <div className="space-y-4 mt-4">
-                          <div>
-                            <Label>Nombre</Label>
-                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Anatomía" />
-                          </div>
-                          <div>
-                            <Label>Descripción</Label>
-                            <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} />
-                          </div>
-                          <div>
-                            <Label>Color</Label>
-                            <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
-                          </div>
-                          <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse?.id, folder_id: currentFolderId })} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                            Crear materia
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
+
+                                                          {/* Solo materias en cursos, no carpetas en carpetas */}
+                                                          {!currentFolderId && (
+                                  <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                                  <DialogTrigger asChild>
+                                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                                  <Plus className="w-4 h-4 mr-2" /> Nueva materia
+                                  </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                  <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
+                                  <div className="space-y-4 mt-4">
+                                  <div>
+                                  <Label>Nombre</Label>
+                                  <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Anatomía" />
+                                  </div>
+                                  <div>
+                                  <Label>Descripción</Label>
+                                  <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} />
+                                  </div>
+                                  <div>
+                                  <Label>Color</Label>
+                                  <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                                  </div>
+                                  <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse?.id })} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                                  Crear materia
+                                  </Button>
+                                  </div>
+                                  </DialogContent>
+                                  </Dialog>
+                                  )}
+                                  </div>
+                                  )}
               </div>
 
               <DroppableArea 
@@ -1404,11 +1389,15 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                 </Tabs>
               )}
 
-              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && (
+              {currentCourseFolders.length === 0 && currentFolderSubjects.length === 0 && currentFolderQuizzes.length === 0 && (
                 <div className="text-center py-16">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Carpeta vacía</h3>
-                  <p className="text-gray-500">Agrega contenido a esta carpeta</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {currentFolderId ? 'Carpeta vacía' : 'Contenido vacío'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {currentFolderId ? 'Agrega cuestionarios a esta carpeta' : 'Agrega materias a este curso'}
+                  </p>
                 </div>
               )}
               </motion.div>
