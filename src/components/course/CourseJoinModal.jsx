@@ -67,8 +67,19 @@ export default function CourseJoinModal({ open, onClose, currentUser }) {
           toast.info('Ya tienes una solicitud pendiente para este curso');
         } else if (status === 'approved') {
           toast.info('Ya estás inscrito en este curso');
-        } else {
-          toast.info('Tu solicitud para este curso fue rechazada anteriormente');
+        } else if (status === 'rejected') {
+          // Actualizar solicitud rechazada a pendiente nuevamente
+          await base44.entities.CourseEnrollment.update(existing[0].id, {
+            status: 'pending',
+            access_code: code.toUpperCase(),
+            rejection_reason: null
+          });
+          toast.success('Solicitud reenviada. Espera la aprobación del administrador.');
+          queryClient.invalidateQueries(['enrollments']);
+          setCode('');
+          onClose();
+          setLoading(false);
+          return;
         }
         setLoading(false);
         return;
