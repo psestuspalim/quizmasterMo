@@ -209,15 +209,15 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-0">
       {/* Header compacto con progreso y score */}
-      <div className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 rounded-xl shadow-sm border mb-4 p-3">
+      <div className="bg-gray-900/95 backdrop-blur-sm sticky top-0 z-10 rounded-xl shadow-sm border border-gray-700 mb-4 p-3">
         <div className="flex items-center justify-between gap-4">
           {/* Score badges */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+            <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-medium">
               <CheckCircle2 className="w-3 h-3" />
               {correctAnswers}
             </div>
-            <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
+            <div className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-medium">
               <XCircle className="w-3 h-3" />
               {wrongAnswers}
             </div>
@@ -226,7 +226,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
           {/* Progress */}
           <div className="flex-1 max-w-[200px]">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                   initial={{ width: 0 }}
@@ -234,7 +234,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   transition={{ duration: 0.3 }}
                 />
               </div>
-              <span className="text-xs font-medium text-gray-600 whitespace-nowrap">
+              <span className="text-xs font-medium text-gray-300 whitespace-nowrap">
                 {questionNumber}/{totalQuestions}
               </span>
             </div>
@@ -249,30 +249,30 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 setIsMarked(!isMarked);
                 onMarkForReview(question, !isMarked);
               }}
-              className={`h-8 w-8 p-0 ${isMarked ? 'text-yellow-600' : 'text-gray-400'}`}
+              className={`h-8 w-8 p-0 ${isMarked ? 'text-yellow-400' : 'text-gray-500'}`}
             >
-              <Bookmark className={`w-4 h-4 ${isMarked ? 'fill-yellow-600' : ''}`} />
+              <Bookmark className={`w-4 h-4 ${isMarked ? 'fill-yellow-400' : ''}`} />
             </Button>
           )}
         </div>
       </div>
 
-      {/* Question Card - Más compacta */}
-      <Card className="border-0 shadow-lg overflow-hidden">
+      {/* Question Card - Dark Mode */}
+      <Card className="border-0 shadow-lg overflow-hidden bg-gray-900">
         {/* Question Header */}
-        <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 border-b">
+        <div className="bg-gray-800/50 p-4 border-b border-gray-700">
           <div className="flex items-start gap-3">
             <Badge className="bg-indigo-600 text-white text-xs shrink-0">
               {questionNumber}
             </Badge>
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-900 leading-relaxed">
+              <p className="text-sm sm:text-base font-medium text-gray-100 leading-relaxed">
                 <MathText text={question.question} />
               </p>
               
               {/* Imagen si existe */}
               {question.imageUrl && (
-                <div className="mt-3 rounded-lg overflow-hidden border bg-gray-100">
+                <div className="mt-3 rounded-lg overflow-hidden border border-gray-700 bg-gray-800">
                   <img 
                     src={question.imageUrl} 
                     alt="Pregunta" 
@@ -282,81 +282,11 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
               )}
             </div>
           </div>
-
-          {/* Botones de ayuda - Inline */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-3 ml-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRephrase}
-              disabled={rephrasing || rephrasedQuestion}
-              className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50"
-            >
-              {rephrasing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              <span className="ml-1 hidden sm:inline">Reformular</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEtymology}
-              disabled={loadingEtymology || etymology}
-              className="h-7 px-2 text-xs text-purple-600 hover:bg-purple-50"
-            >
-              {loadingEtymology ? <Loader2 className="w-3 h-3 animate-spin" /> : <BookOpen className="w-3 h-3" />}
-              <span className="ml-1 hidden sm:inline">Etimología</span>
-            </Button>
-            {question.hint && !showFeedback && showHintSetting && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowHint(!showHint)}
-                className="h-7 px-2 text-xs text-amber-600 hover:bg-amber-50"
-              >
-                <Lightbulb className="w-3 h-3" />
-                <span className="ml-1 hidden sm:inline">Pista</span>
-              </Button>
-            )}
-          </div>
-
-          {/* Contenido expandible de ayudas */}
-          <AnimatePresence>
-            {(rephrasedQuestion || etymology || showHint) && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-3 ml-8 space-y-2"
-              >
-                {rephrasedQuestion && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs">
-                    <span className="font-medium text-blue-800">En otras palabras: </span>
-                    <span className="text-blue-900">{rephrasedQuestion}</span>
-                  </div>
-                )}
-                {etymology && etymology.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-xs space-y-1">
-                    <span className="font-medium text-purple-800">Etimología: </span>
-                    {etymology.map((term, idx) => (
-                      <div key={idx} className="text-purple-900">
-                        <strong>{term.term}</strong> → {term.breakdown}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {showHint && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs">
-                    <span className="font-medium text-amber-800">💡 Pista: </span>
-                    <span className="text-amber-900"><MathText text={question.hint} /></span>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Answer Options */}
-        <CardContent className="p-3 sm:p-4 relative">
-          <div className="grid grid-cols-1 gap-2">
+        <CardContent className="p-3 sm:p-4 relative bg-gray-900">
+          <div className="grid grid-cols-1 gap-3">
             {question.answerOptions.map((option, index) => {
               const isSelected = selectedAnswer === index;
               const isCorrect = option.isCorrect;
@@ -364,52 +294,79 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
               const showIncorrect = showFeedback && isSelected && !isCorrect;
 
               return (
-                <motion.button
+                <motion.div
                   key={index}
-                  whileHover={{ scale: showFeedback ? 1 : 1.005 }}
-                  whileTap={{ scale: showFeedback ? 1 : 0.995 }}
-                  onClick={() => handleSelectAnswer(index)}
-                  disabled={showFeedback}
-                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                    showCorrect
-                      ? 'border-green-500 bg-green-50 shadow-green-100 shadow-md'
-                      : showIncorrect
-                      ? 'border-red-500 bg-red-50 shadow-red-100 shadow-md'
-                      : isSelected
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-sm'
-                  }`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 font-semibold text-xs transition-all ${
-                        showCorrect
-                          ? 'border-green-500 bg-green-500 text-white'
-                          : showIncorrect
-                          ? 'border-red-500 bg-red-500 text-white'
-                          : isSelected
-                          ? 'border-indigo-500 bg-indigo-500 text-white'
-                          : 'border-gray-300 text-gray-500'
-                      }`}
-                    >
-                      {showCorrect ? (
-                        <CheckCircle2 className="w-4 h-4" />
-                      ) : showIncorrect ? (
-                        <XCircle className="w-4 h-4" />
-                      ) : (
-                        String.fromCharCode(65 + index)
-                      )}
+                  <button
+                    onClick={() => handleSelectAnswer(index)}
+                    disabled={showFeedback}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all duration-200 ${
+                      showCorrect
+                        ? 'border-green-500 bg-gray-800'
+                        : showIncorrect
+                        ? 'border-red-500 bg-gray-800'
+                        : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 font-semibold text-xs mt-0.5 ${
+                          showCorrect || showIncorrect
+                            ? 'border-transparent'
+                            : 'border-gray-600 text-gray-400'
+                        }`}
+                      >
+                        {showCorrect ? (
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        ) : showIncorrect ? (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        ) : (
+                          String.fromCharCode(65 + index) + '.'
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm text-gray-200">
+                          <MathText text={option.text} />
+                        </span>
+                        
+                        {/* Feedback expandido dentro de la opción */}
+                        {showFeedback && (showCorrect || showIncorrect) && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-2 pt-2 border-t border-gray-700"
+                          >
+                            <div className="flex items-start gap-2">
+                              {showCorrect ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                              )}
+                              <div>
+                                <p className={`text-xs font-medium ${showCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                                  {showCorrect ? 'Respuesta correcta' : 'No exactamente'}
+                                </p>
+                                {option.rationale && (
+                                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                                    <MathText text={option.rationale} />
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
-                    <span className={`text-sm flex-1 ${showCorrect || showIncorrect ? 'font-medium' : ''}`}>
-                      <MathText text={option.text} />
-                    </span>
-                  </div>
-                </motion.button>
+                  </button>
+                </motion.div>
               );
             })}
           </div>
 
-          {/* Feedback Section - Compacto */}
+          {/* Mostrar pista + feedback adicional */}
           <AnimatePresence>
             {showFeedback && selectedOption && (
               <motion.div
@@ -417,57 +374,22 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-4 space-y-3"
               >
-                {/* Resultado */}
-                <div className={`rounded-xl p-3 ${
-                  selectedOption.isCorrect
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'
-                    : 'bg-gradient-to-r from-red-50 to-rose-50 border border-red-200'
-                }`}>
-                  <div className="flex items-start gap-2">
-                    {selectedOption.isCorrect ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-semibold text-sm ${selectedOption.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
-                        {selectedOption.isCorrect ? '¡Correcto!' : 'Incorrecto'}
-                      </p>
-                      {/* Para incorrectas: priorizar feedback general (n), para correctas: rationale (f) */}
-                      {(!selectedOption.isCorrect && question.feedback) && (
-                        <p className="text-xs mt-1 leading-relaxed text-red-700">
-                          <MathText text={question.feedback} />
-                        </p>
-                      )}
-                      {(selectedOption.isCorrect && selectedOption.rationale) && (
-                        <p className="text-xs mt-1 leading-relaxed text-green-700">
-                          <MathText text={selectedOption.rationale} />
-                        </p>
-                      )}
-                      {(!selectedOption.isCorrect && !question.feedback && selectedOption.rationale) && (
-                        <p className="text-xs mt-1 leading-relaxed text-red-700">
-                          <MathText text={selectedOption.rationale} />
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Campo de reflexión obligatorio para respuestas incorrectas */}
                   {!selectedOption.isCorrect && showReflection && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                      <label className="block text-sm font-medium text-amber-800 mb-2">
-                        ✍️ ¿Por qué crees que te equivocaste? <span className="text-amber-600">(obligatorio)</span>
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        ✍️ ¿Por qué crees que te equivocaste? <span className="text-gray-500">(obligatorio)</span>
                       </label>
                       <textarea
                         value={reflectionText}
                         onChange={(e) => setReflectionText(e.target.value)}
                         placeholder="Escribe tu reflexión sobre el error (mínimo 10 caracteres)..."
-                        className="w-full p-2.5 text-sm border border-amber-300 rounded-lg bg-white focus:ring-2 focus:ring-amber-400 focus:border-amber-400 resize-none"
+                        className="w-full p-2.5 text-sm border border-gray-700 rounded-lg bg-gray-900 text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                         rows={2}
                       />
                       {reflectionText.length > 0 && reflectionText.length < 10 && (
-                        <p className="text-xs text-amber-600 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           {10 - reflectionText.length} caracteres más...
                         </p>
                       )}
@@ -487,8 +409,17 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                     />
                   )}
 
-                  {/* Botón siguiente */}
-                  <div className="pointer-events-auto">
+                  {/* Botones de navegación */}
+                  <div className="flex gap-3 mt-4">
+                    {onBack && questionNumber > 1 && (
+                      <Button
+                        variant="ghost"
+                        onClick={onBack}
+                        className="flex-1 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 border border-gray-700"
+                      >
+                        Atrás
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       onClick={(e) => {
@@ -497,91 +428,44 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                         handleNext();
                       }}
                       disabled={!canProceed}
-                      className={`w-full h-11 text-white font-medium shadow-lg relative z-50 ${
+                      className={`flex-1 h-11 font-medium relative z-50 ${
                         canProceed 
-                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-200'
-                          : 'bg-gray-400 cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      {canProceed ? 'Siguiente pregunta' : 'Completa tu reflexión'}
-                      <ChevronRight className="w-4 h-4 ml-1" />
+                      {canProceed ? 'Siguiente' : 'Completa tu reflexión'}
                     </Button>
                   </div>
 
-                {/* Herramientas adicionales para incorrectas */}
-                {!selectedOption.isCorrect && (showSchema || showNotes) && (
-                  <div className="flex flex-wrap gap-2">
-                    {!schema && showSchema && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleGenerateSchema}
-                        disabled={loadingSchema}
-                        className="h-8 text-xs text-teal-600 border-teal-200 hover:bg-teal-50"
-                      >
-                        {loadingSchema ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Workflow className="w-3 h-3 mr-1" />}
-                        Ver esquema
-                      </Button>
-                    )}
-                    {showNotes && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowNotesField(!showNotesField)}
-                        className={`h-8 text-xs ${showNotesField ? 'bg-amber-50 border-amber-300' : 'border-amber-200'} text-amber-600 hover:bg-amber-50`}
-                      >
-                        <MessageSquare className="w-3 h-3 mr-1" />
-                        {showNotesField ? 'Ocultar notas' : 'Agregar nota'}
-                      </Button>
-                    )}
-                  </div>
-                )}
 
-                {/* Esquema generado */}
-                {schema && (
+
+                {/* Mostrar pista - Solo si existe hint */}
+                {question.hint && showHintSetting && !showHint && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowHint(true)}
+                    className="w-full justify-start text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-700"
+                  >
+                    <ChevronDown className="w-4 h-4 mr-2" />
+                    Mostrar pista
+                  </Button>
+                )}
+                
+                {/* Pista expandida */}
+                {showHint && question.hint && showHintSetting && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="bg-teal-50 border border-teal-200 rounded-xl p-3"
+                    className="bg-gray-800 border border-gray-700 rounded-lg p-3"
                   >
-                    <p className="text-xs font-semibold text-teal-800 mb-2">{schema.title}</p>
-                    <pre className="text-xs text-teal-900 whitespace-pre-wrap font-sans bg-white/60 rounded p-2">
-                      {schema.schema}
-                    </pre>
-                    <p className="text-xs text-teal-600 mt-2">💡 {schema.summary}</p>
-                  </motion.div>
-                )}
-
-                {/* Campo de notas - Colapsable */}
-                <AnimatePresence>
-                  {showNotesField && showNotes && !selectedOption.isCorrect && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
-                      <textarea
-                        value={userNote}
-                        onChange={(e) => setUserNote(e.target.value)}
-                        placeholder="Escribe tus dudas o notas..."
-                        className="w-full p-2 text-xs border border-amber-200 rounded-lg bg-amber-50 focus:ring-2 focus:ring-amber-300 focus:border-amber-300 resize-none"
-                        rows={2}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Tip Cinéfilo */}
-                {question.hint && showHintSetting && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
                     <div className="flex items-start gap-2">
-                      <span className="text-lg">🎬</span>
+                      <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-purple-800 text-xs">Tip Cinéfilo</p>
-                        <p className="text-xs text-purple-700 mt-0.5"><MathText text={question.hint} /></p>
+                        <p className="text-xs text-gray-400"><MathText text={question.hint} /></p>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 </motion.div>
