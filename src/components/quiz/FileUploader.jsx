@@ -49,6 +49,56 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       5: 'Evaluar'
     };
 
+    // FORMATO CON METADATA (formato completo con metadata + q)
+    if (data.metadata && data.q && Array.isArray(data.q)) {
+      console.log('📦 Formato detectado: metadata + q');
+
+      questions = data.q.map((q) => {
+        if (!q.x || !q.o || !Array.isArray(q.o)) return null;
+
+        return {
+          type: 'text',
+          question: q.x,
+          hint: q.ana || '',
+          feedback: q.n || '',
+          difficulty: difficultyMap[q.dif] || 'moderado',
+          subtopic: q.sb || '',
+          answerOptions: q.o.map(opt => ({
+            text: opt.t,
+            isCorrect: opt.c === true,
+            rationale: opt.r || ''
+          }))
+        };
+      }).filter(q => q !== null);
+
+      title = data.metadata.title || fileName;
+      description = data.metadata.source || `${data.metadata.total || questions.length} preguntas`;
+
+      const quizData = {
+        title,
+        description,
+        total_questions: questions.length,
+        questions: questions,
+        t: title,
+        q: questions.map(q => JSON.stringify({
+          x: q.question,
+          dif: q.difficulty === 'fácil' ? 1 : q.difficulty === 'moderado' ? 2 : 3,
+          qt: 'mcq',
+          id: q.subtopic || 'Q',
+          o: q.answerOptions.map(opt => ({
+            text: opt.text,
+            c: opt.isCorrect,
+            r: opt.rationale
+          }))
+        })),
+        file_name: fileName,
+        is_hidden: false
+      };
+
+      await onUploadSuccess(quizData);
+      return;
+    }
+
     // FORMATO NUEVO {t, q} con estructura compacta
     if (data.t && data.q && Array.isArray(data.q) && !data.m) {
       console.log('📦 Formato detectado: {t, q} compacto');
