@@ -27,6 +27,8 @@ export default function EnrollmentRequests({ currentUser }) {
     mutationFn: ({ id, data }) => base44.entities.CourseEnrollment.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['enrollment-requests']);
+      queryClient.invalidateQueries(['enrollments']);
+      queryClient.invalidateQueries(['all-enrollments']);
       toast.success('Solicitud actualizada');
       setRejectingId(null);
       setRejectionReason('');

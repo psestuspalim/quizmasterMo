@@ -134,7 +134,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       user_email: currentUser?.email, 
       status: 'approved' 
     }),
-    enabled: !!currentUser?.email && currentUser?.role !== 'admin'
+    enabled: !!currentUser?.email && currentUser?.role !== 'admin',
+    refetchInterval: 3000
   });
 
   const { data: subjects = [] } = useQuery({

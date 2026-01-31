@@ -76,9 +76,11 @@ export default function CourseJoinModal({ open, onClose, currentUser }) {
           });
           toast.success('Solicitud reenviada. Espera la aprobación del administrador.');
           queryClient.invalidateQueries(['enrollments']);
+          queryClient.invalidateQueries(['enrollment-requests']);
+          queryClient.invalidateQueries(['all-enrollments']);
           setCode('');
-          onClose();
           setLoading(false);
+          onClose();
           return;
         }
         setLoading(false);
@@ -102,7 +104,10 @@ export default function CourseJoinModal({ open, onClose, currentUser }) {
 
       toast.success('Solicitud enviada. Espera la aprobación del administrador.');
       queryClient.invalidateQueries(['enrollments']);
+      queryClient.invalidateQueries(['enrollment-requests']);
+      queryClient.invalidateQueries(['all-enrollments']);
       setCode('');
+      setLoading(false);
       onClose();
     } catch (error) {
       console.error('Error:', error);
