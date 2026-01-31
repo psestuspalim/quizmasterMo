@@ -64,24 +64,31 @@ export default function AdminContent() {
     enabled: currentUser?.role === 'admin'
   });
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries(['courses']);
+    queryClient.invalidateQueries(['folders']);
+    queryClient.invalidateQueries(['subjects']);
+    queryClient.invalidateQueries(['quizzes']);
+  };
+
   const updateCourseMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Course.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['courses'])
+    onSuccess: invalidateAll
   });
 
   const updateFolderMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Folder.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['folders'])
+    onSuccess: invalidateAll
   });
 
   const updateSubjectMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Subject.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['subjects'])
+    onSuccess: invalidateAll
   });
 
   const updateQuizMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Quiz.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['quizzes'])
+    onSuccess: invalidateAll
   });
 
   if (!currentUser || currentUser?.role !== 'admin') {
@@ -98,83 +105,37 @@ export default function AdminContent() {
       updateSubject: (params) => updateSubjectMutation.mutateAsync(params),
       updateQuiz: (params) => updateQuizMutation.mutateAsync(params)
     });
-    queryClient.invalidateQueries(['courses']);
-    queryClient.invalidateQueries(['folders']);
-    queryClient.invalidateQueries(['subjects']);
-    queryClient.invalidateQueries(['quizzes']);
+    invalidateAll();
   };
 
   const handleChangeType = async (itemId, fromType, toType) => {
     try {
-      let originalItem;
-      if (fromType === 'course') {
-        originalItem = courses.find(c => c.id === itemId);
-      } else if (fromType === 'folder') {
-        originalItem = folders.find(f => f.id === itemId);
-      } else if (fromType === 'subject') {
-        originalItem = subjects.find(s => s.id === itemId);
-      }
-
+      const entities = { course: courses, folder: folders, subject: subjects };
+      const originalItem = entities[fromType]?.find(item => item.id === itemId);
+      
       if (!originalItem) return;
 
       const { id, created_date, updated_date, created_by, ...commonData } = originalItem;
 
-      if (fromType === 'course') {
-        await base44.entities.Course.delete(itemId);
-      } else if (fromType === 'folder') {
-        await base44.entities.Folder.delete(itemId);
-      } else if (fromType === 'subject') {
-        await base44.entities.Subject.delete(itemId);
-      }
+      await base44.entities[fromType.charAt(0).toUpperCase() + fromType.slice(1)].delete(itemId);
+      await base44.entities[toType.charAt(0).toUpperCase() + toType.slice(1)].create(commonData);
 
-      if (toType === 'course') {
-        await base44.entities.Course.create(commonData);
-      } else if (toType === 'folder') {
-        await base44.entities.Folder.create(commonData);
-      } else if (toType === 'subject') {
-        await base44.entities.Subject.create(commonData);
-      }
-
-      queryClient.invalidateQueries(['courses']);
-      queryClient.invalidateQueries(['folders']);
-      queryClient.invalidateQueries(['subjects']);
+      invalidateAll();
       toast.success('Tipo cambiado');
     } catch (error) {
-      console.error('Error cambiando tipo:', error);
       toast.error('Error al cambiar tipo');
     }
   };
 
-  const handleBulkDelete = async () => {
-    const itemsArray = Array.from(selectedItems);
-    const itemsToDelete = itemsArray.map(key => {
-      const [type, id] = key.split('-');
-      return { type, id };
-    });
-
-    setDeleteDialog({ open: true, items: itemsToDelete });
-  };
-
   const confirmDelete = async () => {
     try {
+      const entities = { course: courses, folder: folders, subject: subjects, quiz: quizzes };
+      
       for (const item of deleteDialog.items) {
-        let itemData = null;
-        
-        if (item.type === 'course') {
-          itemData = courses.find(c => c.id === item.id);
-          await base44.entities.Course.delete(item.id);
-        } else if (item.type === 'folder') {
-          itemData = folders.find(f => f.id === item.id);
-          await base44.entities.Folder.delete(item.id);
-        } else if (item.type === 'subject') {
-          itemData = subjects.find(s => s.id === item.id);
-          await base44.entities.Subject.delete(item.id);
-        } else if (item.type === 'quiz') {
-          itemData = quizzes.find(q => q.id === item.id);
-          await base44.entities.Quiz.delete(item.id);
-        }
+        const itemData = entities[item.type]?.find(i => i.id === item.id);
         
         if (itemData) {
+          await base44.entities[item.type.charAt(0).toUpperCase() + item.type.slice(1)].delete(item.id);
           await base44.entities.DeletedItem.create({
             item_type: item.type,
             item_id: item.id,
@@ -185,36 +146,26 @@ export default function AdminContent() {
         }
       }
 
-      queryClient.invalidateQueries(['courses']);
-      queryClient.invalidateQueries(['folders']);
-      queryClient.invalidateQueries(['subjects']);
-      queryClient.invalidateQueries(['quizzes']);
+      invalidateAll();
       queryClient.invalidateQueries(['deleted-items']);
-
       setSelectedItems(new Set());
+      setDeleteDialog({ open: false, items: [] });
       toast.success('Elementos movidos a la papelera');
     } catch (error) {
       toast.error('Error al eliminar');
+      setDeleteDialog({ open: false, items: [] });
     }
-
-    setDeleteDialog({ open: false, items: [] });
   };
 
   const handleToggleVisibility = async (type, id) => {
-    let item;
-    if (type === 'course') item = courses.find(c => c.id === id);
-    if (type === 'folder') item = folders.find(f => f.id === id);
-    if (type === 'subject') item = subjects.find(s => s.id === id);
-    if (type === 'quiz') item = quizzes.find(q => q.id === id);
-
+    const entities = { course: courses, folder: folders, subject: subjects, quiz: quizzes };
+    const mutations = { course: updateCourseMutation, folder: updateFolderMutation, subject: updateSubjectMutation, quiz: updateQuizMutation };
+    
+    const item = entities[type]?.find(i => i.id === id);
     if (!item) return;
 
     const newHidden = !item.is_hidden;
-    if (type === 'course') await updateCourseMutation.mutateAsync({ id, data: { is_hidden: newHidden } });
-    if (type === 'folder') await updateFolderMutation.mutateAsync({ id, data: { is_hidden: newHidden } });
-    if (type === 'subject') await updateSubjectMutation.mutateAsync({ id, data: { is_hidden: newHidden } });
-    if (type === 'quiz') await updateQuizMutation.mutateAsync({ id, data: { is_hidden: newHidden } });
-
+    await mutations[type].mutateAsync({ id, data: { is_hidden: newHidden } });
     toast.success(newHidden ? 'Oculto' : 'Visible');
   };
 
@@ -234,13 +185,7 @@ export default function AdminContent() {
         icon={FolderTree}
         title="Gestión de Contenido"
         subtitle="Organiza cursos, carpetas, materias y quizzes"
-        badge={
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">{courses.length} cursos</Badge>
-            <Badge variant="secondary">{subjects.length} materias</Badge>
-            <Badge variant="secondary">{quizzes.length} quizzes</Badge>
-          </div>
-        }
+        badge={<Badge variant="secondary">{courses.length + folders.length + subjects.length + quizzes.length} elementos</Badge>}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -271,13 +216,10 @@ export default function AdminContent() {
                     window.location.href = `/Quizzes`;
                   }
                 }}
-                onDeleteItems={(items) => {
-                  const itemsToDelete = items.map(item => ({
-                    type: item.type,
-                    id: item.id
-                  }));
-                  setDeleteDialog({ open: true, items: itemsToDelete });
-                }}
+                onDeleteItems={(items) => setDeleteDialog({ 
+                  open: true, 
+                  items: items.map(item => ({ type: item.type, id: item.id }))
+                })}
                 selectedItems={selectedItems}
                 onSelectionChange={setSelectedItems}
               />
