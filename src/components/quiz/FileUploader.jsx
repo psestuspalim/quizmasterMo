@@ -439,6 +439,33 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       return { errors, warnings, info };
     }
 
+    // FORMATO: {metadata, q}
+    if (data.metadata && data.q) {
+      if (!Array.isArray(data.q)) {
+        errors.push('❌ "q" debe ser un array de preguntas');
+        return { errors, warnings, info };
+      }
+      if (data.q.length === 0) {
+        errors.push('❌ El array "q" está vacío');
+        return { errors, warnings, info };
+      }
+
+      info.push(`✅ Formato válido: metadata + q - ${data.q.length} pregunta${data.q.length > 1 ? 's' : ''}`);
+
+      data.q.forEach((q, idx) => {
+        const qNum = idx + 1;
+        if (!q.x || q.x.trim() === '') errors.push(`❌ Pregunta ${qNum}: falta "x" (texto)`);
+        if (!q.o || !Array.isArray(q.o)) {
+          errors.push(`❌ Pregunta ${qNum}: falta "o" (opciones)`);
+        } else {
+          const correctCount = q.o.filter(opt => opt.c === true).length;
+          if (correctCount === 0) errors.push(`❌ Pregunta ${qNum}: ninguna opción correcta`);
+        }
+      });
+
+      return { errors, warnings, info };
+    }
+
     // FORMATO: {t, q}
     if (data.t && data.q && !data.m) {
       if (!Array.isArray(data.q)) {
@@ -494,10 +521,11 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
 
     // Formato no reconocido
     errors.push('❌ Formato no reconocido. Estructuras aceptadas:');
-    errors.push('   1. Array directo: [{"question": "...", "answerOptions": [...]}]');
-    errors.push('   2. Wrapper "quiz": {"quiz": [...]}');
-    errors.push('   3. Wrapper "questions": {"questions": [...]}');
-    errors.push('   4. Formato longitudinal: {"t": "Título", "q": [...]}');
+    errors.push('   1. Formato con metadata: {"metadata": {...}, "q": [...]}');
+    errors.push('   2. Array directo: [{"question": "...", "answerOptions": [...]}]');
+    errors.push('   3. Wrapper "quiz": {"quiz": [...]}');
+    errors.push('   4. Wrapper "questions": {"questions": [...]}');
+    errors.push('   5. Formato longitudinal: {"t": "Título", "q": [...]}');
     return { errors, warnings, info };
   };
 
