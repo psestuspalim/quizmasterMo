@@ -57,11 +57,11 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       console.log('📦 Quiz expandido:', expandedQuiz);
 
       const quizData = {
-        title: data.t,
+        title: fileName,
         description: '',
         total_questions: data.q.length,
         questions: expandedQuiz.questions,
-        t: data.t,
+        t: fileName,
         q: data.q.map(q => typeof q === 'string' ? q : JSON.stringify(q)),
         file_name: fileName,
         is_hidden: false
@@ -100,7 +100,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       const expanded = fromCompactFormat(data);
 
       await onUploadSuccess({
-        title: data.m.t || fileName,
+        title: fileName,
         description: data.m.s || data.m.f || '',
         total_questions: data.m.c || data.q.length,
         questions: expanded.questions,
