@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar, Plus, Trash2 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, parseISO, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function ExamOverview({ courseId, subjects, currentUser, isAdmin }) {
@@ -57,12 +57,16 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
 
   // Exámenes próximos
   const sortedExams = allExams
-    .map(exam => ({
-      ...exam,
-      daysRemaining: differenceInDays(new Date(exam.date), new Date())
-    }))
+    .map(exam => {
+      const examDate = startOfDay(parseISO(exam.date));
+      const today = startOfDay(new Date());
+      return {
+        ...exam,
+        daysRemaining: differenceInDays(examDate, today)
+      };
+    })
     .filter(exam => exam.daysRemaining >= 0)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a, b) => parseISO(a.date) - parseISO(b.date));
 
   const getUrgencyBadge = (days) => {
     if (days === 0) return { label: 'Hoy', className: 'bg-red-600 text-white' };
@@ -168,7 +172,7 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
                     <div className="flex items-center gap-1.5 text-xs text-gray-600">
                       <span className="font-medium">{exam.exam_type}</span>
                       <span>•</span>
-                      <span>{format(new Date(exam.date), "d MMM", { locale: es })}</span>
+                      <span>{format(parseISO(exam.date), "d MMM", { locale: es })}</span>
                       {exam.notes && (
                         <>
                           <span>•</span>
