@@ -627,7 +627,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     });
 
     if (!isLastQuestion) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex(prev => prev + 1);
       setQuestionStartTime(Date.now());
     } else {
       // Marcar sesión como completa
