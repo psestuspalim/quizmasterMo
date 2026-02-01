@@ -135,11 +135,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         user_email: currentUser?.email, 
         status: 'approved' 
       });
-      console.log('📚 Enrollments cargados:', result);
       return result;
     },
-    enabled: !!currentUser?.email && currentUser?.role !== 'admin',
-    refetchInterval: 3000
+    enabled: !!currentUser?.email && currentUser?.role !== 'admin'
   });
 
   const { data: subjects = [] } = useQuery({
