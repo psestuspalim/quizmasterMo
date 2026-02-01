@@ -198,6 +198,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   const selectedOption = selectedAnswer !== null ? question.answerOptions[selectedAnswer] : null;
 
   const handleNext = () => {
+    if (!selectedOption) return;
     const isCorrect = selectedOption.isCorrect;
     onAnswer(isCorrect, selectedOption, question);
   };
@@ -427,12 +428,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 </Button>
               )}
               <Button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleNext();
-                }}
+                onClick={handleNext}
                 disabled={!canProceed}
                 className={`flex-1 h-11 font-medium ${
                   canProceed 
