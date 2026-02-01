@@ -29,10 +29,8 @@ export default function AdminProgress() {
     queryFn: () => base44.entities.QuizAttempt.list('-created_date', 2000),
   });
 
-  // Filter out incomplete attempts (0 score with 0 answered)
-  const validAttempts = attempts.filter(a => 
-    a.answered_questions > 0 || a.score > 0 || a.is_completed
-  );
+  // Mostrar todos los intentos sin filtrar
+  const validAttempts = attempts;
 
   const deleteAttemptMutation = useMutation({
     mutationFn: (id) => base44.entities.QuizAttempt.delete(id),
