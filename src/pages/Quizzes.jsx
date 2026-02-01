@@ -445,8 +445,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         // Usuario tiene enrollment aprobado - acceso garantizado
         const hasEnrollment = enrollments.some(e => e.course_id === c.id && e.status === 'approved');
         if (hasEnrollment) return true;
-        // Si no tiene enrollment, verificar visibilidad
-        if (c.visibility === 'all' || !c.visibility) return true;
+        // Si no tiene enrollment, verificar visibilidad (permitir todos por defecto)
+        if (!c.visibility || c.visibility === 'all') return true;
         if (c.visibility === 'specific') return c.allowed_users?.includes(currentUser?.email);
         return false;
       });
