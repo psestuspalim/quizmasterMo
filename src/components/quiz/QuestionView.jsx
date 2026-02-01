@@ -409,68 +409,77 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                     />
                   )}
 
-                  {/* Botones de navegación */}
-                  <div className="flex gap-3 mt-4">
-                    {onBack && questionNumber > 1 && (
-                      <Button
-                        variant="ghost"
-                        onClick={onBack}
-                        className="flex-1 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 border border-gray-700"
-                      >
-                        Atrás
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleNext();
-                      }}
-                      disabled={!canProceed}
-                      className={`flex-1 h-11 font-medium relative z-50 ${
-                        canProceed 
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
-                          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {canProceed ? 'Siguiente' : 'Completa tu reflexión'}
-                    </Button>
-                  </div>
-
-
-
-                {/* Mostrar pista - Solo si existe hint */}
-                {question.hint && showHintSetting && !showHint && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowHint(true)}
-                    className="w-full justify-start text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-700"
-                  >
-                    <ChevronDown className="w-4 h-4 mr-2" />
-                    Mostrar pista
-                  </Button>
-                )}
-                
-                {/* Pista expandida */}
-                {showHint && question.hint && showHintSetting && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="bg-gray-800 border border-gray-700 rounded-lg p-3"
-                  >
-                    <div className="flex items-start gap-2">
-                      <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-400"><MathText text={question.hint} /></p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
+                  
                 </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Botones de navegación - fuera del AnimatePresence */}
+          {showFeedback && selectedOption && (
+            <div className="flex gap-3 mt-4">
+              {onBack && questionNumber > 1 && (
+                <Button
+                  variant="ghost"
+                  onClick={onBack}
+                  className="flex-1 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 border border-gray-700"
+                >
+                  Atrás
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleNext();
+                }}
+                disabled={!canProceed}
+                className={`flex-1 h-11 font-medium ${
+                  canProceed 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {canProceed ? 'Siguiente' : 'Completa tu reflexión'}
+              </Button>
+            </div>
+          )}
+
+          {/* Pista - dentro del CardContent pero fuera del AnimatePresence */}
+          {showFeedback && selectedOption && (
+            <div className="mt-4 space-y-3">
+
+
+
+              {/* Mostrar pista - Solo si existe hint */}
+              {question.hint && showHintSetting && !showHint && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowHint(true)}
+                  className="w-full justify-start text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-700"
+                >
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Mostrar pista
+                </Button>
+              )}
+              
+              {/* Pista expandida */}
+              {showHint && question.hint && showHintSetting && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="bg-gray-800 border border-gray-700 rounded-lg p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-400"><MathText text={question.hint} /></p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
