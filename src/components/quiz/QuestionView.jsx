@@ -419,9 +419,9 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
             <div className="flex gap-3 mt-4">
               {onBack && questionNumber > 1 && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={onBack}
-                  className="flex-1 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 border border-gray-700"
+                  className="flex-1"
                 >
                   Atrás
                 </Button>
@@ -437,7 +437,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 className={`flex-1 h-11 font-medium ${
                   canProceed 
                     ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 {canProceed ? 'Siguiente' : 'Completa tu reflexión'}
@@ -448,15 +448,12 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
           {/* Pista - dentro del CardContent pero fuera del AnimatePresence */}
           {showFeedback && selectedOption && (
             <div className="mt-4 space-y-3">
-
-
-
               {/* Mostrar pista - Solo si existe hint */}
               {question.hint && showHintSetting && !showHint && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setShowHint(true)}
-                  className="w-full justify-start text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-700"
+                  className="w-full justify-start"
                 >
                   <ChevronDown className="w-4 h-4 mr-2" />
                   Mostrar pista
@@ -468,12 +465,12 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-gray-800 border border-gray-700 rounded-lg p-3"
+                  className="bg-yellow-50 border border-yellow-200 rounded-lg p-3"
                 >
                   <div className="flex items-start gap-2">
-                    <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                    <Lightbulb className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-gray-400"><MathText text={question.hint} /></p>
+                      <p className="text-xs text-gray-700"><MathText text={question.hint} /></p>
                     </div>
                   </div>
                 </motion.div>
