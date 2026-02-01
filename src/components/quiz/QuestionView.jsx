@@ -209,15 +209,15 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
   return (
     <div className="max-w-3xl mx-auto px-2 sm:px-0">
       {/* Header compacto con progreso y score */}
-      <div className="bg-gray-900/95 backdrop-blur-sm sticky top-0 z-10 rounded-xl shadow-sm border border-gray-700 mb-4 p-3">
+      <div className="bg-white/95 backdrop-blur-sm sticky top-0 z-10 rounded-xl shadow-sm border border-gray-200 mb-4 p-3">
         <div className="flex items-center justify-between gap-4">
           {/* Score badges */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-medium">
+            <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
               <CheckCircle2 className="w-3 h-3" />
               {correctAnswers}
             </div>
-            <div className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-medium">
+            <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">
               <XCircle className="w-3 h-3" />
               {wrongAnswers}
             </div>
@@ -226,7 +226,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
           {/* Progress */}
           <div className="flex-1 max-w-[200px]">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                   initial={{ width: 0 }}
@@ -234,7 +234,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                   transition={{ duration: 0.3 }}
                 />
               </div>
-              <span className="text-xs font-medium text-gray-300 whitespace-nowrap">
+              <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
                 {questionNumber}/{totalQuestions}
               </span>
             </div>
@@ -249,30 +249,30 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                 setIsMarked(!isMarked);
                 onMarkForReview(question, !isMarked);
               }}
-              className={`h-8 w-8 p-0 ${isMarked ? 'text-yellow-400' : 'text-gray-500'}`}
+              className={`h-8 w-8 p-0 ${isMarked ? 'text-yellow-600' : 'text-gray-400'}`}
             >
-              <Bookmark className={`w-4 h-4 ${isMarked ? 'fill-yellow-400' : ''}`} />
+              <Bookmark className={`w-4 h-4 ${isMarked ? 'fill-yellow-600' : ''}`} />
             </Button>
           )}
         </div>
       </div>
 
-      {/* Question Card - Dark Mode */}
-      <Card className="border-0 shadow-lg overflow-hidden bg-gray-900">
+      {/* Question Card */}
+      <Card className="border-0 shadow-lg overflow-hidden bg-white">
         {/* Question Header */}
-        <div className="bg-gray-800/50 p-4 border-b border-gray-700">
+        <div className="bg-gray-50 p-4 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <Badge className="bg-indigo-600 text-white text-xs shrink-0">
               {questionNumber}
             </Badge>
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-100 leading-relaxed">
+              <p className="text-sm sm:text-base font-medium text-gray-900 leading-relaxed">
                 <MathText text={question.question} />
               </p>
               
               {/* Imagen si existe */}
               {question.imageUrl && (
-                <div className="mt-3 rounded-lg overflow-hidden border border-gray-700 bg-gray-800">
+                <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                   <img 
                     src={question.imageUrl} 
                     alt="Pregunta" 
@@ -285,7 +285,7 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
         </div>
 
         {/* Answer Options */}
-        <CardContent className="p-3 sm:p-4 relative bg-gray-900">
+        <CardContent className="p-3 sm:p-4 relative bg-white">
           <div className="grid grid-cols-1 gap-3">
             {question.answerOptions.map((option, index) => {
               const isSelected = selectedAnswer === index;
@@ -305,10 +305,10 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                     disabled={showFeedback}
                     className={`w-full p-3 rounded-lg border-2 text-left transition-all duration-200 ${
                       showCorrect
-                        ? 'border-green-500 bg-gray-800'
+                        ? 'border-green-500 bg-green-50'
                         : showIncorrect
-                        ? 'border-red-500 bg-gray-800'
-                        : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -316,19 +316,19 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 font-semibold text-xs mt-0.5 ${
                           showCorrect || showIncorrect
                             ? 'border-transparent'
-                            : 'border-gray-600 text-gray-400'
+                            : 'border-gray-300 text-gray-600'
                         }`}
                       >
                         {showCorrect ? (
-                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          <CheckCircle2 className="w-5 h-5 text-green-600" />
                         ) : showIncorrect ? (
-                          <XCircle className="w-5 h-5 text-red-500" />
+                          <XCircle className="w-5 h-5 text-red-600" />
                         ) : (
                           String.fromCharCode(65 + index) + '.'
                         )}
                       </div>
                       <div className="flex-1">
-                        <span className="text-sm text-gray-200">
+                        <span className="text-sm text-gray-800">
                           <MathText text={option.text} />
                         </span>
                         
@@ -337,20 +337,20 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-2 pt-2 border-t border-gray-700"
+                            className="mt-2 pt-2 border-t border-gray-200"
                           >
                             <div className="flex items-start gap-2">
                               {showCorrect ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
                               ) : (
-                                <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <XCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                               )}
                               <div>
-                                <p className={`text-xs font-medium ${showCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                                <p className={`text-xs font-medium ${showCorrect ? 'text-green-700' : 'text-red-700'}`}>
                                   {showCorrect ? 'Respuesta correcta' : 'No exactamente'}
                                 </p>
                                 {option.rationale && (
-                                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                                     <MathText text={option.rationale} />
                                   </p>
                                 )}
@@ -377,15 +377,15 @@ Crea un esquema visual claro y educativo en español. Usa saltos de línea para 
 
                 {/* Campo de reflexión obligatorio para respuestas incorrectas */}
                   {!selectedOption.isCorrect && showReflection && (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <label className="block text-sm font-medium text-gray-800 mb-2">
                         ✍️ ¿Por qué crees que te equivocaste? <span className="text-gray-500">(obligatorio)</span>
                       </label>
                       <textarea
                         value={reflectionText}
                         onChange={(e) => setReflectionText(e.target.value)}
                         placeholder="Escribe tu reflexión sobre el error (mínimo 10 caracteres)..."
-                        className="w-full p-2.5 text-sm border border-gray-700 rounded-lg bg-gray-900 text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                         rows={2}
                       />
                       {reflectionText.length > 0 && reflectionText.length < 10 && (
