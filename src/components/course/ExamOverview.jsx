@@ -1,41 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Plus, AlertTriangle, Clock, CheckCircle2, Trash2, Users } from 'lucide-react';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function ExamOverview({ courseId, subjects, currentUser, isAdmin }) {
-  const [showDialog, setShowDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [newExam, setNewExam] = useState({
     subject_id: '',
+    subject_name: '',
     exam_type: '1º Parcial',
     date: '',
-    notes: '',
-    for_all: false
+    notes: ''
   });
 
-  const queryClient = useQueryClient();
-
   const { data: allExams = [] } = useQuery({
-    queryKey: ['exam-dates', courseId, currentUser?.email],
-    queryFn: () => base44.entities.ExamDate.filter({ course_id: courseId }),
-    enabled: !!courseId && !!currentUser
+    queryKey: ['exam-dates', courseId],
+    queryFn: () => base44.entities.ExamDate.filter({ course_id: courseId }, 'date'),
+    enabled: !!courseId
   });
 
   const createExamMutation = useMutation({
     mutationFn: (data) => base44.entities.ExamDate.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['exam-dates']);
-      setShowDialog(false);
-      setNewExam({ subject_id: '', exam_type: '1º Parcial', date: '', notes: '', for_all: false });
+      setOpen(false);
+      setNewExam({ subject_id: '', subject_name: '', exam_type: '1º Parcial', date: '', notes: '' });
     }
   });
 
@@ -44,68 +44,83 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
     onSuccess: () => queryClient.invalidateQueries(['exam-dates'])
   });
 
-  const getDaysRemaining = (dateString) => {
-    const examDate = parseISO(dateString);
-    const today = new Date();
-    return differenceInDays(examDate, today);
-  };
-
-  const getUrgencyBadge = (days) => {
-    if (days < 0) return { color: 'bg-gray-400 text-gray-800', icon: CheckCircle2, text: 'Pasó' };
-    if (days === 0) return { color: 'bg-red-600 text-white animate-pulse', icon: AlertTriangle, text: '¡HOY!' };
-    if (days <= 2) return { color: 'bg-red-500 text-white', icon: AlertTriangle, text: `${days}d` };
-    if (days <= 6) return { color: 'bg-yellow-500 text-white', icon: Clock, text: `${days}d` };
-    return { color: 'bg-green-500 text-white', icon: CheckCircle2, text: `${days}d` };
-  };
-
-  const sortedExams = [...allExams]
-    .map(exam => ({
-      ...exam,
-      daysRemaining: getDaysRemaining(exam.date)
-    }))
-    .sort((a, b) => a.daysRemaining - b.daysRemaining)
-    .slice(0, 5);
-
-  const handleCreateExam = () => {
-    const subject = subjects.find(s => s.id === newExam.subject_id);
-    if (!subject) return;
-
+  const handleCreate = () => {
+    if (!newExam.subject_id || !newExam.date) return;
     createExamMutation.mutate({
-      subject_id: newExam.subject_id,
-      subject_name: subject.name,
-      course_id: courseId,
-      exam_type: newExam.exam_type,
-      date: newExam.date,
-      notes: newExam.notes,
-      user_email: (isAdmin && newExam.for_all) ? null : currentUser.email
+      ...newExam,
+      course_id: courseId
     });
   };
 
-  // Mostrar siempre el componente si hay exámenes o si es admin
+  const canDelete = (exam) => {
+    return isAdmin || exam.created_by === currentUser?.email;
+  };
+
+  // Calendario: obtener días del mes actual
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  // Calcular inicio de la semana (lunes anterior si el mes no empieza en lunes)
+  const startDay = monthStart.getDay();
+  const paddingDays = startDay === 0 ? 6 : startDay - 1;
+
+  // Exámenes próximos
+  const sortedExams = allExams
+    .map(exam => ({
+      ...exam,
+      daysRemaining: differenceInDays(new Date(exam.date), new Date())
+    }))
+    .filter(exam => exam.daysRemaining >= 0)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Mapa de exámenes por día
+  const examsByDay = useMemo(() => {
+    const map = {};
+    allExams.forEach(exam => {
+      const dateKey = format(new Date(exam.date), 'yyyy-MM-dd');
+      if (!map[dateKey]) map[dateKey] = [];
+      map[dateKey].push(exam);
+    });
+    return map;
+  }, [allExams]);
+
+  const getUrgencyBadge = (days) => {
+    if (days === 0) return { label: 'Hoy', className: 'bg-red-600 text-white' };
+    if (days === 1) return { label: 'Mañana', className: 'bg-orange-600 text-white' };
+    if (days <= 3) return { label: `${days}d`, className: 'bg-orange-500 text-white' };
+    if (days <= 7) return { label: `${days}d`, className: 'bg-yellow-500 text-white' };
+    return { label: `${days}d`, className: 'bg-blue-500 text-white' };
+  };
 
   return (
-    <Card className="mb-6 overflow-hidden border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Próximos Exámenes</h3>
-          </div>
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+    <Card className="mb-6 shadow-md overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 bg-gradient-to-r from-indigo-50 to-blue-50">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-indigo-600" />
+          Próximos Exámenes
+        </CardTitle>
+        {isAdmin && (
+          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="w-4 h-4 mr-2" />
-                {isAdmin ? 'Agregar' : 'Agregar examen'}
+              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Plus className="w-4 h-4 mr-1" /> Agregar
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Programar Examen</DialogTitle>
+                <DialogTitle>Agregar Fecha de Examen</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
                   <Label>Materia</Label>
-                  <Select value={newExam.subject_id} onValueChange={(val) => setNewExam({...newExam, subject_id: val})}>
+                  <Select
+                    value={newExam.subject_id}
+                    onValueChange={(value) => {
+                      const subject = subjects.find(s => s.id === value);
+                      setNewExam({ ...newExam, subject_id: value, subject_name: subject?.name || '' });
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una materia" />
                     </SelectTrigger>
@@ -120,7 +135,7 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
                 </div>
                 <div>
                   <Label>Tipo de Examen</Label>
-                  <Select value={newExam.exam_type} onValueChange={(val) => setNewExam({...newExam, exam_type: val})}>
+                  <Select value={newExam.exam_type} onValueChange={(value) => setNewExam({ ...newExam, exam_type: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -135,101 +150,146 @@ export default function ExamOverview({ courseId, subjects, currentUser, isAdmin 
                 </div>
                 <div>
                   <Label>Fecha</Label>
-                  <Input
-                    type="date"
-                    value={newExam.date}
-                    onChange={(e) => setNewExam({...newExam, date: e.target.value})}
-                  />
+                  <Input type="date" value={newExam.date} onChange={(e) => setNewExam({ ...newExam, date: e.target.value })} />
                 </div>
                 <div>
                   <Label>Notas (opcional)</Label>
-                  <Input
-                    value={newExam.notes}
-                    onChange={(e) => setNewExam({...newExam, notes: e.target.value})}
-                    placeholder="Ej: Temas 1-5"
-                  />
+                  <Input value={newExam.notes} onChange={(e) => setNewExam({ ...newExam, notes: e.target.value })} placeholder="Ej: Aula 202" />
                 </div>
-                {isAdmin && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="for-all"
-                      checked={newExam.for_all}
-                      onChange={(e) => setNewExam({...newExam, for_all: e.target.checked})}
-                      className="rounded"
-                    />
-                    <Label htmlFor="for-all" className="flex items-center gap-1 cursor-pointer">
-                      <Users className="w-4 h-4" />
-                      Para todos los estudiantes
-                    </Label>
-                  </div>
-                )}
-                <Button onClick={handleCreateExam} className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={!newExam.subject_id || !newExam.date}>
-                  Crear Examen
+                <Button onClick={handleCreate} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                  Agregar Examen
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-        </div>
+        )}
+      </CardHeader>
+      <CardContent className="p-4">
+        {/* Calendario Mensual */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="h-8"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <h3 className="text-sm font-semibold text-gray-900 capitalize">
+              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="h-8"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
 
-        {sortedExams.length === 0 ? (
-          isAdmin ? (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">No hay exámenes programados</p>
-            </div>
-          ) : null
-        ) : (
-          <div className="space-y-2">
-            {sortedExams.map((exam) => {
-              const badge = getUrgencyBadge(exam.daysRemaining);
-              const Icon = badge.icon;
-              const canDelete = isAdmin || exam.user_email === currentUser.email;
+          {/* Días de la semana */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(day => (
+              <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+                {day}
+              </div>
+            ))}
+          </div>
 
+          {/* Días del mes */}
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: paddingDays }).map((_, i) => (
+              <div key={`pad-${i}`} className="aspect-square" />
+            ))}
+            {daysInMonth.map(day => {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              const dayExams = examsByDay[dateKey] || [];
+              const isToday = isSameDay(day, new Date());
+              
               return (
                 <div
-                  key={exam.id}
-                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+                  key={dateKey}
+                  className={`aspect-square rounded-md flex flex-col items-center justify-center text-xs relative ${
+                    isToday ? 'bg-indigo-600 text-white font-bold' : 'hover:bg-gray-100'
+                  }`}
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    <Badge className={`${badge.color} flex items-center gap-1 px-2 py-1`}>
-                      <Icon className="w-3 h-3" />
-                      {badge.text}
-                    </Badge>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-900">{exam.subject_name}</span>
-                        <span className="text-sm text-gray-500">•</span>
-                        <span className="text-sm text-gray-600">{exam.exam_type}</span>
-                        {!exam.user_email && (
-                          <Badge variant="outline" className="text-xs">
-                            <Users className="w-3 h-3 mr-1" />
-                            Todos
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {format(parseISO(exam.date), "d 'de' MMMM, yyyy", { locale: es })}
-                        {exam.notes && ` • ${exam.notes}`}
-                      </div>
+                  <span className={isToday ? 'text-white' : 'text-gray-700'}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayExams.length > 0 && (
+                    <div className="absolute bottom-0.5 flex gap-0.5">
+                      {dayExams.slice(0, 3).map((exam, i) => (
+                        <div
+                          key={i}
+                          className="w-1 h-1 rounded-full"
+                          style={{ 
+                            backgroundColor: subjects.find(s => s.id === exam.subject_id)?.color || '#6366f1'
+                          }}
+                        />
+                      ))}
                     </div>
-                  </div>
-                  {canDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteExamMutation.mutate(exam.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Lista de próximos exámenes */}
+        <div className="border-t pt-4">
+          <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Próximos exámenes</h4>
+          {sortedExams.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">No hay exámenes próximos</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {sortedExams.map(exam => {
+                const urgency = getUrgencyBadge(exam.daysRemaining);
+                const subjectColor = subjects.find(s => s.id === exam.subject_id)?.color || '#6366f1';
+                
+                return (
+                  <div 
+                    key={exam.id} 
+                    className="flex items-center gap-3 p-2.5 rounded-lg border-l-4 hover:bg-gray-50 transition-colors"
+                    style={{ borderLeftColor: subjectColor }}
+                  >
+                    <Badge className={`${urgency.className} text-xs px-1.5 py-0.5 font-semibold shrink-0`}>
+                      {urgency.label}
+                    </Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-900 truncate">
+                        {exam.subject_name}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <span className="font-medium">{exam.exam_type}</span>
+                        <span>•</span>
+                        <span>{format(new Date(exam.date), "d MMM", { locale: es })}</span>
+                        {exam.notes && (
+                          <>
+                            <span>•</span>
+                            <span className="truncate">{exam.notes}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {isAdmin && (canDelete(exam) || currentUser?.email === exam.created_by) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteExamMutation.mutate(exam.id)}
+                        className="text-gray-400 hover:text-red-600 shrink-0 h-7 w-7"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }
