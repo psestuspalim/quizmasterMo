@@ -1258,48 +1258,43 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                   />
                                 )}
 
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                                  <div>
-                                  </div>
-                                  {isAdmin && (
-                                    <div className="flex flex-wrap gap-2">
-                                      <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
-                                        <Upload className="w-4 h-4 mr-2" /> Subir JSON
-                                      </Button>
+                                {isAdmin && (
+                                  <div className="flex flex-wrap gap-2 mb-6">
+                                    <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
+                                      <Upload className="w-4 h-4 mr-2" /> Subir JSON
+                                    </Button>
 
-                                      {/* Solo materias en cursos, no carpetas en carpetas */}
-                                      {!currentFolderId && (
-                                        <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
-                                          <DialogTrigger asChild>
-                                            <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
-                                              <Plus className="w-4 h-4 mr-2" /> Nueva materia
-                                            </Button>
-                                          </DialogTrigger>
-                                          <DialogContent>
-                                            <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
-                                            <div className="space-y-4 mt-4">
-                                              <div>
-                                                <Label>Nombre</Label>
-                                                <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Anatomía" />
-                                              </div>
-                                              <div>
-                                                <Label>Descripción</Label>
-                                                <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} />
-                                              </div>
-                                              <div>
-                                                <Label>Color</Label>
-                                                <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
-                                              </div>
-                                              <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse?.id })} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                                                Crear materia
-                                              </Button>
+                                    {!currentFolderId && (
+                                      <Dialog open={showSubjectDialog} onOpenChange={setShowSubjectDialog}>
+                                        <DialogTrigger asChild>
+                                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm h-9">
+                                            <Plus className="w-4 h-4 mr-2" /> Nueva materia
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader><DialogTitle>Crear nueva materia</DialogTitle></DialogHeader>
+                                          <div className="space-y-4 mt-4">
+                                            <div>
+                                              <Label>Nombre</Label>
+                                              <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Anatomía" />
                                             </div>
-                                          </DialogContent>
-                                        </Dialog>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                                            <div>
+                                              <Label>Descripción</Label>
+                                              <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} />
+                                            </div>
+                                            <div>
+                                              <Label>Color</Label>
+                                              <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                                            </div>
+                                            <Button onClick={() => createSubjectMutation.mutate({ ...newItem, course_id: selectedCourse?.id })} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                                              Crear materia
+                                            </Button>
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
+                                    )}
+                                  </div>
+                                )}
 
               <DroppableArea 
                 droppableId={currentFolderId ? `folder-${currentFolderId}` : `course-${selectedCourse?.id}`} 
