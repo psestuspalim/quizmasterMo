@@ -1234,6 +1234,20 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                               <motion.div key="subjects" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                                 <Breadcrumb />
 
+                                {/* Título del curso */}
+                                <div className="mb-4">
+                                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                    {selectedCourse ? (
+                                      <>{selectedCourse.icon} {selectedCourse.name}</>
+                                    ) : currentFolderId ? (
+                                      <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
+                                    ) : null}
+                                  </h1>
+                                  <p className="text-gray-600">
+                                    {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
+                                  </p>
+                                </div>
+
                                 {/* Exam Overview - Solo en cursos, no en carpetas */}
                                 {selectedCourse && !currentFolderId && (
                                   <ExamOverview
@@ -1246,17 +1260,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                   <div>
-                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                                      {selectedCourse ? (
-                                        <>{selectedCourse.icon} {selectedCourse.name}</>
-                                      ) : currentFolderId ? (
-                                        <><Folder className="w-6 h-6" /> {folders.find(f => f.id === currentFolderId)?.name}</>
-                                      ) : null}
-                                    </h1>
-                                    <p className="text-gray-600">
-                                      {selectedCourse?.description || folders.find(f => f.id === currentFolderId)?.description || 'Contenido'}
-                                    </p>
-                                  </div>
                                   {isAdmin && (
                                                           <div className="flex flex-wrap gap-2">
                                                             <Button onClick={() => setShowUploader(true)} variant="outline" className="text-xs sm:text-sm h-9">
