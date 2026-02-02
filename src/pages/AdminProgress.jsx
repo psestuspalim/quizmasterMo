@@ -83,27 +83,26 @@ export default function AdminProgress() {
     queryFn: () => base44.entities.User.list('-created_date', 1000),
   });
 
-  // Crear objeto con todos los usuarios
-  const studentStats = users.reduce((acc, user) => {
-    acc[user.email] = {
-      email: user.email,
-      username: user.username || user.full_name || 'Sin nombre',
-      attempts: [],
-      totalQuizzes: 0,
-      totalCorrect: 0,
-      totalQuestions: 0,
-    };
-    return acc;
-  }, {});
+  // Crear objeto solo con usuarios que tienen intentos
+  const studentStats = {};
 
   // Agregar intentos válidos a los usuarios
   validAttempts.forEach(attempt => {
-    if (studentStats[attempt.user_email]) {
-      studentStats[attempt.user_email].attempts.push(attempt);
-      studentStats[attempt.user_email].totalQuizzes += 1;
-      studentStats[attempt.user_email].totalCorrect += attempt.score;
-      studentStats[attempt.user_email].totalQuestions += attempt.total_questions;
+    if (!studentStats[attempt.user_email]) {
+      const user = users.find(u => u.email === attempt.user_email);
+      studentStats[attempt.user_email] = {
+        email: attempt.user_email,
+        username: attempt.username || user?.username || user?.full_name || 'Sin nombre',
+        attempts: [],
+        totalQuizzes: 0,
+        totalCorrect: 0,
+        totalQuestions: 0,
+      };
     }
+    studentStats[attempt.user_email].attempts.push(attempt);
+    studentStats[attempt.user_email].totalQuizzes += 1;
+    studentStats[attempt.user_email].totalCorrect += attempt.score;
+    studentStats[attempt.user_email].totalQuestions += attempt.total_questions;
   });
 
   const failedAttemptsCount = attempts.length - validAttempts.length;
