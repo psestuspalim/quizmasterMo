@@ -27,7 +27,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
 
   const processJsonData = async (data, fileName = 'Quiz') => {
     let questions = [];
-    let title = fileName.replace('.json', '');
+    let title = customTitle.trim() || fileName.replace('.json', '');
     let description = '';
 
     // Mapeo de dificultad inglés a español
@@ -316,15 +316,15 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
 
     // Convertir a formato compacto antes de guardar
     const compactQuiz = toCompactFormat({
-      title,
+      title: customTitle.trim() || title,
       description: description || `Cuestionario con ${questions.length} preguntas`,
       questions,
       total_questions: questions.length
     });
 
     await onUploadSuccess({
-      title: compactQuiz.t,
-      t: compactQuiz.t,
+      title: customTitle.trim() || compactQuiz.t,
+      t: customTitle.trim() || compactQuiz.t,
       q: compactQuiz.q.map(q => JSON.stringify(q)),
       total_questions: compactQuiz.q.length,
       questions: questions,
@@ -565,7 +565,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       }
 
       const fileName = customTitle.trim() || data.t || data.m?.t || 'Quiz cargado';
-      console.log('📝 Procesando quiz:', fileName);
+      console.log('📝 Procesando quiz con título:', fileName);
       await processJsonData(data, fileName);
       console.log('✅ Quiz procesado exitosamente');
 

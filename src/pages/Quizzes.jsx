@@ -151,7 +151,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const { data: quizzes = [] } = useQuery({
     queryKey: ['quizzes'],
-    queryFn: () => base44.entities.Quiz.list('-created_date'),
+    queryFn: async () => {
+      const allQuizzes = await base44.entities.Quiz.list('-created_date');
+      return allQuizzes.sort((a, b) => {
+        const titleA = (a.title || a.t || '').toLowerCase();
+        const titleB = (b.title || b.t || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      });
+    },
   });
 
   const { data: attempts = [] } = useQuery({
