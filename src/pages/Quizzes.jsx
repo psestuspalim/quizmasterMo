@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ArrowLeft, BookOpen, FolderPlus, TrendingUp, Crown, Award, Folder, ChevronRight, Pencil, Trash2, Upload, Swords, ClipboardList, Music, GraduationCap, Home, Trophy, Settings, Sparkles, FolderInput } from 'lucide-react';
+import { Plus, ArrowLeft, BookOpen, FolderPlus, Folder, ChevronRight, Pencil, Trash2, Upload, Music, GraduationCap, Home, Settings, Sparkles, FolderInput } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,8 +41,7 @@ import QuizListItem from '../components/quiz/QuizListItem';
 import PointsDisplay from '../components/gamification/PointsDisplay';
 import BadgeUnlockModal from '../components/gamification/BadgeUnlockModal';
 import { calculatePoints, calculateLevel, checkNewBadges } from '../components/gamification/GamificationService';
-import OnlineUsersPanel from '../components/challenge/OnlineUsersPanel';
-import ChallengeNotifications from '../components/challenge/ChallengeNotifications';
+
 import SessionTimer from '../components/ui/SessionTimer';
 import TaskProgressFloat from '../components/tasks/TaskProgressFloat';
 import ContentManager from '../components/admin/ContentManager';
@@ -994,18 +993,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           {/* Home View - Courses + Unassigned Subjects */}
           {view === 'home' && !editingCourse && !editingSubject && !editingFolder && !editingQuiz && !explorerMode && (
             <motion.div key="courses" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <ChallengeNotifications currentUser={currentUser} onStartChallenge={(c) => window.location.href = `/ChallengePlay?id=${c.id}`} />
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                {userStats && (
-                  <div className="flex-1 max-w-md">
-                    <PointsDisplay points={userStats.total_points || 0} level={userStats.level || 1} />
-                  </div>
-                )}
-                <div className="w-full sm:w-64">
-                  <OnlineUsersPanel currentUser={currentUser} quizzes={quizzes} subjects={subjects} />
+              {userStats && (
+                <div className="mb-6">
+                  <PointsDisplay points={userStats.total_points || 0} level={userStats.level || 1} />
                 </div>
-              </div>
+              )}
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
