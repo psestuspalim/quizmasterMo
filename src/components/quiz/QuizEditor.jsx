@@ -6,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Save, X, ChevronDown, ChevronUp, GripVertical, Settings } from 'lucide-react';
+import { Trash2, Plus, Save, X, ChevronDown, ChevronUp, GripVertical, Settings, Download, FileJson } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuizSettingsPanel from '../admin/QuizSettingsPanel';
+import JSONEditor from '../ui/JSONEditor';
+import { toCompactFormat, fromCompactFormat } from '../utils/quizFormats';
 
 export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
   const [editedQuiz, setEditedQuiz] = useState({
@@ -17,6 +19,8 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
     is_hidden: quiz.is_hidden || false
   });
   const [expandedQuestion, setExpandedQuestion] = useState(null);
+  const [jsonText, setJsonText] = useState('');
+  const [jsonErrors, setJsonErrors] = useState([]);
 
   const updateQuestion = (index, field, value) => {
     const newQuestions = [...editedQuiz.questions];
@@ -74,11 +78,55 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
     });
   };
 
+  const handleDownloadJSON = () => {
+    const compactQuiz = toCompactFormat({
+      title: editedQuiz.title,
+      description: editedQuiz.description || '',
+      questions: editedQuiz.questions,
+      total_questions: editedQuiz.questions.length
+    });
+
+    const dataStr = JSON.stringify(compactQuiz, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `${editedQuiz.title || 'quiz'}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const handleSaveFromJSON = () => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      const expanded = fromCompactFormat(parsed);
+      
+      const updatedQuiz = {
+        ...editedQuiz,
+        title: expanded.title || editedQuiz.title,
+        description: expanded.description || editedQuiz.description,
+        questions: expanded.questions,
+        total_questions: expanded.questions.length,
+        t: expanded.title,
+        q: toCompactFormat(expanded).q.map(q => JSON.stringify(q))
+      };
+      
+      setEditedQuiz(updatedQuiz);
+      setJsonErrors([]);
+    } catch (err) {
+      setJsonErrors([`Error: ${err.message}`]);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="general">General y Preguntas</TabsTrigger>
+          <TabsTrigger value="json-editor">
+            <FileJson className="w-4 h-4 mr-2" />
+            Editar JSON
+          </TabsTrigger>
           <TabsTrigger value="quiz-settings" disabled={!quiz?.id}>
             <Settings className="w-4 h-4 mr-2" />
             Vista Quiz
@@ -310,6 +358,45 @@ export default function QuizEditor({ quiz, subjects = [], onSave, onCancel }) {
           Guardar cambios
         </Button>
       </div>
+        </TabsContent>
+        
+        <TabsContent value="json-editor" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Editar JSON completo</CardTitle>
+                <p className="text-sm text-gray-500 mt-1">Edita el JSON del cuestionario directamente</p>
+              </div>
+              <Button onClick={handleDownloadJSON} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Descargar JSON
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <JSONEditor
+                value={jsonText || JSON.stringify(toCompactFormat({
+                  title: editedQuiz.title,
+                  description: editedQuiz.description || '',
+                  questions: editedQuiz.questions,
+                  total_questions: editedQuiz.questions.length
+                }), null, 2)}
+                onChange={(text) => {
+                  setJsonText(text);
+                  setJsonErrors([]);
+                }}
+                errors={jsonErrors}
+              />
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleSaveFromJSON} 
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                  disabled={jsonErrors.length > 0}
+                >
+                  Aplicar cambios desde JSON
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="quiz-settings">
