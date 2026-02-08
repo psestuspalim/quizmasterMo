@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings, Users, BarChart3, ClipboardList, Trash2, 
-  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key, TrendingUp, LayoutDashboard
+  ChevronDown, Shield, FileQuestion, Cog, Download, Wrench, Activity, Key, TrendingUp, LayoutDashboard, CalendarClock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -37,6 +37,12 @@ export default function AdminMenu({
       icon: Key,
       href: 'CourseManagement',
       description: 'Códigos y solicitudes'
+    },
+    {
+      label: 'Registro de Actividad',
+      icon: CalendarClock,
+      href: 'AdminActivityLog',
+      description: 'Actividad diaria por usuario'
     },
     {
       label: 'Sesiones en Vivo',
