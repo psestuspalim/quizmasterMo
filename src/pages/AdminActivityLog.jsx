@@ -208,19 +208,22 @@ export default function AdminActivityLog() {
                   const activity = activityByDate[date];
                   
                   return (
-                    <Button
+                    <button
                       key={date}
-                      variant={isSelected ? "default" : "outline"}
                       onClick={() => setSelectedDate(dateObj)}
-                      className="flex flex-col items-start p-3 h-auto"
+                      className={`flex flex-col items-start p-3 h-auto rounded-md border transition-colors ${
+                        isSelected 
+                          ? 'bg-primary text-primary-foreground border-primary' 
+                          : 'bg-background border-input hover:bg-accent hover:text-accent-foreground'
+                      }`}
                     >
-                      <span className="font-semibold">
+                      <span className="font-semibold pointer-events-none">
                         {format(dateObj, 'd MMM', { locale: es })}
                       </span>
-                      <span className="text-xs opacity-70">
+                      <span className="text-xs opacity-70 pointer-events-none">
                         {activity.users.length} usuarios
                       </span>
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
