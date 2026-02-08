@@ -10,7 +10,7 @@ import { es } from 'date-fns/locale';
 import AdminShell from '../components/admin/AdminShell';
 
 export default function AdminActivityLog() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDateKey, setSelectedDateKey] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [currentUser, setCurrentUser] = useState(null);
 
   React.useEffect(() => {
@@ -76,7 +76,6 @@ export default function AdminActivityLog() {
   }, [attempts, sessions]);
 
   // Obtener actividad del día seleccionado
-  const selectedDateKey = format(selectedDate, 'yyyy-MM-dd');
   const dayActivity = activityByDate[selectedDateKey] || {
     users: [],
     attempts: [],
@@ -202,15 +201,15 @@ export default function AdminActivityLog() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {allDates.slice(0, 30).map(date => {
-                  const isSelected = date === selectedDateKey;
-                  const dateObj = new Date(date);
-                  const activity = activityByDate[date];
+                {allDates.slice(0, 30).map(dateKey => {
+                  const isSelected = dateKey === selectedDateKey;
+                  const dateObj = new Date(dateKey + 'T12:00:00');
+                  const activity = activityByDate[dateKey];
                   
                   return (
                     <button
-                      key={date}
-                      onClick={() => setSelectedDate(dateObj)}
+                      key={dateKey}
+                      onClick={() => setSelectedDateKey(dateKey)}
                       className={`flex flex-col items-start p-3 h-auto rounded-md border transition-colors ${
                         isSelected 
                           ? 'bg-primary text-primary-foreground border-primary' 
@@ -297,7 +296,7 @@ export default function AdminActivityLog() {
           {userActivity.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle>Detalle de Actividad - {format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}</CardTitle>
+                <CardTitle>Detalle de Actividad - {format(new Date(selectedDateKey + 'T12:00:00'), "d 'de' MMMM, yyyy", { locale: es })}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {userActivity.map((user) => {
