@@ -163,8 +163,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const { data: attempts = [] } = useQuery({
     queryKey: ['attempts', currentUser?.email],
-    queryFn: () => base44.entities.QuizAttempt.filter({ user_email: currentUser?.email }, '-created_date'),
+    queryFn: () => base44.entities.QuizAttempt.filter({ user_email: currentUser?.email }, '-created_date', 500),
     enabled: !!currentUser?.email,
+    staleTime: 0,
   });
 
   const { data: userStatsData } = useQuery({
