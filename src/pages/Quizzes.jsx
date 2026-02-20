@@ -724,7 +724,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               id: currentAttemptId,
               data: { is_completed: false }
             });
-            queryClient.invalidateQueries(['attempts']);
+            queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
           }
           // Marcar sesión como inactiva
           if (currentSessionId) {
