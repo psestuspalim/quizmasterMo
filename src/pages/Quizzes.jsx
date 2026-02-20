@@ -653,7 +653,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           console.error('Error marking session complete:', error);
         }
       }
-      queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+      await queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+      await queryClient.refetchQueries({ queryKey: ['attempts', currentUser?.email] });
       setView('results');
     }
   };
