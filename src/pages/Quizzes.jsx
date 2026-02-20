@@ -638,7 +638,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         score: newScore,
         answered_questions: answeredCount,
         wrong_questions: newWrongAnswers,
-        marked_questions: markedQuestions,
+        marked_questions: markedQuestionsRef.current,
         response_times: newResponseTimes,
         is_completed: isLastQuestion,
       };
