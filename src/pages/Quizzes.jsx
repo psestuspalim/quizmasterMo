@@ -790,31 +790,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   const handleExitQuiz = async () => {
-          if (currentAttemptId) {
-            await updateAttemptMutation.mutateAsync({
-              id: currentAttemptId,
-              data: { is_completed: false }
-            });
-            queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
-          }
-          // Marcar sesión como inactiva
-          if (currentSessionId) {
-            try {
-              await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
-            } catch (error) {
-              console.error('Error marking session inactive:', error);
-            }
-          }
-          setSelectedQuiz(null);
-          setSwipeMode(false);
-          setCurrentSessionId(null);
-          // Volver a la vista anterior (carpeta o materia)
-          if (currentFolderId) {
-            setView('subjects');
-          } else {
-            setView('list');
-          }
-        };
+    // La sesión se mantiene activa para poder reanudarse
+    setSelectedQuiz(null);
+    setSwipeMode(false);
+    // Volver a la vista anterior
+    if (currentFolderId) {
+      setView('subjects');
+    } else {
+      setView('list');
+    }
+  };
+
+  const handleDeleteSession = async (sessionId) => {
+    try {
+      await base44.entities.QuizSession.delete(sessionId);
+      queryClient.invalidateQueries({ queryKey: ['active-sessions', currentUser?.email] });
+    } catch (error) {
+      console.error('Error deleting session:', error);
+    }
+  };
 
       const handleStartSwipeMode = (quiz) => {
         const expandedQuiz = isCompactFormat(quiz) ? fromCompactFormat(quiz) : quiz;
