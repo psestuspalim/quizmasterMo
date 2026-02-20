@@ -777,7 +777,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           quiz_id: selectedQuiz.id,
           subject_id: selectedQuiz.subject_id,
           user_email: currentUser.email,
-          username: currentUser.username,
+          username: currentUser.full_name || currentUser.username || currentUser.email,
           score: score,
           total_questions: total,
           answered_questions: total,
