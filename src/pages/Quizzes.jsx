@@ -1342,6 +1342,48 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                         </DialogContent>
                                       </Dialog>
                                     )}
+
+                                    {/* Botón "Nueva carpeta" - siempre visible en admin, dentro o fuera de carpeta */}
+                                    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline" className="text-xs sm:text-sm h-9 border-amber-300 text-amber-700 hover:bg-amber-50">
+                                          <FolderPlus className="w-4 h-4 mr-2" /> Nueva carpeta
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            {currentFolderId
+                                              ? `Crear subcarpeta en "${folders.find(f => f.id === currentFolderId)?.name}"`
+                                              : 'Crear nueva carpeta'}
+                                          </DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4 mt-4">
+                                          <div>
+                                            <Label>Nombre</Label>
+                                            <Input value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ej: Unidad 1" />
+                                          </div>
+                                          <div>
+                                            <Label>Descripción</Label>
+                                            <Input value={newItem.description} onChange={(e) => setNewItem({...newItem, description: e.target.value})} placeholder="Descripción opcional" />
+                                          </div>
+                                          <div>
+                                            <Label>Color</Label>
+                                            <input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
+                                          </div>
+                                          <Button
+                                            onClick={() => createFolderMutation.mutate({
+                                              ...newItem,
+                                              course_id: currentFolderId ? null : selectedCourse?.id || null,
+                                              parent_id: currentFolderId || null,
+                                            })}
+                                            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                                          >
+                                            Crear carpeta
+                                          </Button>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
                                   </div>
                                 )}
 
