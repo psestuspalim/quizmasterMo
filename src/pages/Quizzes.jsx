@@ -483,6 +483,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     : [];
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
+  const markedQuestionsRef = React.useRef(markedQuestions);
+  useEffect(() => { markedQuestionsRef.current = markedQuestions; }, [markedQuestions]);
 
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
