@@ -37,14 +37,24 @@ export default function EnrollmentRequests({ currentUser }) {
   });
 
   const handleApprove = async (request) => {
-    await updateRequestMutation.mutateAsync({
-      id: request.id,
-      data: {
+    try {
+      // Actualizar enrollment a aprobado
+      await base44.entities.CourseEnrollment.update(request.id, {
         status: 'approved',
         approved_by: currentUser.email,
         approved_at: new Date().toISOString()
-      }
-    });
+      });
+      
+      // Invalidar queries para que se reflejen cambios
+      await queryClient.invalidateQueries({ queryKey: ['enrollment-requests'] });
+      await queryClient.invalidateQueries({ queryKey: ['enrollments'] });
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      
+      toast.success('Usuario inscrito al curso');
+    } catch (error) {
+      console.error('Error al aprobar:', error);
+      toast.error('Error al aprobar solicitud');
+    }
   };
 
   const handleReject = async (request) => {
