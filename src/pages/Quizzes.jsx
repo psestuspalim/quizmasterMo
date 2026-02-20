@@ -1451,7 +1451,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                       isAdmin={isAdmin}
                       onDelete={(id) => deleteFolderMutation.mutate(id)}
                       onEdit={setEditingFolder}
-                      onClick={() => setCurrentFolderId(folder.id)}
+                      onClick={() => handleEnterFolder(folder.id)}
                     />
                   </DraggableItem>
                 ))}
