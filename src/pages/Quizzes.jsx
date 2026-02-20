@@ -1440,58 +1440,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                   </div>
                                 )}
 
-              {/* Botón nueva subcarpeta inline - solo cuando estamos dentro de una carpeta */}
-              {isAdmin && currentFolderId && (
-                <div className="mb-3">
-                  <Dialog open={showSubFolderDialog} onOpenChange={setShowSubFolderDialog}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-dashed border-amber-400 text-amber-700 hover:bg-amber-50 text-xs"
-                        onClick={() => setSubFolderItem({ name: '', description: '', color: '#f59e0b' })}
-                      >
-                        <FolderPlus className="w-3.5 h-3.5 mr-1.5" /> Nueva subcarpeta
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Nueva subcarpeta en "{folders.find(f => f.id === currentFolderId)?.name}"</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 mt-4">
-                        <div>
-                          <Label>Nombre</Label>
-                          <Input value={subFolderItem.name} onChange={(e) => setSubFolderItem({...subFolderItem, name: e.target.value})} placeholder="Ej: Unidad 1" />
-                        </div>
-                        <div>
-                          <Label>Descripción</Label>
-                          <Input value={subFolderItem.description} onChange={(e) => setSubFolderItem({...subFolderItem, description: e.target.value})} placeholder="Descripción opcional" />
-                        </div>
-                        <div>
-                          <Label>Color</Label>
-                          <input type="color" value={subFolderItem.color} onChange={(e) => setSubFolderItem({...subFolderItem, color: e.target.value})} className="w-full h-10 rounded-md border cursor-pointer" />
-                        </div>
-                        <Button
-                          onClick={() => {
-                            createFolderMutation.mutate({
-                              ...subFolderItem,
-                              course_id: selectedCourse?.id || null,
-                              parent_id: currentFolderId,
-                            });
-                            setShowSubFolderDialog(false);
-                            setSubFolderItem({ name: '', description: '', color: '#f59e0b' });
-                          }}
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                          disabled={!subFolderItem.name.trim()}
-                        >
-                          Crear subcarpeta
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
-
               <DroppableArea 
                 droppableId={currentFolderId ? `folder-${currentFolderId}` : `course-${selectedCourse?.id}`} 
                 type="FOLDER" 
