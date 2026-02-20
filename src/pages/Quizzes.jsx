@@ -78,6 +78,7 @@ export default function QuizzesPage() {
   const [editingFolder, setEditingFolder] = useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [folderStack, setFolderStack] = useState([]); // historial de carpetas para navegación atrás
   const [showBulkUploader, setShowBulkUploader] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState('quizzes');
   const [swipeMode, setSwipeMode] = useState(false);
