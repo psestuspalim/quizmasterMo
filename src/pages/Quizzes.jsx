@@ -785,7 +785,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           })),
           completed_at: new Date().toISOString()
         });
-        queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+        await queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+      await queryClient.refetchQueries({ queryKey: ['attempts', currentUser?.email] });
         setSwipeMode(false);
         setSelectedQuiz(null);
         setView('list');
