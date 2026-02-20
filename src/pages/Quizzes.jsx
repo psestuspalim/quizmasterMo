@@ -392,14 +392,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const saveAttemptMutation = useMutation({
     mutationFn: (data) => base44.entities.QuizAttempt.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+      queryClient.invalidateQueries({ queryKey: ['attempts'] });
     }
   });
 
   const updateAttemptMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.QuizAttempt.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+      queryClient.invalidateQueries({ queryKey: ['attempts'] });
     }
   });
 
