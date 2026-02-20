@@ -947,6 +947,18 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const Breadcrumb = () => {
     const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
     const folderParentSubject = currentFolder?.subject_id ? subjects.find(s => s.id === currentFolder.subject_id) : null;
+
+    // Construir la cadena completa de carpetas padre
+    const buildFolderChain = () => {
+      const chain = [];
+      for (let i = 0; i < folderStack.length; i++) {
+        const fId = folderStack[i];
+        const f = folders.find(x => x.id === fId);
+        if (f) chain.push({ id: fId, name: f.name, stackIndex: i });
+      }
+      return chain;
+    };
+    const folderChain = buildFolderChain();
     
     return (
       <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
@@ -960,7 +972,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setSelectedSubject(null); setCurrentFolderId(null); setView('subjects'); }}
+              onClick={() => { setSelectedSubject(null); setCurrentFolderId(null); setFolderStack([]); setView('subjects'); }}
               className={`px-2 ${!selectedSubject && !currentFolderId ? 'font-medium text-gray-900' : 'text-gray-600'}`}
             >
               {selectedCourse.icon} {selectedCourse.name}
@@ -975,7 +987,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               size="sm"
               onClick={() => { 
                 setSelectedSubject(folderParentSubject); 
-                setCurrentFolderId(null); 
+                setCurrentFolderId(null);
+                setFolderStack([]);
                 setView('list'); 
               }}
               className="px-2 text-gray-600"
@@ -990,6 +1003,24 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             <span className="font-medium text-gray-900">{selectedSubject.name}</span>
           </>
         )}
+        {/* Carpetas padre en el stack */}
+        {folderChain.map((f) => (
+          <React.Fragment key={f.id}>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2 text-gray-600"
+              onClick={() => {
+                // Navegar a esta carpeta del stack, descartando las más profundas
+                setCurrentFolderId(f.id);
+                setFolderStack(prev => prev.slice(0, f.stackIndex));
+              }}
+            >
+              {f.name}
+            </Button>
+          </React.Fragment>
+        ))}
         {currentFolderId && (
           <>
             <ChevronRight className="w-4 h-4 text-gray-400" />
