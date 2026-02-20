@@ -925,24 +925,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   // Breadcrumb
   const Breadcrumb = () => {
-    // Build the full folder ancestor chain
-    const buildFolderChain = (folderId) => {
-      const chain = [];
-      let id = folderId;
-      while (id) {
-        const folder = folders.find(f => f.id === id);
-        if (!folder) break;
-        chain.unshift(folder);
-        id = folder.parent_id || null;
-      }
-      return chain;
-    };
-
-    const folderChain = currentFolderId ? buildFolderChain(currentFolderId) : [];
-    const folderParentSubject = folderChain.length > 0 && folderChain[0].subject_id
-      ? subjects.find(s => s.id === folderChain[0].subject_id)
-      : null;
-
+    const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
+    const folderParentSubject = currentFolder?.subject_id ? subjects.find(s => s.id === currentFolder.subject_id) : null;
+    
     return (
       <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
         <Button variant="ghost" size="sm" onClick={handleHome} className="text-gray-600 hover:text-gray-900 px-2">
@@ -985,26 +970,14 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
             <span className="font-medium text-gray-900">{selectedSubject.name}</span>
           </>
         )}
-        {folderChain.map((folder, idx) => {
-          const isLast = idx === folderChain.length - 1;
-          return (
-            <React.Fragment key={folder.id}>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-              {isLast ? (
-                <span className="font-medium text-gray-900">{folder.name}</span>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentFolderId(folder.id)}
-                  className="px-2 text-gray-600"
-                >
-                  {folder.name}
-                </Button>
-              )}
-            </React.Fragment>
-          );
-        })}
+        {currentFolderId && (
+          <>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="font-medium text-gray-900">
+              {currentFolder?.name}
+            </span>
+          </>
+        )}
       </div>
     );
   };
