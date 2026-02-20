@@ -97,21 +97,21 @@ export default function JSONEditor({ value, onChange, errors = [], className = '
             ))}
           </div>
 
-          {/* Editor area with overlay */}
-          <div className="flex-1 relative overflow-hidden">
-            {/* Red highlight overlay */}
+          {/* Editor area */}
+          <div className="flex-1 relative">
+            {/* Red highlight lines - positioned absolutely behind textarea, scrolls with it via JS */}
             <div
               ref={overlayRef}
               aria-hidden="true"
-              className="absolute inset-0 pointer-events-none overflow-hidden"
-              style={{ paddingTop: 12 }}
+              className="absolute top-0 left-0 w-full pointer-events-none overflow-hidden"
+              style={{ paddingTop: 12, zIndex: 0 }}
             >
               {Array.from({ length: lineCount }, (_, i) => (
                 <div
                   key={i}
                   style={{
                     height: LINE_HEIGHT,
-                    backgroundColor: errorLines.has(i + 1) ? 'rgba(239,68,68,0.12)' : 'transparent',
+                    backgroundColor: errorLines.has(i + 1) ? 'rgba(239,68,68,0.15)' : 'transparent',
                   }}
                 />
               ))}
@@ -123,8 +123,8 @@ export default function JSONEditor({ value, onChange, errors = [], className = '
               onChange={(e) => onChange(e.target.value)}
               onScroll={handleScroll}
               placeholder='{"metadata": {...}, "q": [...]}'
-              className="w-full p-3 font-mono text-sm leading-5 resize-none focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 relative z-10"
-              style={{ minHeight: '400px', lineHeight: `${LINE_HEIGHT}px` }}
+              className="w-full p-3 font-mono text-sm resize-none focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              style={{ minHeight: '400px', lineHeight: `${LINE_HEIGHT}px`, position: 'relative', zIndex: 1 }}
               spellCheck={false}
             />
           </div>
