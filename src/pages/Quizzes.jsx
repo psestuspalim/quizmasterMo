@@ -1425,7 +1425,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                           <Button
                                             onClick={() => createFolderMutation.mutate({
                                               ...newItem,
-                                              course_id: currentFolderId ? null : selectedCourse?.id || null,
+                                              course_id: selectedCourse?.id || null,
                                               parent_id: currentFolderId || null,
                                             })}
                                             className="w-full bg-amber-500 hover:bg-amber-600 text-white"
