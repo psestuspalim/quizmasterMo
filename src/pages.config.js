@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AdminActivityLog from './pages/AdminActivityLog';
 import AdminContent from './pages/AdminContent';
 import AdminHome from './pages/AdminHome';
 import AdminJsonManager from './pages/AdminJsonManager';
@@ -63,11 +64,11 @@ import LiveSessions from './pages/LiveSessions';
 import MyTasks from './pages/MyTasks';
 import Quizzes from './pages/Quizzes';
 import index from './pages/index';
-import AdminActivityLog from './pages/AdminActivityLog';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminActivityLog": AdminActivityLog,
     "AdminContent": AdminContent,
     "AdminHome": AdminHome,
     "AdminJsonManager": AdminJsonManager,
@@ -84,7 +85,6 @@ export const PAGES = {
     "MyTasks": MyTasks,
     "Quizzes": Quizzes,
     "index": index,
-    "AdminActivityLog": AdminActivityLog,
 }
 
 export const pagesConfig = {
