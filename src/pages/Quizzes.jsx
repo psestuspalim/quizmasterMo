@@ -676,7 +676,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       quiz_id: selectedQuiz.id,
       subject_id: selectedQuiz.subject_id,
       user_email: currentUser.email,
-      username: currentUser.username,
+      username: currentUser.full_name || currentUser.username || currentUser.email,
       score: 0,
       total_questions: selectedQuiz.questions.length,
       answered_questions: 0,
@@ -690,6 +690,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     setScore(0);
     setWrongAnswers([]);
     setCorrectAnswers([]);
+    setMarkedQuestions([]);
+    setResponseTimes([]);
+    setQuestionStartTime(Date.now());
     setView('quiz');
   };
 
