@@ -717,15 +717,18 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     
     const attempt = await saveAttemptMutation.mutateAsync({
       quiz_id: selectedQuiz.id,
-      subject_id: selectedQuiz.subject_id,
+      subject_id: selectedQuiz.subject_id || null,
       user_email: currentUser.email,
       username: currentUser.full_name || currentUser.username || currentUser.email,
       score: 0,
       total_questions: wrongQuestionsQuiz.questions.length,
       answered_questions: 0,
       is_completed: false,
-      wrong_questions: []
+      wrong_questions: [],
+      marked_questions: [],
+      response_times: []
     });
+    console.log('✅ Nuevo intento (retry wrong) creado:', attempt?.id);
     
     setCurrentAttemptId(attempt.id);
     setSelectedQuiz(wrongQuestionsQuiz);
