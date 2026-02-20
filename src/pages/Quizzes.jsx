@@ -472,10 +472,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const currentCourseSubjects = selectedCourse 
     ? subjects.filter(s => s && s.id && s.course_id === selectedCourse.id && canUserAccess(s, selectedCourse))
     : [];
-  const currentCourseFolders = selectedCourse
-    ? folders.filter(f => f && f.id && f.course_id === selectedCourse.id && (currentFolderId ? f.parent_id === currentFolderId : !f.parent_id) && canUserAccess(f, selectedCourse))
-    : currentFolderId 
+  const currentCourseFolders = currentFolderId
     ? folders.filter(f => f && f.id && f.parent_id === currentFolderId && canUserAccess(f))
+    : selectedCourse
+    ? folders.filter(f => f && f.id && f.course_id === selectedCourse.id && !f.parent_id && canUserAccess(f, selectedCourse))
     : [];
 
   const currentFolderQuizzes = currentFolderId
