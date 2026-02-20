@@ -627,18 +627,24 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
     const answeredCount = currentQuestionIndex + 1;
 
-    await updateAttemptMutation.mutateAsync({
-      id: currentAttemptId,
-      data: {
-        score: newScore,
-        answered_questions: answeredCount,
-        wrong_questions: newWrongAnswers,
-        marked_questions: markedQuestions,
-        response_times: newResponseTimes,
-        is_completed: isLastQuestion,
-        completed_at: isLastQuestion ? new Date().toISOString() : undefined
-      }
-    });
+    if (currentAttemptId) {
+      console.log('📝 Actualizando intento:', currentAttemptId, 'isLastQuestion:', isLastQuestion, 'wrong:', newWrongAnswers.length);
+      await updateAttemptMutation.mutateAsync({
+        id: currentAttemptId,
+        data: {
+          score: newScore,
+          answered_questions: answeredCount,
+          wrong_questions: newWrongAnswers,
+          marked_questions: markedQuestions,
+          response_times: newResponseTimes,
+          is_completed: isLastQuestion,
+          completed_at: isLastQuestion ? new Date().toISOString() : undefined
+        }
+      });
+      console.log('✅ Intento actualizado');
+    } else {
+      console.error('❌ No hay currentAttemptId, el intento no se pudo crear al inicio');
+    }
 
     if (!isLastQuestion) {
       setCurrentQuestionIndex(prev => prev + 1);
