@@ -498,25 +498,34 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   useEffect(() => { markedQuestionsRef.current = markedQuestions; }, [markedQuestions]);
 
   // Quiz handlers
-  const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
+  const { data: activeSessions = [] } = useQuery({
+    queryKey: ['active-sessions', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      const sessions = await base44.entities.QuizSession.filter({
+        user_email: currentUser.email,
+        is_active: true
+      });
+      return sessions;
+    },
+    enabled: !!currentUser?.email
+  });
+
+  const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = [], resumeSessionId = null) => {
     if (!currentUser?.email) {
       alert('Tu sesión no está cargada aún. Espera un momento e intenta de nuevo.');
       return;
     }
-    // Expandir desde formato compacto solo si existe q Y tiene contenido
+
     let expandedQuiz;
     if (quiz.q && Array.isArray(quiz.q) && quiz.q.length > 0) {
-      // Parsear strings JSON de vuelta a objetos
       const parsedQ = quiz.q.map(q => typeof q === 'string' ? JSON.parse(q) : q);
-      
-      // Detectar formato nuevo {t, q} vs viejo {m, q}
       if (quiz.t && !quiz.m) {
         expandedQuiz = fromCompactFormat({ t: quiz.t, q: parsedQ });
       } else {
         expandedQuiz = fromCompactFormat({ m: quiz.m || { t: quiz.title, s: quiz.description, v: 'cQ-v2', c: parsedQ.length }, q: parsedQ });
       }
     } else if (quiz.questions && quiz.questions.length > 0) {
-      // Usar questions si no hay formato compacto válido
       expandedQuiz = quiz;
     } else {
       alert('Este quiz no tiene preguntas');
@@ -529,7 +538,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     }
 
     let filteredQuestions = [...expandedQuiz.questions];
-
     if (selectedDeck === 'wrong') {
       const wrongQuestionsMap = new Map();
       quizAttempts.forEach(attempt => {
@@ -546,62 +554,83 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
       }));
 
-    const attemptData = {
-      quiz_id: quiz.id,
-      subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
-      user_email: currentUser.email,
-      username: currentUser.full_name || currentUser.username || currentUser.email,
-      score: 0,
-      total_questions: shuffledQuestions.length,
-      answered_questions: 0,
-      is_completed: false,
-      wrong_questions: [],
-      marked_questions: [],
-      response_times: []
-    };
-    console.log('📝 Creando intento inicial:', attemptData);
-    const attempt = await saveAttemptMutation.mutateAsync(attemptData);
-    if (!attempt?.id) {
-      console.error('❌ El intento no fue creado correctamente - no tiene ID');
-      alert('Error al crear el intento. Intenta de nuevo.');
-      return;
-    }
-    console.log('✅ Intento creado con ID:', attempt.id);
-
-    // Crear sesión en vivo
-    try {
-      const session = await base44.entities.QuizSession.create({
+    // Si es reanudar, obtener sesión existente
+    let session, attempt;
+    if (resumeSessionId) {
+      session = activeSessions.find(s => s.id === resumeSessionId);
+      if (session) {
+        // Obtener el último intento de esta sesión
+        const attemptsList = await base44.entities.QuizAttempt.filter({ quiz_id: quiz.id, user_email: currentUser.email }, '-created_date', 10);
+        attempt = attemptsList[0];
+        if (attempt) {
+          setCurrentAttemptId(attempt.id);
+          setCurrentQuestionIndex(attempt.answered_questions || 0);
+          setScore(attempt.score || 0);
+          setWrongAnswers(attempt.wrong_questions || []);
+          setMarkedQuestions(attempt.marked_questions || []);
+          setResponseTimes(attempt.response_times || []);
+        }
+        setCurrentSessionId(session.id);
+      }
+    } else {
+      // Nueva sesión
+      const attemptData = {
+        quiz_id: quiz.id,
+        subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
         user_email: currentUser.email,
         username: currentUser.full_name || currentUser.username || currentUser.email,
-        quiz_id: quiz.id,
-        quiz_title: expandedQuiz.title,
-        subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
-        current_question: 0,
-        total_questions: shuffledQuestions.length,
         score: 0,
-        wrong_count: 0,
-        started_at: new Date().toISOString(),
-        last_activity: new Date().toISOString(),
-        is_active: true
-      });
-      console.log('✅ Sesión creada:', session.id);
-      setCurrentSessionId(session.id);
-    } catch (error) {
-      console.error('❌ Error creando sesión (no crítico):', error);
+        total_questions: shuffledQuestions.length,
+        answered_questions: 0,
+        is_completed: false,
+        wrong_questions: [],
+        marked_questions: [],
+        response_times: []
+      };
+      console.log('📝 Creando intento inicial:', attemptData);
+      attempt = await saveAttemptMutation.mutateAsync(attemptData);
+      if (!attempt?.id) {
+        console.error('❌ El intento no fue creado correctamente');
+        alert('Error al crear el intento.');
+        return;
+      }
+      console.log('✅ Intento creado con ID:', attempt.id);
+      setCurrentAttemptId(attempt.id);
+
+      try {
+        session = await base44.entities.QuizSession.create({
+          user_email: currentUser.email,
+          username: currentUser.full_name || currentUser.username || currentUser.email,
+          quiz_id: quiz.id,
+          quiz_title: expandedQuiz.title,
+          subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
+          current_question: 0,
+          total_questions: shuffledQuestions.length,
+          score: 0,
+          wrong_count: 0,
+          started_at: new Date().toISOString(),
+          last_activity: new Date().toISOString(),
+          is_active: true
+        });
+        console.log('✅ Sesión creada:', session.id);
+        setCurrentSessionId(session.id);
+      } catch (error) {
+        console.error('❌ Error creando sesión:', error);
+      }
+
+      setCurrentQuestionIndex(0);
+      setScore(0);
+      setWrongAnswers([]);
+      setCorrectAnswers([]);
+      setMarkedQuestions([]);
+      setResponseTimes([]);
     }
 
-    setCurrentAttemptId(attempt.id);
     setSelectedQuiz({ ...quiz, id: quiz.id, subject_id: quiz.subject_id, title: expandedQuiz.title, questions: shuffledQuestions });
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    setWrongAnswers([]);
-    setCorrectAnswers([]);
-    setMarkedQuestions([]);
-    setResponseTimes([]);
     setQuestionStartTime(Date.now());
     setDeckType(selectedDeck);
     setView('quiz');
-    };
+  };
 
   const handleMarkQuestion = async (question, isMarked) => {
     if (isMarked) {
