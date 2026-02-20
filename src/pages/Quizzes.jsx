@@ -601,16 +601,16 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     const newWrongAnswers = !isCorrect ? [...wrongAnswers, {
       question: question.question,
       selected_answer: selectedOption.text,
-      correct_answer: question.answerOptions.find(opt => opt.isCorrect)?.text,
+      correct_answer: question.answerOptions?.find(opt => opt.isCorrect)?.text || '',
       response_time: responseTime,
-      answerOptions: question.answerOptions,
-      hint: question.hint,
-      difficulty: question.difficulty
+      answerOptions: question.answerOptions || [],
+      hint: question.hint || '',
+      difficulty: question.difficulty || null
     }] : wrongAnswers;
 
     if (isCorrect) {
       setScore(newScore);
-      setCorrectAnswers([...correctAnswers, { 
+      setCorrectAnswers(prev => [...prev, { 
         question: question.question,
         difficulty: question.difficulty,
         selected_answer: selectedOption.text
@@ -622,35 +622,35 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
     const answeredCount = currentQuestionIndex + 1;
 
-    if (currentAttemptId) {
-      console.log('📝 Actualizando intento:', currentAttemptId, 'isLastQuestion:', isLastQuestion, 'wrong:', newWrongAnswers.length);
-      await updateAttemptMutation.mutateAsync({
-        id: currentAttemptId,
-        data: {
-          score: newScore,
-          answered_questions: answeredCount,
-          wrong_questions: newWrongAnswers,
-          marked_questions: markedQuestions,
-          response_times: newResponseTimes,
-          is_completed: isLastQuestion,
-          completed_at: isLastQuestion ? new Date().toISOString() : undefined
-        }
-      });
-      console.log('✅ Intento actualizado');
+    if (!currentAttemptId) {
+      console.error('❌ No hay currentAttemptId - el intento no fue creado correctamente al inicio');
     } else {
-      console.error('❌ No hay currentAttemptId, el intento no se pudo crear al inicio');
+      const updateData = {
+        score: newScore,
+        answered_questions: answeredCount,
+        wrong_questions: newWrongAnswers,
+        marked_questions: markedQuestions,
+        response_times: newResponseTimes,
+        is_completed: isLastQuestion,
+      };
+      if (isLastQuestion) {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      console.log(`📝 Pregunta ${answeredCount}/${selectedQuiz.questions.length} - score: ${newScore} - errores: ${newWrongAnswers.length} - completado: ${isLastQuestion}`);
+      await updateAttemptMutation.mutateAsync({ id: currentAttemptId, data: updateData });
+      console.log('✅ Intento guardado en DB');
     }
 
     if (!isLastQuestion) {
       setCurrentQuestionIndex(prev => prev + 1);
       setQuestionStartTime(Date.now());
     } else {
-      // Marcar sesión como completa
       if (currentSessionId) {
         try {
           await base44.entities.QuizSession.update(currentSessionId, { is_active: false });
         } catch (error) {
-          console.error('Error marking session complete:', error);
+          console.error('Error cerrando sesión:', error);
         }
       }
       await queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
