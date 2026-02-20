@@ -488,6 +488,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   // Quiz handlers
   const handleStartQuiz = async (quiz, questionCount, selectedDeck = 'all', quizAttempts = []) => {
+    if (!currentUser?.email) {
+      alert('Tu sesión no está cargada aún. Espera un momento e intenta de nuevo.');
+      return;
+    }
     // Expandir desde formato compacto solo si existe q Y tiene contenido
     let expandedQuiz;
     if (quiz.q && Array.isArray(quiz.q) && quiz.q.length > 0) {
