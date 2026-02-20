@@ -826,9 +826,28 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         setSelectedSubject(null);
         setSelectedCourse(null);
         setCurrentFolderId(null);
+        setFolderStack([]);
         setView('home');
         setShowUploader(false);
       };
+
+  const handleEnterFolder = (folderId) => {
+    if (currentFolderId) {
+      setFolderStack(prev => [...prev, currentFolderId]);
+    }
+    setCurrentFolderId(folderId);
+  };
+
+  const handleExitFolder = () => {
+    if (folderStack.length > 0) {
+      const newStack = [...folderStack];
+      const parentId = newStack.pop();
+      setFolderStack(newStack);
+      setCurrentFolderId(parentId);
+    } else {
+      setCurrentFolderId(null);
+    }
+  };
 
       const handleReviewWrongBySubject = async (subjectId) => {
         // Obtener todos los quizzes de la materia
