@@ -391,11 +391,20 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   const saveAttemptMutation = useMutation({
-    mutationFn: (data) => base44.entities.QuizAttempt.create(data),
+    mutationFn: (data) => {
+      console.log('🚀 Llamando QuizAttempt.create con:', JSON.stringify(data).slice(0, 200));
+      return base44.entities.QuizAttempt.create(data);
+    },
+    onError: (err) => console.error('❌ Error en saveAttemptMutation:', err),
+    onSuccess: (res) => console.log('✅ saveAttemptMutation éxito, ID:', res?.id),
   });
 
   const updateAttemptMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.QuizAttempt.update(id, data),
+    mutationFn: ({ id, data }) => {
+      console.log('🔄 Llamando QuizAttempt.update ID:', id, 'score:', data.score, 'completed:', data.is_completed);
+      return base44.entities.QuizAttempt.update(id, data);
+    },
+    onError: (err) => console.error('❌ Error en updateAttemptMutation:', err),
   });
 
   const createUserStatsMutation = useMutation({
