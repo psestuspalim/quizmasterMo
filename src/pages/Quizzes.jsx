@@ -534,17 +534,20 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         answerOptions: [...(q.answerOptions || [])].sort(() => Math.random() - 0.5)
       }));
 
-    const attempt = await saveAttemptMutation.mutateAsync({
+    const attemptData = {
       quiz_id: quiz.id,
-      subject_id: quiz.subject_id || expandedQuiz.subject_id,
+      subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
       user_email: currentUser.email,
-      username: currentUser.username,
+      username: currentUser.full_name || currentUser.username || currentUser.email,
       score: 0,
       total_questions: shuffledQuestions.length,
       answered_questions: 0,
       is_completed: false,
       wrong_questions: []
-    });
+    };
+    console.log('📝 Creando intento con datos:', attemptData);
+    const attempt = await saveAttemptMutation.mutateAsync(attemptData);
+    console.log('✅ Intento creado:', attempt?.id);
 
     // Crear sesión en vivo
     try {
