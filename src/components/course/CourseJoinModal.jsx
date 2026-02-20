@@ -21,41 +21,38 @@ export default function CourseJoinModal({ open, onClose, currentUser }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!code.trim()) return;
+    if (!code.trim() || loading) return;
 
     setLoading(true);
     try {
-      // Buscar código
-      const codes = await base44.entities.CourseAccessCode.filter({ code: code.toUpperCase() });
+      const codeUpper = code.toUpperCase();
       
+      // Buscar código
+      const codes = await base44.entities.CourseAccessCode.filter({ code: codeUpper });
       if (codes.length === 0) {
         toast.error('Código inválido');
-        setLoading(false);
         return;
       }
 
       const accessCode = codes[0];
 
-      // Validar código
+      // Validaciones
       if (!accessCode.is_active) {
         toast.error('Este código está desactivado');
-        setLoading(false);
         return;
       }
 
       if (accessCode.expires_at && new Date(accessCode.expires_at) < new Date()) {
         toast.error('Este código ha expirado');
-        setLoading(false);
         return;
       }
 
       if (accessCode.max_uses && accessCode.current_uses >= accessCode.max_uses) {
         toast.error('Este código ha alcanzado su límite de usos');
-        setLoading(false);
         return;
       }
 
-      // Verificar si ya solicitó este curso
+      // Verificar si ya solicitó
       const existing = await base44.entities.CourseEnrollment.filter({
         user_email: currentUser.email,
         course_id: accessCode.course_id
@@ -65,49 +62,47 @@ export default function CourseJoinModal({ open, onClose, currentUser }) {
         const status = existing[0].status;
         if (status === 'pending') {
           toast.info('Ya tienes una solicitud pendiente para este curso');
+          return;
         } else if (status === 'approved') {
           toast.info('Ya estás inscrito en este curso');
+          return;
         } else if (status === 'rejected') {
-          // Actualizar solicitud rechazada a pendiente nuevamente
           await base44.entities.CourseEnrollment.update(existing[0].id, {
             status: 'pending',
-            access_code: code.toUpperCase(),
+            access_code: codeUpper,
             rejection_reason: null
           });
-          toast.success('Solicitud reenviada. Espera la aprobación del administrador.');
-          queryClient.invalidateQueries(['enrollments']);
-          queryClient.invalidateQueries(['enrollment-requests']);
-          queryClient.invalidateQueries(['all-enrollments']);
+          toast.success('Solicitud reenviada');
+          queryClient.invalidateQueries({ queryKey: ['enrollments'] });
+          queryClient.invalidateQueries({ queryKey: ['enrollment-requests'] });
           setCode('');
-          setLoading(false);
           onClose();
           return;
         }
-        setLoading(false);
-        return;
       }
 
-      // Crear solicitud
+      // Crear solicitud y actualizar código en transacción
       await base44.entities.CourseEnrollment.create({
         user_email: currentUser.email,
         username: currentUser.username,
         course_id: accessCode.course_id,
         course_name: accessCode.course_name,
-        access_code: code.toUpperCase(),
+        access_code: codeUpper,
         status: 'pending'
       });
 
-      // Incrementar uso del código
+      // Recargar código para obtener valor actualizado
+      const updatedCodes = await base44.entities.CourseAccessCode.filter({ code: codeUpper });
+      const updatedAccessCode = updatedCodes[0];
+      
       await base44.entities.CourseAccessCode.update(accessCode.id, {
-        current_uses: accessCode.current_uses + 1
+        current_uses: (updatedAccessCode?.current_uses || 0) + 1
       });
 
-      toast.success('Solicitud enviada. Espera la aprobación del administrador.');
-      queryClient.invalidateQueries(['enrollments']);
-      queryClient.invalidateQueries(['enrollment-requests']);
-      queryClient.invalidateQueries(['all-enrollments']);
+      toast.success('Solicitud enviada');
+      queryClient.invalidateQueries({ queryKey: ['enrollments'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollment-requests'] });
       setCode('');
-      setLoading(false);
       onClose();
     } catch (error) {
       console.error('Error:', error);
