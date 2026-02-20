@@ -99,8 +99,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showFeatureAnalytics, setShowFeatureAnalytics] = useState(false);
-  const [showSubFolderDialog, setShowSubFolderDialog] = useState(false);
-  const [subFolderItem, setSubFolderItem] = useState({ name: '', description: '', color: '#f59e0b' });
 
   const queryClient = useQueryClient();
 
