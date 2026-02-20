@@ -887,8 +887,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     return { totalCorrect, totalWrong, totalAnswered };
   };
 
-  // Username prompt
-  if (!currentUser || !currentUser.username) {
+  // Username prompt - only if full_name is also missing
+  if (!currentUser) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-gray-500">Cargando...</div></div>;
+  }
+  if (!currentUser.username && !currentUser.full_name) {
     return <UsernamePrompt onSubmit={(username) => updateUsernameMutation.mutateAsync(username)} />;
   }
 
