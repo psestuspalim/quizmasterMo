@@ -538,20 +538,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       total_questions: shuffledQuestions.length,
       answered_questions: 0,
       is_completed: false,
-      wrong_questions: []
+      wrong_questions: [],
+      marked_questions: [],
+      response_times: []
     };
-    console.log('📝 Creando intento con datos:', attemptData);
+    console.log('📝 Creando intento inicial:', attemptData);
     const attempt = await saveAttemptMutation.mutateAsync(attemptData);
-    console.log('✅ Intento creado:', attempt?.id);
+    if (!attempt?.id) {
+      console.error('❌ El intento no fue creado correctamente - no tiene ID');
+      alert('Error al crear el intento. Intenta de nuevo.');
+      return;
+    }
+    console.log('✅ Intento creado con ID:', attempt.id);
 
     // Crear sesión en vivo
     try {
       const session = await base44.entities.QuizSession.create({
         user_email: currentUser.email,
-        username: currentUser.username,
+        username: currentUser.full_name || currentUser.username || currentUser.email,
         quiz_id: quiz.id,
         quiz_title: expandedQuiz.title,
-        subject_id: quiz.subject_id || expandedQuiz.subject_id,
+        subject_id: quiz.subject_id || expandedQuiz.subject_id || null,
         current_question: 0,
         total_questions: shuffledQuestions.length,
         score: 0,
@@ -563,7 +570,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       console.log('✅ Sesión creada:', session.id);
       setCurrentSessionId(session.id);
     } catch (error) {
-      console.error('❌ Error creando sesión:', error);
+      console.error('❌ Error creando sesión (no crítico):', error);
     }
 
     setCurrentAttemptId(attempt.id);
