@@ -57,6 +57,7 @@ import FeatureAnalytics from '../components/admin/FeatureAnalytics';
 import FeatureTracker from '../components/admin/FeatureTracker';
 import ExamOverview from '../components/course/ExamOverview';
 import MainNav from '../components/navigation/MainNav';
+import PausedSessionCard from '../components/quiz/PausedSessionCard';
 
 export default function QuizzesPage() {
   const [view, setView] = useState('home');
