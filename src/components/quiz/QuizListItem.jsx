@@ -32,20 +32,10 @@ export default function QuizListItem({
   let totalAnswered = 0;
   
   attempts.forEach(attempt => {
-    totalAnswered += attempt.answered_questions || attempt.total_questions || 0;
+    totalAnswered += attempt.answered_questions || 0;
     attempt.wrong_questions?.forEach(wq => wrongSet.add(wq.question));
   });
-  
-  // Calcular correctas únicas (preguntas que nunca se han fallado)
-  const allQuestions = quiz.questions?.map(q => q.question) || [];
-  allQuestions.forEach(q => {
-    if (!wrongSet.has(q)) {
-      // Verificar si fue contestada en algún intento
-      const wasAnswered = attempts.some(a => a.answered_questions > 0);
-      if (wasAnswered) correctSet.add(q);
-    }
-  });
-  
+
   const uniqueWrong = wrongSet.size;
   const uniqueCorrect = correctSet.size;
   const avgScore = attempts.length > 0 
@@ -54,8 +44,12 @@ export default function QuizListItem({
   const bestScore = attempts.length > 0
     ? Math.round(Math.max(...attempts.map(a => (a.score / a.total_questions) * 100)))
     : 0;
+  // Usar el máximo de preguntas respondidas entre todos los intentos
+  const maxAnswered = attempts.length > 0
+    ? Math.max(...attempts.map(a => a.answered_questions || 0))
+    : 0;
   const progressPercent = totalQuestions > 0 
-    ? Math.min(100, Math.round(((uniqueCorrect + uniqueWrong) / totalQuestions) * 100))
+    ? Math.min(100, Math.round((maxAnswered / totalQuestions) * 100))
     : 0;
 
   const getScoreColor = (score) => {
