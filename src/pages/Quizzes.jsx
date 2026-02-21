@@ -1629,34 +1629,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                           <motion.div key="list" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                           <Breadcrumb />
 
-                          {/* Sesiones pausadas */}
-                          {activeSessions.length > 0 && (
-                            <div className="mb-6">
-                              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                                ⏸️ Sesiones pausadas
-                              </h2>
-                              <div className="space-y-3">
-                                {activeSessions.map(session => {
-                                  const sessionQuiz = quizzes.find(q => q.id === session.quiz_id);
-                                  return (
-                                    <PausedSessionCard
-                                      key={session.id}
-                                      session={session}
-                                      quiz={sessionQuiz}
-                                      onResume={(sessionId) => {
-                                        const quiz = quizzes.find(q => q.id === session.quiz_id);
-                                        if (quiz) {
-                                          handleStartQuiz(quiz, session.total_questions, 'all', [], sessionId);
-                                        }
-                                      }}
-                                      onDelete={handleDeleteSession}
-                                    />
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                 <div>
                                   <h1 className="text-xl sm:text-3xl font-bold text-gray-900">{selectedSubject.name}</h1>
