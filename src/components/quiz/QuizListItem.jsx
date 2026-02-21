@@ -125,6 +125,11 @@ export default function QuizListItem({
           {quiz.is_hidden && (
             <Badge variant="outline" className="text-xs bg-gray-100">🔒</Badge>
           )}
+          {pausedSession && (
+            <Badge className="text-xs bg-amber-100 text-amber-700 border-amber-300 flex-shrink-0">
+              ⏸️ {pausedSession.current_question}/{pausedSession.total_questions}
+            </Badge>
+          )}
         </div>
         
         {/* Stats en línea */}
