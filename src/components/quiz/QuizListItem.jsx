@@ -101,7 +101,7 @@ export default function QuizListItem({
             stroke={avgScore >= 80 ? '#22c55e' : avgScore >= 50 ? '#eab308' : avgScore > 0 ? '#ef4444' : '#6366f1'}
             strokeWidth="4"
             fill="none"
-            strokeDasharray={`${(progressPercent / 100) * 125.6} 125.6`}
+            strokeDasharray={`${(avgScore / 100) * 125.6} 125.6`}
             strokeLinecap="round"
           />
         </svg>
