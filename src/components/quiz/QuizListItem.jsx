@@ -20,7 +20,8 @@ export default function QuizListItem({
   onStartSwipe,
   onMove,
   isSelected = false,
-  onSelect
+  onSelect,
+  pausedSession = null
 }) {
   const totalQuestions = quiz.total_questions || quiz.questions?.length || 0;
   const hasAttempts = attempts.length > 0;
