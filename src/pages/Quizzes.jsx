@@ -377,8 +377,9 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       if (quiz) {
         const newData = {};
         if (destType === 'folder') {
+          const destFolder = folders.find(f => f.id === destId);
           newData.folder_id = destId;
-          newData.subject_id = null;
+          newData.subject_id = destFolder?.subject_id || null;
         } else if (destType === 'subject') {
           newData.subject_id = destId;
           newData.folder_id = null;
@@ -1569,9 +1570,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                   </Button>
                                                   <FileUploader 
                                                     onUploadSuccess={async (data) => {
+                                                      const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
                                                       await createQuizMutation.mutateAsync({ 
                                                         ...data, 
-                                                        folder_id: currentFolderId || null 
+                                                        folder_id: currentFolderId || null,
+                                                        subject_id: currentFolder?.subject_id || data.subject_id || null
                                                       });
                                                       setShowUploader(false);
                                                       queryClient.invalidateQueries(['quizzes']);
