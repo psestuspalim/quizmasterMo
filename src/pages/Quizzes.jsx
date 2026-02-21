@@ -1710,18 +1710,27 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                               )}
 
                               <DroppableArea droppableId={`subject-${selectedSubject.id}`} type="QUIZ" className="space-y-2">
-                                              {subjectQuizzes.filter(q => !q.folder_id).map((quiz, index) => (
+                                              {subjectQuizzes.filter(q => !q.folder_id).map((quiz, index) => {
+                                                const pausedSession = activeSessions.find(s => s.quiz_id === quiz.id);
+                                                return (
                                               <DraggableItem key={quiz.id} id={quiz.id} index={index} isAdmin={isAdmin}>
                                               <QuizListItem
                                               quiz={quiz}
                                               attempts={attempts.filter(a => a.quiz_id === quiz.id)}
                                               isAdmin={isAdmin}
-                                              onStart={handleStartQuiz}
+                                              onStart={(q, count, deck, att) => {
+                                                if (pausedSession) {
+                                                  handleStartQuiz(q, pausedSession.total_questions, 'all', [], pausedSession.id);
+                                                } else {
+                                                  handleStartQuiz(q, count, deck, att);
+                                                }
+                                              }}
                                               onEdit={setEditingQuiz}
                                               onDelete={(id) => deleteQuizMutation.mutate(id)}
                                               onStartSwipe={handleStartSwipeMode}
                                               onMove={setMovingQuiz}
                                               isSelected={selectedQuizzes.includes(quiz.id)}
+                                              pausedSession={pausedSession}
                                               onSelect={(id) => {
                                               if (selectedQuizzes.includes(id)) {
                                               setSelectedQuizzes(selectedQuizzes.filter(qId => qId !== id));
@@ -1731,7 +1740,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                               }}
                                               />
                                               </DraggableItem>
-                                              ))}
+                                              );
+                                              })}
                                               </DroppableArea>
             </motion.div>
           )}
