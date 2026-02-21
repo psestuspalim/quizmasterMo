@@ -458,18 +458,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   // Filtered data
-  const visibleCourses = isAdmin 
-    ? courses.filter(c => c && c.id && !c.is_hidden)
-    : courses.filter(c => {
-        if (!c || !c.id || c.is_hidden) return false;
-        // Usuario tiene enrollment aprobado - acceso garantizado
-        const hasEnrollment = enrollments.some(e => e.course_id === c.id && e.status === 'approved');
-        if (hasEnrollment) return true;
-        // Si no tiene enrollment, verificar visibilidad (permitir todos por defecto)
-        if (!c.visibility || c.visibility === 'all') return true;
-        if (c.visibility === 'specific') return c.allowed_users?.includes(currentUser?.email);
-        return false;
-      });
+  const visibleCourses = courses.filter(c => c && c.id && !c.is_hidden);
   const unassignedSubjects = subjects.filter(s => s && s.id && !s.course_id && !s.folder_id && canUserAccess(s));
   const unassignedFolders = folders.filter(f => f && f.id && !f.course_id && !f.parent_id && !f.subject_id && canUserAccess(f));
   const currentCourseSubjects = selectedCourse 
