@@ -779,7 +779,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   };
 
   const handleExitQuiz = async () => {
-    // La sesión se mantiene activa para poder reanudarse
+    // Refrescar intentos para que el progreso se refleje en la lista
+    await queryClient.invalidateQueries({ queryKey: ['attempts', currentUser?.email] });
+    await queryClient.refetchQueries({ queryKey: ['attempts', currentUser?.email] });
+    await queryClient.invalidateQueries({ queryKey: ['active-sessions', currentUser?.email] });
     setSelectedQuiz(null);
     setSwipeMode(false);
     // Volver a la vista anterior
