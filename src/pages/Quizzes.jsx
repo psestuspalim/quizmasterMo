@@ -98,7 +98,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showQuizExporter, setShowQuizExporter] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', color: '#6366f1' });
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
-  const [showJoinModal, setShowJoinModal] = useState(false);
+
   const [showFeatureAnalytics, setShowFeatureAnalytics] = useState(false);
 
 
