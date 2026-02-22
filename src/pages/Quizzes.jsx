@@ -940,6 +940,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         });
 
         setCurrentAttemptId(attempt.id);
+        currentAttemptIdRef.current = attempt.id;
         setSelectedQuiz(reviewQuiz);
         setCurrentQuestionIndex(0);
         setScore(0);
