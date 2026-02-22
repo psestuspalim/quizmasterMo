@@ -170,6 +170,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     enabled: !!currentUser?.email,
     staleTime: 0,
     gcTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const { data: userStatsData } = useQuery({
