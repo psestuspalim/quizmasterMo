@@ -52,7 +52,7 @@ import AIQuizGenerator from '../components/quiz/AIQuizGenerator';
 import FileExplorer from '../components/explorer/FileExplorer';
 import MoveQuizModal from '../components/quiz/MoveQuizModal';
 import QuizExporter from '../components/admin/QuizExporter';
-import CourseJoinModal from '../components/course/CourseJoinModal';
+
 import FeatureAnalytics from '../components/admin/FeatureAnalytics';
 import FeatureTracker from '../components/admin/FeatureTracker';
 import ExamOverview from '../components/course/ExamOverview';
