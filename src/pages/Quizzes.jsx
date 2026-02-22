@@ -789,6 +789,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     console.log('✅ Nuevo intento (retry wrong) creado:', attempt?.id);
     
     setCurrentAttemptId(attempt.id);
+    currentAttemptIdRef.current = attempt.id;
     setSelectedQuiz(wrongQuestionsQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
