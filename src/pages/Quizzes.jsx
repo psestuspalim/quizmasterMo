@@ -502,6 +502,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     : [];
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
+  const currentAttemptIdRef = React.useRef(null);
   const markedQuestionsRef = React.useRef(markedQuestions);
   useEffect(() => { markedQuestionsRef.current = markedQuestions; }, [markedQuestions]);
 
