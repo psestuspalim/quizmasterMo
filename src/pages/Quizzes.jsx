@@ -748,6 +748,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     console.log('✅ Nuevo intento (retry) creado:', attempt?.id);
     
     setCurrentAttemptId(attempt.id);
+    currentAttemptIdRef.current = attempt.id;
     setSelectedQuiz(shuffledQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
