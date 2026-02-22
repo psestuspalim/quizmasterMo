@@ -701,8 +701,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         updateData.completed_at = new Date().toISOString();
       }
 
-      console.log(`📝 Pregunta ${answeredCount}/${selectedQuiz.questions.length} - score: ${newScore} - errores: ${newWrongAnswers.length} - completado: ${isLastQuestion}`);
-      await updateAttemptMutation.mutateAsync({ id: currentAttemptId, data: updateData });
+      console.log(`📝 Pregunta ${answeredCount}/${selectedQuiz.questions.length} - score: ${newScore} - errores: ${newWrongAnswers.length} - completado: ${isLastQuestion} - attemptId: ${attemptId}`);
+      await updateAttemptMutation.mutateAsync({ id: attemptId, data: updateData });
       console.log('✅ Intento guardado en DB');
     }
 
