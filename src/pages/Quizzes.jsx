@@ -1130,7 +1130,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
                   <MainNav 
                     isAdmin={isAdmin}
-                    onJoinCourse={() => setShowJoinModal(true)}
                     onOpenContentManager={() => setShowContentManager(true)}
                     onOpenQuizExporter={() => setShowQuizExporter(true)}
                     onOpenFeatureAnalytics={() => setShowFeatureAnalytics(true)}
