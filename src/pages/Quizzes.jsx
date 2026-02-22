@@ -605,6 +605,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       }
       console.log('✅ Intento creado con ID:', attempt.id);
       setCurrentAttemptId(attempt.id);
+      currentAttemptIdRef.current = attempt.id;
 
       try {
         session = await base44.entities.QuizSession.create({
