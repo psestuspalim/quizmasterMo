@@ -685,7 +685,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     const isLastQuestion = currentQuestionIndex >= selectedQuiz.questions.length - 1;
     const answeredCount = currentQuestionIndex + 1;
 
-    if (!currentAttemptId) {
+    const attemptId = currentAttemptIdRef.current || currentAttemptId;
+    if (!attemptId) {
       console.error('❌ No hay currentAttemptId - el intento no fue creado correctamente al inicio');
     } else {
       const updateData = {
