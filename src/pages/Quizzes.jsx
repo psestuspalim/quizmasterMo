@@ -430,41 +430,11 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     if (item.is_hidden) return false;
 
     // Si es un curso y el usuario tiene enrollment aprobado, tiene acceso (prioridad máxima)
-    if (!parentItem && item.id && enrollments.some(e => e.course_id === item.id && e.status === 'approved')) {
-      return true;
-    }
-
-    // Si el padre es un curso con enrollment aprobado, heredar acceso
-    if (parentItem && parentItem.id && enrollments.some(e => e.course_id === parentItem.id && e.status === 'approved')) {
-      return true;
-    }
-
-    if (item.visibility === 'inherit') {
-      // Si hay parentItem explícito, heredar de él
-      if (parentItem) {
-        return canUserAccess(parentItem);
-      }
-      // Si la carpeta está asociada a una materia, heredar de la materia
-      if (item.subject_id) {
-        const parentSubject = subjects.find(s => s.id === item.subject_id);
-        if (parentSubject) return canUserAccess(parentSubject);
-      }
-      // Si la carpeta tiene carpeta padre, heredar de ella
-      if (item.parent_id) {
-        const parentFolder = folders.find(f => f.id === item.parent_id);
-        if (parentFolder) return canUserAccess(parentFolder);
-      }
-      // Si la carpeta está directamente en un curso, verificar enrollment
-      if (item.course_id) {
-        return enrollments.some(e => e.course_id === item.course_id && e.status === 'approved');
-      }
-    }
-
     if (item.visibility === 'specific') {
-      return item.allowed_users?.includes(currentUser?.email);
-    }
+        return item.allowed_users?.includes(currentUser?.email);
+      }
 
-    return item.visibility === 'all' || !item.visibility;
+      return true;
   };
 
   // Filtered data
