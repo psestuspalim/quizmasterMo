@@ -1832,13 +1832,6 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
           </div>
         )}
 
-        {/* Course Join Modal */}
-        <CourseJoinModal 
-          open={showJoinModal} 
-          onClose={() => setShowJoinModal(false)}
-          currentUser={currentUser}
-        />
-
         {/* Feature Analytics Modal */}
         {showFeatureAnalytics && (
           <FeatureAnalytics onClose={() => setShowFeatureAnalytics(false)} />
