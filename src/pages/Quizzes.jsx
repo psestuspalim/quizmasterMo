@@ -447,8 +447,25 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
       return true;
     }
 
-    if (item.visibility === 'inherit' && parentItem) {
-      return canUserAccess(parentItem);
+    if (item.visibility === 'inherit') {
+      // Si hay parentItem explícito, heredar de él
+      if (parentItem) {
+        return canUserAccess(parentItem);
+      }
+      // Si la carpeta está asociada a una materia, heredar de la materia
+      if (item.subject_id) {
+        const parentSubject = subjects.find(s => s.id === item.subject_id);
+        if (parentSubject) return canUserAccess(parentSubject);
+      }
+      // Si la carpeta tiene carpeta padre, heredar de ella
+      if (item.parent_id) {
+        const parentFolder = folders.find(f => f.id === item.parent_id);
+        if (parentFolder) return canUserAccess(parentFolder);
+      }
+      // Si la carpeta está directamente en un curso, verificar enrollment
+      if (item.course_id) {
+        return enrollments.some(e => e.course_id === item.course_id && e.status === 'approved');
+      }
     }
 
     if (item.visibility === 'specific') {
