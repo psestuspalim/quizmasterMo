@@ -1226,23 +1226,10 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
               {visibleCourses.length === 0 && unassignedSubjects.length === 0 && (
                 <div className="text-center py-16">
                   <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {isAdmin ? 'No hay contenido' : 'No tienes acceso a ningún curso'}
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay contenido</h3>
                   <p className="text-gray-500 mb-4">
-                    {isAdmin 
-                      ? 'Comienza creando tu primer curso o materia'
-                      : 'Solicita unirte a un curso usando el botón "Unirse a Curso" o espera a que un administrador apruebe tu solicitud'}
+                    {isAdmin ? 'Comienza creando tu primer curso o materia' : 'Aún no hay cursos disponibles'}
                   </p>
-                  {!isAdmin && (
-                    <Button 
-                      onClick={() => setShowJoinModal(true)} 
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> 
-                      Unirse a Curso
-                    </Button>
-                  )}
                 </div>
               )}
             </motion.div>
