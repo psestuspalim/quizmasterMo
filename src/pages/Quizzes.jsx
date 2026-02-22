@@ -130,17 +130,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
     queryFn: () => base44.entities.Course.list('order'),
   });
 
-  const { data: enrollments = [] } = useQuery({
-    queryKey: ['enrollments', currentUser?.email],
-    queryFn: async () => {
-      const result = await base44.entities.CourseEnrollment.filter({ 
-        user_email: currentUser?.email, 
-        status: 'approved' 
-      });
-      return result;
-    },
-    enabled: !!currentUser?.email && currentUser?.role !== 'admin'
-  });
+
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
