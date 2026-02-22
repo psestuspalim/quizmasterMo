@@ -573,6 +573,7 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
         attempt = attemptsList[0];
         if (attempt) {
           setCurrentAttemptId(attempt.id);
+          currentAttemptIdRef.current = attempt.id;
           setCurrentQuestionIndex(attempt.answered_questions || 0);
           setScore(attempt.score || 0);
           setWrongAnswers(attempt.wrong_questions || []);
