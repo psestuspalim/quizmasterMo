@@ -1,0 +1,61 @@
+{
+  "name": "DeletedItem",
+  "type": "object",
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "course",
+        "folder",
+        "subject",
+        "quiz"
+      ],
+      "description": "Tipo de elemento eliminado"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "ID original del elemento"
+    },
+    "item_data": {
+      "type": "object",
+      "description": "Datos completos del elemento eliminado"
+    },
+    "deleted_by": {
+      "type": "string",
+      "description": "Email del usuario que elimin\u00f3"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de eliminaci\u00f3n"
+    }
+  },
+  "required": [
+    "item_type",
+    "item_id",
+    "item_data",
+    "deleted_by"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

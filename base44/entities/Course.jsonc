@@ -1,0 +1,66 @@
+{
+  "name": "Course",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nombre del curso (ej: Semestre Selectivo)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n del curso"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color del curso en hex"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji o icono del curso"
+    },
+    "order": {
+      "type": "number",
+      "description": "Orden de visualizaci\u00f3n",
+      "default": 0
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "all",
+        "specific"
+      ],
+      "default": "all"
+    },
+    "allowed_users": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

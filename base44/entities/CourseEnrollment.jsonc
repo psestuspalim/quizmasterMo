@@ -1,0 +1,78 @@
+{
+  "name": "CourseEnrollment",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario"
+    },
+    "username": {
+      "type": "string",
+      "description": "Nombre del usuario"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID del curso"
+    },
+    "course_name": {
+      "type": "string",
+      "description": "Nombre del curso"
+    },
+    "access_code": {
+      "type": "string",
+      "description": "C\u00f3digo usado para inscribirse"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Estado de la solicitud"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email del admin que aprob\u00f3"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de aprobaci\u00f3n"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Raz\u00f3n de rechazo"
+    }
+  },
+  "required": [
+    "user_email",
+    "course_id"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

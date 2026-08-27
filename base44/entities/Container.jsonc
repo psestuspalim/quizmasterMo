@@ -1,0 +1,84 @@
+{
+  "name": "Container",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nombre del contenedor"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n del contenedor"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "course",
+        "folder",
+        "subject"
+      ],
+      "default": "folder",
+      "description": "Tipo de contenedor"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color en hex"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji o icono"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "ID del contenedor padre (null si es ra\u00edz)"
+    },
+    "order": {
+      "type": "number",
+      "description": "Orden de visualizaci\u00f3n",
+      "default": 0
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "description": "Si est\u00e1 oculto",
+      "default": false
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "all",
+        "specific",
+        "inherit"
+      ],
+      "default": "inherit",
+      "description": "Visibilidad: todos, usuarios espec\u00edficos o heredar del padre"
+    },
+    "allowed_users": {
+      "type": "array",
+      "description": "Emails de usuarios con acceso (si visibility es specific)",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

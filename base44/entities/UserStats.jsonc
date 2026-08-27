@@ -1,0 +1,111 @@
+{
+  "name": "UserStats",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario"
+    },
+    "username": {
+      "type": "string",
+      "description": "Nombre de usuario"
+    },
+    "total_points": {
+      "type": "number",
+      "description": "Puntos totales acumulados",
+      "default": 0
+    },
+    "level": {
+      "type": "number",
+      "description": "Nivel actual del usuario",
+      "default": 1
+    },
+    "badges": {
+      "type": "array",
+      "description": "Insignias obtenidas",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "earned_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "perfect_scores": {
+      "type": "number",
+      "description": "Cantidad de puntajes perfectos",
+      "default": 0
+    },
+    "total_correct": {
+      "type": "number",
+      "description": "Total de respuestas correctas",
+      "default": 0
+    },
+    "total_questions": {
+      "type": "number",
+      "description": "Total de preguntas respondidas",
+      "default": 0
+    },
+    "streak_days": {
+      "type": "number",
+      "description": "D\u00edas consecutivos de estudio",
+      "default": 0
+    },
+    "last_activity": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima actividad"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "create": {
+      "user_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

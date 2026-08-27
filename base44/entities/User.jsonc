@@ -1,0 +1,13 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Nombre de usuario \u00fanico"
+    }
+  },
+  "required": [
+    "username"
+  ]
+}

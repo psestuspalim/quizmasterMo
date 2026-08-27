@@ -1,0 +1,111 @@
+{
+  "name": "AssignedTask",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario asignado"
+    },
+    "user_username": {
+      "type": "string"
+    },
+    "assigned_by": {
+      "type": "string",
+      "description": "Email del admin que asign\u00f3"
+    },
+    "quiz_id": {
+      "type": "string"
+    },
+    "quiz_title": {
+      "type": "string"
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "subject_name": {
+      "type": "string"
+    },
+    "target_score": {
+      "type": "number",
+      "description": "Porcentaje m\u00ednimo requerido",
+      "default": 70
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "overdue"
+      ],
+      "default": "pending"
+    },
+    "best_score": {
+      "type": "number",
+      "default": 0
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "quiz_id",
+    "assigned_by"
+  ],
+  "rls": {
+    "create": {
+      "assigned_by": "{{user.email}}",
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "assigned_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "assigned_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

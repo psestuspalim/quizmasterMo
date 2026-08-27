@@ -1,0 +1,77 @@
+{
+  "name": "QuizSettings",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "enum": [
+        "course",
+        "folder",
+        "subject",
+        "quiz"
+      ],
+      "description": "Tipo de entidad"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID de la entidad"
+    },
+    "show_options": {
+      "type": "boolean",
+      "description": "Mostrar opciones de respuesta",
+      "default": true
+    },
+    "show_feedback": {
+      "type": "boolean",
+      "description": "Mostrar feedback despu\u00e9s de responder",
+      "default": true
+    },
+    "show_reflection": {
+      "type": "boolean",
+      "description": "Mostrar campo de reflexi\u00f3n",
+      "default": true
+    },
+    "show_error_analysis": {
+      "type": "boolean",
+      "description": "Mostrar an\u00e1lisis de error con IA",
+      "default": true
+    },
+    "show_schema": {
+      "type": "boolean",
+      "description": "Mostrar bot\u00f3n de esquema",
+      "default": true
+    },
+    "show_notes": {
+      "type": "boolean",
+      "description": "Mostrar opci\u00f3n de agregar notas",
+      "default": true
+    },
+    "show_hint": {
+      "type": "boolean",
+      "description": "Mostrar tip cin\u00e9filo/pista",
+      "default": true
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

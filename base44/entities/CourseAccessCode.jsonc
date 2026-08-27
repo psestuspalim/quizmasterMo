@@ -1,0 +1,59 @@
+{
+  "name": "CourseAccessCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "C\u00f3digo \u00fanico de acceso"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID del curso"
+    },
+    "course_name": {
+      "type": "string",
+      "description": "Nombre del curso"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Si el c\u00f3digo est\u00e1 activo"
+    },
+    "max_uses": {
+      "type": "number",
+      "description": "M\u00e1ximo de usos (null = ilimitado)"
+    },
+    "current_uses": {
+      "type": "number",
+      "default": 0,
+      "description": "Usos actuales"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de expiraci\u00f3n"
+    }
+  },
+  "required": [
+    "code",
+    "course_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

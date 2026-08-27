@@ -1,0 +1,74 @@
+{
+  "name": "Subject",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nombre de la materia"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n de la materia"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color de la materia en hex"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID del curso contenedor"
+    },
+    "folder_id": {
+      "type": "string",
+      "description": "ID de la carpeta contenedora (null si no est\u00e1 en carpeta)"
+    },
+    "order": {
+      "type": "number",
+      "description": "Orden de visualizaci\u00f3n",
+      "default": 0
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "description": "Si la materia est\u00e1 oculta",
+      "default": false
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "all",
+        "specific",
+        "inherit"
+      ],
+      "default": "inherit",
+      "description": "Visibilidad: todos, usuarios espec\u00edficos o heredar del padre"
+    },
+    "allowed_users": {
+      "type": "array",
+      "description": "Emails de usuarios con acceso (si visibility es specific)",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

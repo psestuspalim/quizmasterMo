@@ -1,0 +1,45 @@
+{
+  "name": "Audio",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo del audio"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL del archivo de audio"
+    },
+    "subject_id": {
+      "type": "string",
+      "description": "ID de la materia"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Duraci\u00f3n en segundos"
+    }
+  },
+  "required": [
+    "title",
+    "file_url",
+    "subject_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

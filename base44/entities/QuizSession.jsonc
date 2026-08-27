@@ -1,0 +1,92 @@
+{
+  "name": "QuizSession",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario"
+    },
+    "username": {
+      "type": "string",
+      "description": "Nombre del usuario"
+    },
+    "quiz_id": {
+      "type": "string",
+      "description": "ID del quiz"
+    },
+    "quiz_title": {
+      "type": "string",
+      "description": "T\u00edtulo del quiz"
+    },
+    "subject_id": {
+      "type": "string",
+      "description": "ID de la materia"
+    },
+    "current_question": {
+      "type": "number",
+      "description": "Pregunta actual (\u00edndice)",
+      "default": 0
+    },
+    "total_questions": {
+      "type": "number",
+      "description": "Total de preguntas"
+    },
+    "score": {
+      "type": "number",
+      "description": "Puntaje actual",
+      "default": 0
+    },
+    "wrong_count": {
+      "type": "number",
+      "description": "Respuestas incorrectas",
+      "default": 0
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Cu\u00e1ndo empez\u00f3 el quiz"
+    },
+    "last_activity": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima actividad"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Si la sesi\u00f3n est\u00e1 activa"
+    }
+  },
+  "required": [
+    "user_email",
+    "quiz_id"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {}
+  }
+}

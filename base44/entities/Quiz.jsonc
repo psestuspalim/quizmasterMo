@@ -1,0 +1,147 @@
+{
+  "name": "Quiz",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo del cuestionario"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n del cuestionario"
+    },
+    "subject_id": {
+      "type": "string",
+      "description": "ID de la materia"
+    },
+    "folder_id": {
+      "type": "string",
+      "description": "ID de la carpeta (si est\u00e1 dentro de una carpeta)"
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "description": "Si el cuestionario est\u00e1 oculto",
+      "default": false
+    },
+    "questions": {
+      "type": "array",
+      "description": "Array de preguntas",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Tipo de pregunta: 'text' o 'image'"
+          },
+          "question": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "URL de la imagen (para preguntas tipo image)"
+          },
+          "answerOptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "rationale": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "options": {
+            "type": "array",
+            "description": "Opciones para preguntas de imagen",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "markers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "hint": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total_questions": {
+      "type": "number",
+      "description": "N\u00famero total de preguntas"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Nombre del archivo original"
+    },
+    "t": {
+      "type": "string",
+      "description": "T\u00edtulo en formato compacto"
+    },
+    "q": {
+      "type": "array",
+      "description": "Preguntas en formato compacto"
+    },
+    "m": {
+      "type": "object",
+      "description": "Metadata en formato compacto legacy"
+    }
+  },
+  "required": [
+    "title",
+    "questions"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

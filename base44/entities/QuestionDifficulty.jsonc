@@ -1,0 +1,87 @@
+{
+  "name": "QuestionDifficulty",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario"
+    },
+    "quiz_id": {
+      "type": "string",
+      "description": "ID del cuestionario"
+    },
+    "question_text": {
+      "type": "string",
+      "description": "Texto de la pregunta (identificador)"
+    },
+    "difficulty_rating": {
+      "type": "number",
+      "description": "Rating de dificultad: 1=Muy f\u00e1cil, 2=F\u00e1cil, 3=Normal, 4=Dif\u00edcil, 5=Muy dif\u00edcil"
+    },
+    "ease_factor": {
+      "type": "number",
+      "description": "Factor de facilidad para SRS (default 2.5)",
+      "default": 2.5
+    },
+    "interval": {
+      "type": "number",
+      "description": "Intervalo en d\u00edas hasta pr\u00f3xima revisi\u00f3n",
+      "default": 1
+    },
+    "repetitions": {
+      "type": "number",
+      "description": "N\u00famero de repeticiones exitosas",
+      "default": 0
+    },
+    "next_review": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de pr\u00f3xima revisi\u00f3n"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima vez revisada"
+    }
+  },
+  "required": [
+    "user_email",
+    "quiz_id",
+    "question_text",
+    "difficulty_rating"
+  ],
+  "rls": {
+    "create": {
+      "user_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "name": "QuizAttempt",
+  "type": "object",
+  "properties": {
+    "quiz_id": {
+      "type": "string",
+      "description": "ID del cuestionario"
+    },
+    "subject_id": {
+      "type": "string",
+      "description": "ID de la materia"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario"
+    },
+    "username": {
+      "type": "string",
+      "description": "Nombre de usuario"
+    },
+    "score": {
+      "type": "number",
+      "description": "Puntaje obtenido"
+    },
+    "total_questions": {
+      "type": "number",
+      "description": "N\u00famero total de preguntas"
+    },
+    "answered_questions": {
+      "type": "number",
+      "description": "Preguntas respondidas hasta ahora"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "description": "Si el intento est\u00e1 completo",
+      "default": false
+    },
+    "response_times": {
+      "type": "array",
+      "description": "Tiempo de respuesta en segundos para cada pregunta",
+      "items": {
+        "type": "number"
+      }
+    },
+    "wrong_questions": {
+      "type": "array",
+      "description": "Preguntas respondidas incorrectamente",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "selected_answer": {
+            "type": "string"
+          },
+          "correct_answer": {
+            "type": "string"
+          },
+          "response_time": {
+            "type": "number",
+            "description": "Tiempo en segundos"
+          },
+          "answerOptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "rationale": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "hint": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "marked_questions": {
+      "type": "array",
+      "description": "Preguntas marcadas para revisar",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "answerOptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "rationale": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "hint": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "quiz_id",
+    "user_email",
+    "score",
+    "total_questions"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

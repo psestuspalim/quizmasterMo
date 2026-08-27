@@ -1,0 +1,90 @@
+{
+  "name": "ExamDate",
+  "type": "object",
+  "properties": {
+    "subject_id": {
+      "type": "string",
+      "description": "ID de la materia"
+    },
+    "subject_name": {
+      "type": "string",
+      "description": "Nombre de la materia"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID del curso"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario (null si es para todos)"
+    },
+    "exam_type": {
+      "type": "string",
+      "enum": [
+        "1\u00ba Parcial",
+        "2\u00ba Parcial",
+        "3\u00ba Parcial",
+        "4\u00ba Parcial",
+        "Final"
+      ],
+      "description": "Tipo de examen"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Fecha del examen"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notas adicionales"
+    }
+  },
+  "required": [
+    "subject_id",
+    "course_id",
+    "exam_type",
+    "date"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_email": null
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
