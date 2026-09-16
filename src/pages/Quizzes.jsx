@@ -465,6 +465,8 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const [currentAttemptId, setCurrentAttemptId] = useState(null);
   const currentAttemptIdRef = React.useRef(null);
+  const currentFolderIdRef = React.useRef(null);
+  useEffect(() => { currentFolderIdRef.current = currentFolderId; }, [currentFolderId]);
   const markedQuestionsRef = React.useRef(markedQuestions);
   useEffect(() => { markedQuestionsRef.current = markedQuestions; }, [markedQuestions]);
 
@@ -1540,12 +1542,19 @@ const [showAIGenerator, setShowAIGenerator] = useState(false);
                                                   <Button onClick={() => setShowUploader(false)} variant="ghost" className="mb-6">
                                                     <ArrowLeft className="w-4 h-4 mr-2" /> Volver
                                                   </Button>
+                                                  {currentFolderId && folders.find(f => f.id === currentFolderId) && (
+                                                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-800">
+                                                      <Folder className="w-4 h-4 flex-shrink-0" />
+                                                      <span>Guardando en: <strong>{folders.find(f => f.id === currentFolderId).name}</strong></span>
+                                                    </div>
+                                                  )}
                                                   <FileUploader 
-                                                    onUploadSuccess={async (data) => {
-                                                      const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
+                                                      onUploadSuccess={async (data) => {
+                                                        const fid = currentFolderIdRef.current;
+                                                      const currentFolder = fid ? folders.find(f => f.id === fid) : null;
                                                       await createQuizMutation.mutateAsync({ 
                                                         ...data, 
-                                                        folder_id: currentFolderId || null,
+                                                        folder_id: fid || null,
                                                         subject_id: currentFolder?.subject_id || data.subject_id || null
                                                       });
                                                       setShowUploader(false);
