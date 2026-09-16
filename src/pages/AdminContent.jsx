@@ -157,6 +157,14 @@ export default function AdminContent() {
     }
   };
 
+  const handleBulkDelete = () => {
+    const items = Array.from(selectedItems).map(key => {
+      const [type, ...idParts] = key.split('-');
+      return { type, id: idParts.join('-') };
+    });
+    setDeleteDialog({ open: true, items });
+  };
+
   const handleToggleVisibility = async (type, id) => {
     const entities = { course: courses, folder: folders, subject: subjects, quiz: quizzes };
     const mutations = { course: updateCourseMutation, folder: updateFolderMutation, subject: updateSubjectMutation, quiz: updateQuizMutation };

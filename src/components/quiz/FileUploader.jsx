@@ -50,6 +50,57 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       5: 'Evaluar'
     };
 
+    // FORMATO SIMPLIFICADO (titulo + items con caso_clinico y preguntas)
+    if (data.titulo && data.items && Array.isArray(data.items)) {
+      console.log('📦 Formato detectado: simplificado (titulo + items)');
+
+      const casoClinico = data.items
+        .filter(item => item.tipo === 'caso_clinico')
+        .map(item => item.texto)
+        .join('\n\n');
+
+      questions = data.items
+        .filter(item => item.tipo === 'pregunta')
+        .map((item) => {
+          const questionText = casoClinico
+            ? `${casoClinico}\n\nPregunta ${item.numero || ''}: ${item.pregunta}`
+            : item.pregunta;
+
+          return {
+            type: 'text',
+            question: questionText,
+            hint: item.comentarios || '',
+            difficulty: 'moderado',
+            answerOptions: (item.opciones || []).map(opt => ({
+              text: opt.texto,
+              isCorrect: !!(item.respuesta_correcta && opt.letra && opt.letra.toUpperCase() === item.respuesta_correcta.toUpperCase()),
+              rationale: ''
+            }))
+          };
+        });
+
+      title = data.titulo;
+      description = `${questions.length} preguntas`;
+
+      const compactQuiz = toCompactFormat({
+        title: customTitle.trim() || title,
+        description: description || `Cuestionario con ${questions.length} preguntas`,
+        questions,
+        total_questions: questions.length
+      });
+
+      await onUploadSuccess({
+        title: customTitle.trim() || compactQuiz.t,
+        t: customTitle.trim() || compactQuiz.t,
+        q: compactQuiz.q.map(q => JSON.stringify(q)),
+        total_questions: compactQuiz.q.length,
+        questions: questions,
+        file_name: fileName,
+        is_hidden: false
+      });
+      return;
+    }
+
     // FORMATO CON METADATA (formato completo con metadata + q)
     if (data.metadata && data.q && Array.isArray(data.q)) {
       console.log('📦 Formato detectado: metadata + q');
@@ -440,6 +491,33 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
       return { errors, warnings, info };
     }
 
+    // FORMATO SIMPLIFICADO: {titulo, items}
+    if (data.titulo && data.items && Array.isArray(data.items)) {
+      const preguntas = data.items.filter(item => item.tipo === 'pregunta');
+      info.push(`✅ Formato simplificado: ${preguntas.length} pregunta${preguntas.length !== 1 ? 's' : ''} detectada${preguntas.length !== 1 ? 's' : ''}`);
+
+      preguntas.forEach((item, idx) => {
+        const qNum = item.numero || idx + 1;
+        if (!item.pregunta || !item.pregunta.trim()) errors.push(`❌ Pregunta ${qNum}: falta "pregunta" (texto)`);
+        if (!item.opciones || !Array.isArray(item.opciones) || item.opciones.length === 0) {
+          errors.push(`❌ Pregunta ${qNum}: falta "opciones" (debe ser un array)`);
+        } else {
+          item.opciones.forEach((opt, optIdx) => {
+            if (!opt.letra) warnings.push(`⚠️ Pregunta ${qNum}, Opción ${optIdx + 1}: falta "letra"`);
+            if (!opt.texto || !opt.texto.trim()) errors.push(`❌ Pregunta ${qNum}, Opción ${optIdx + 1}: falta "texto"`);
+          });
+          if (item.respuesta_correcta) {
+            const hasMatch = item.opciones.some(opt => opt.letra && opt.letra.toUpperCase() === item.respuesta_correcta.toUpperCase());
+            if (!hasMatch) errors.push(`❌ Pregunta ${qNum}: "respuesta_correcta" (${item.respuesta_correcta}) no coincide con ninguna letra de opción`);
+          } else {
+            warnings.push(`⚠️ Pregunta ${qNum}: sin respuesta_correcta definida`);
+          }
+        }
+      });
+
+      return { errors, warnings, info };
+    }
+
     // FORMATO: {metadata, q}
     if (data.metadata && data.q) {
       if (!Array.isArray(data.q)) {
@@ -527,6 +605,7 @@ export default function FileUploader({ onUploadSuccess, jsonOnly = false }) {
     errors.push('   3. Wrapper "quiz": {"quiz": [...]}');
     errors.push('   4. Wrapper "questions": {"questions": [...]}');
     errors.push('   5. Formato longitudinal: {"t": "Título", "q": [...]}');
+    errors.push('   6. Formato simplificado: {"titulo": "...", "items": [{"tipo": "caso_clinico", "texto": "..."}, {"tipo": "pregunta", "pregunta": "...", "opciones": [...], "respuesta_correcta": "A", "comentarios": "..."}]}');
     return { errors, warnings, info };
   };
 
